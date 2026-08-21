@@ -1,0 +1,62 @@
+{
+  "experiment_id": "sg-qwen35-4b-lora-v0.3",
+  "role": "required quality escalation if the 2B candidate misses any frozen gate",
+  "base_model": "Qwen/Qwen3.5-4B",
+  "base_model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "transformers_revision": "0c92811846095910816a87aca50050d10c545270",
+  "seed": 20260820,
+  "epochs": 1.0,
+  "batch_size": 8,
+  "eval_batch_size": 2,
+  "gradient_accumulation": 2,
+  "gradient_checkpointing": true,
+  "trainer_eval": false,
+  "evaluation_policy": "dedicated frozen-slice evaluation after the single training epoch",
+  "learning_rate": 0.0001,
+  "warmup_fraction": 0.05,
+  "weight_decay": 0.01,
+  "max_length": 512,
+  "sampling": "group_by_length",
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "in_proj_qkv",
+      "in_proj_z",
+      "in_proj_b",
+      "in_proj_a",
+      "out_proj",
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "scope": "language tower only; asserted at runtime"
+  },
+  "data": {
+    "manifest_sha256": "24f5f4b7b7ebf99c78634d9545237629b515fd71e94852de40fba65816015e96",
+    "train_jsonl_sha256": "4bdf655e8363d558f7a8e65bc94365390304e9a4df855a538f4e4f8e70788f1c",
+    "dev_jsonl_sha256": "178e5749ff528283d9c5d5501d20f146f9e13c6aa110c03b58825838e1ca6edc",
+    "train_examples": 10111,
+    "dev_examples": 2634,
+    "evaluation": {
+      "dev_sha256": "cb21af4d2c00fe65f8dc9985179d3fab874a3f4651711837018803f652d69be1",
+      "test_sha256": "1fb002a527a1e75389a282d3016cd30fbda4eff4a5369169b8c062b0d1276305",
+      "ood_financial_sha256": "ba816c2bd429ce7aac9e95c6f97c5ec097bdb68a4c016afed2d631df4a54859b",
+      "ood_wspr_sha256": "fc488147a2eaf784d9b4828ec63fc116029faaaf48301551643bf59c670fe328",
+      "forum_validation_sha256": "a31af23130a58cd79b5077841a5fc4488d53c35757743f4506f267eae3453220",
+      "ood_forum_sha256": "b61cda974766d1c0dcf143b8bf8ce0ca100eebd77c0501d164471afdc9293332",
+      "ood_forum_materialized_sha256": "d4a21cad6e051045c7d0862c65c7bec19c5d70bfaf02d2d2ec69fd633805aea1",
+      "adversarial_sha256": "ee782e68ec029f167be28a88d0c4c03f5fc4ae355fd5b8e89e7a4c8f1e3b00bd"
+    },
+    "evidence_audit": {
+      "train_dev_scam_examples": 4025,
+      "with_verbatim_evidence": 4025,
+      "coverage": 1.0
+    }
+  }
+}

@@ -1,0 +1,30 @@
+diff --git a/tools/perplexity/perplexity.cpp b/tools/perplexity/perplexity.cpp
+index ba41287d8..6c209eb8d 100644
+--- a/tools/perplexity/perplexity.cpp
++++ b/tools/perplexity/perplexity.cpp
+@@ -1358,7 +1358,7 @@ static bool multiple_choice_prepare_one_task(llama_context * ctx, multiple_choic
+             }
+             return false;
+         }
+-        task.seq_tokens.emplace_back(::common_tokenize(ctx, task.question + " " + answer, true));
++        task.seq_tokens.emplace_back(::common_tokenize(ctx, task.question + answer, true));
+     }
+     auto min_len = task.seq_tokens.front().size();
+     for (auto& seq : task.seq_tokens) {
+@@ -1670,8 +1670,14 @@ static void multiple_choice_score(llama_context * ctx, const common_params & par
+             }
+             ++n_done;
+ 
+-            // Print the accumulated accuracy mean x 100
+-            LOG("%d\t%.8lf\n", n_done, 100.*n_correct/n_done);
++            // Print the accumulated accuracy followed by one length-normalized
++            // log-probability per answer. ScamGuard parses these values to
++            // apply its frozen calibration after GGUF quantization.
++            LOG("%d\t%.8lf", n_done, 100.*n_correct/n_done);
++            for (float value : cur_task.log_probs) {
++                LOG("\t%.9g", value);
++            }
++            LOG("\n");
+         }
+ 
+         i0 = i1 - 1;

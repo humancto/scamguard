@@ -1,0 +1,17 @@
+{
+  "source_experiment": "sg-qwen35-2b-lora-v0.3",
+  "merge_format": "Hugging Face safetensors BF16",
+  "merge_equivalence": {
+    "argmax_must_match": true,
+    "max_abs_logit_delta": 0.05
+  },
+  "gguf": {
+    "llama_cpp_revision": "521a64cd01979bb5b1a466152c576a9d809b068d",
+    "target_architecture": "arm64",
+    "ggml_native": false,
+    "intermediate_type": "BF16",
+    "quantization": "Q4_K_M",
+    "runtime_scope": "text-only"
+  },
+  "release_gate": "rerun ScamBench classification and generated-schema checks after quantization"
+}

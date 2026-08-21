@@ -1,0 +1,70 @@
+{
+  "artifact_schema_version": 1,
+  "artifacts": {
+    "ood": {
+      "path": "data/external/youtube_scam_calls/youtube_scam_ood.jsonl",
+      "sha256": "69b0d22ee2a9d7b0d44df80fec30e1032bd16d24e5f078f105354c3eb6890cf8"
+    },
+    "train": {
+      "path": "data/external/youtube_scam_calls/youtube_scam_train.jsonl",
+      "sha256": "4be47210071117f257d2cb6c74f520c35175c1a32e6d7263b58228e8849fa5b9"
+    },
+    "validation": {
+      "path": "data/external/youtube_scam_calls/youtube_scam_validation.jsonl",
+      "sha256": "108daf448b01e64f1f6f58228b295119b536c44cede1e6b512abc1eaf9262b1e"
+    }
+  },
+  "counts": {
+    "admitted_families": 220,
+    "admitted_windows": 448,
+    "candidate_windows": 449,
+    "exact_duplicate_windows_removed": 1,
+    "exact_overlaps_with_existing_data_removed": 0,
+    "near_overlaps_with_existing_data_removed": 0,
+    "partition_families": {
+      "ood": 40,
+      "train": 145,
+      "validation": 35
+    },
+    "partition_windows": {
+      "ood": 80,
+      "train": 298,
+      "validation": 70
+    },
+    "privacy_like_counts_before_normalization": {
+      "email_like_rows": 0,
+      "long_digit_rows": 0,
+      "phone_like_rows": 2
+    },
+    "source_length_max": 1422,
+    "source_length_min": 132,
+    "source_rows": 243,
+    "unique_upstream_source_groups": 222
+  },
+  "near_template_stats": {
+    "largest_near_template_cluster": 2,
+    "near_template_clusters": 432,
+    "near_template_rows_quarantined": 0,
+    "real_rows_clustered": 448
+  },
+  "policy": {
+    "counted_as_ordinary_victim_calls": false,
+    "counted_as_real_scam_call_derived": true,
+    "independent_human_label_review_complete": false,
+    "ood_prediction_sealed_until_candidate_freeze": true,
+    "partition": "source-and-near-template connected family, deterministic 70/15/15",
+    "positive_only": true,
+    "raw_text_written_to_manifest": false,
+    "train_used_for_fitting": true,
+    "validation_may_inform_candidate_selection": true,
+    "validation_used_for_fitting_or_threshold": false,
+    "window_policy": "up to early and recent whitespace-complete 425-character windows"
+  },
+  "source": {
+    "archive_sha256": "3f67497736e9421c2f6e59efc46c129006419d40fc752cbb981042940384cedd",
+    "collection": "manually corrected partial YouTube transcripts of scammer/scambaiter calls and some autodialer messages",
+    "dataset": "rivalcults/youtube-scam-phone-call-transcripts",
+    "license": "CC0-1.0",
+    "version": 2
+  }
+}

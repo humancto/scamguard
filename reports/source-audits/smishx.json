@@ -1,0 +1,31 @@
+{
+  "candidate": "external/SmishX/data/dataset.csv",
+  "candidate_rows": 1200,
+  "empty_or_unlabeled_rows_dropped": 0,
+  "labels": {
+    "legitimate": 622,
+    "smishing": 259,
+    "spam": 319
+  },
+  "privacy_findings_after_normalization": {
+    "rows_with_email": 0,
+    "rows_with_long_digit_sequence": 0,
+    "rows_with_phone_like": 0
+  },
+  "privacy_findings_before_normalization": {
+    "rows_with_email": 17,
+    "rows_with_long_digit_sequence": 38,
+    "rows_with_phone_like": 59
+  },
+  "reference": {
+    "directory": "data/processed",
+    "exact_overlap_rows": 807,
+    "near_hamming_max": 6,
+    "near_overlap_rows_including_exact": 1023,
+    "rows": 26192
+  },
+  "within_candidate": {
+    "exact_conflicting_label_groups": 0,
+    "exact_duplicate_rows": 98
+  }
+}

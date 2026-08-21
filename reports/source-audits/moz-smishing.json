@@ -1,0 +1,72 @@
+{
+  "candidate": "external/MOZ-Smishing/test.csv",
+  "candidate_rows": 2561,
+  "empty_or_unlabeled_rows_dropped": 0,
+  "labels": {
+    "Legitimate": 2009,
+    "Smishing": 552
+  },
+  "privacy_findings_after_normalization": {
+    "rows_with_email": 0,
+    "rows_with_long_digit_sequence": 0,
+    "rows_with_phone_like": 0
+  },
+  "privacy_findings_before_normalization": {
+    "rows_with_email": 2,
+    "rows_with_long_digit_sequence": 94,
+    "rows_with_phone_like": 1103
+  },
+  "reference": {
+    "directory": "data/processed",
+    "exact_overlap_rows": 0,
+    "near_hamming_max": 6,
+    "near_overlap_rows_including_exact": 208,
+    "overlap_by_file": {
+      "adversarial.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 23
+      },
+      "dev.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "forum_validation.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "ood_azsc.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 78
+      },
+      "ood_financial.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 2
+      },
+      "ood_forum.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 1
+      },
+      "ood_forum_materialized.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 108
+      },
+      "ood_wspr.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 4
+      },
+      "test.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 24
+      },
+      "train.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 83
+      }
+    },
+    "rows": 26192
+  },
+  "within_candidate": {
+    "exact_conflicting_label_groups": 5,
+    "exact_duplicate_rows": 29
+  }
+}

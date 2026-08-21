@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scamguard-local"
+version = "0.1.0"
+description = "Local-first tiny scam and phishing detection"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [{name = "ScamGuard contributors"}]
+dependencies = [
+  "joblib>=1.4,<2",
+  "numpy>=1.26,<3",
+  "scikit-learn>=1.5,<2",
+]
+
+[project.optional-dependencies]
+train = [
+  "certifi>=2025.1.31",
+  "huggingface-hub>=0.27,<2",
+  "openpyxl>=3.1,<4",
+  "pandas>=2.2,<3",
+  "requests>=2.32,<3",
+]
+neural = [
+  "accelerate>=1.2,<2",
+  "datasets>=3.2,<5",
+  "evaluate>=0.4,<1",
+  "protobuf>=5,<7",
+  "sentencepiece>=0.2,<1",
+  "torch>=2.5,<3",
+  "transformers>=4.48,<6",
+]
+qwen = [
+  "accelerate>=1.2,<2",
+  "datasets>=3.2,<5",
+  "peft>=0.14,<1",
+  "torch>=2.5,<3",
+  "torchvision>=0.20,<1",
+  "transformers @ git+https://github.com/huggingface/transformers.git@0c92811846095910816a87aca50050d10c545270",
+]
+onnx = [
+  "onnx>=1.17,<2",
+  "onnxruntime>=1.20,<2",
+]
+coreml = [
+  "coremltools>=9,<10",
+]
+dev = [
+  "pytest>=8.3,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+scamguard = "scamguard.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scamguard"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/generate_synthetic.py" = ["E501"]
+"src/scamguard/demo.py" = ["E501"]
+"src/scamguard/signals.py" = ["E501"]

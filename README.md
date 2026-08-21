@@ -1,0 +1,229 @@
+# ScamGuard
+
+ScamGuard is a local-first experiment in small, safety-calibrated models for detecting scams,
+phishing, impersonation, credential theft, and manipulative payment requests. The product contract
+is deliberately stricter than a spam filter: it returns `SAFE`, `UNCERTAIN`, or `SCAM`, quotes the
+textual evidence it actually found, and recommends a reversible next action.
+
+The experiment is quality-first. Model size is minimized only after candidates clear the same
+contamination-controlled benchmark.
+
+## Current model ladder
+
+| Track | Role | Approximate mobile package | Decision |
+|---|---|---:|---|
+| TF-IDF logistic regression | cheap reproducible floor | 2.7 MB measured | 1.16 ms p95; 58.1% test recall, gate failed |
+| ModernBERT-base, 149M (schema v6) | historical calibrated classifier | 574 MiB FP32 artifact | 92.67% test recall / 5.10% FPR; 19.06 ms MPS-forward p95 |
+| ModernBERT-base, 149M (schema v9) | fast-router candidate | 574 MiB FP32 artifact | 99.83% regression recall / 6.30% FPR; 16.67 ms MPS-forward p95; sole-detector gates failed |
+| ModernBERT-large, 395M (schema v9) | historical capacity control | 1.48 GiB FP32 artifact | 99.83% regression recall / 0.23% FPR, but 0/72 held identity family; 26.78 ms p95; rejected |
+| ModernBERT-base, 149M (schema v10) | rejected dialogue ablation | 574 MiB FP32 artifact | Taskmaster FPR 0%, but BothBosu scam recall 13.48% and regression FPR 11.23%; rejected |
+| ModernBERT-base, 149M (schema v11) | rejected fast-router ablation | 574 MiB FP32 artifact | 97.86% dev recall / 1.99% FPR and 15.55 ms end-to-end p95, but 11.57% regression FPR; rejected |
+| ModernBERT-base, 149M (schema v12) | rejected counterfactual ablation | 574 MiB FP32 artifact | 99.49% regression recall / 4.18% FPR and 14.27 ms end-to-end p95, but 0/72 held identity-family recall; rejected |
+| ModernBERT-base, 149M (schema v13 dose-16) | current fast-path research candidate | 602.5 MB complete FP32 Core ML pack | exact open-set verdict parity and 5.65 ms Core ML p95 on Mac; policy clears open short-message binary gates, but dialogue and macro F1 still fail |
+| ModernBERT-base, 149M (schema v14 real dialogue) | rejected positive-only call ablation | 602.0 MB training artifact | new real-call recall 34.29%→100%, but regression SAFE FPR 8.48% and dialogue SAFE FPR 73.20%; rejected before export |
+| ModernBERT-base, 149M (schema v15 legitimate openings) | rejected matched-negative call ablation | 602.0 MB training artifact | AppTek FPR 15.52%, regression FPR 18.84%, BothBosu 69.50% recall / 35.29% FPR; rejected despite 12.12 ms p95 |
+| Qwen3.5-0.8B, 4-bit | compact schema/explanation specialist | about 0.6 GB | compression challenger |
+| Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
+| Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
+| Qwen3.5-4B, Q4/Q5/Q6 GGUF | deployable escalation candidates | 2.71/3.07/3.46 GB measured | Q4 and Q5 rejected after regression loss; Q6 is frozen on dev only |
+| Qwen3.5-9B, 4-bit | desktop teacher/upper bound | roughly 6 GB; measure after export | distillation source if needed |
+
+The final release can be a hybrid: the encoder supplies calibrated risk and the Qwen specialist is
+invoked only for uncertain cases. A smaller artifact wins only if it meets the exact same gates.
+The 4B candidate is mandatory when 2B fails a gate; the 9B model is a desktop teacher, not the
+default product payload.
+
+The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
+scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).
+The historical schema-v6 4B adapter's new, selection-only multi-turn diagnostics are in
+[reports/QWEN4B_DIALOGUE_DIAGNOSTIC.md](reports/QWEN4B_DIALOGUE_DIAGNOSTIC.md).
+The historical 149M schema-v9 evaluation and held-out-family failure analysis are in
+[reports/ENCODER_SCHEMA9.md](reports/ENCODER_SCHEMA9.md).
+The completed schema-v11 result, dialogue-policy ablations, and false-positive family audit are in
+[reports/ENCODER_SCHEMA11.md](reports/ENCODER_SCHEMA11.md).
+The rejected schema-v12 dataset decision and immutable identities are in
+[reports/DATASET_SCHEMA12.md](reports/DATASET_SCHEMA12.md). The isolated schema-v13 dose result and
+post-hoc policy audit are in [reports/ENCODER_SCHEMA13.md](reports/ENCODER_SCHEMA13.md); schema v11
+and the failed schema-v10 experiment remain documented in
+[reports/DATASET_SCHEMA11.md](reports/DATASET_SCHEMA11.md) and
+[reports/DATASET_SCHEMA10.md](reports/DATASET_SCHEMA10.md).
+The CC0 real-call source admission and rejected schema-v14 checkpoint are documented in
+[reports/DATASET_SCHEMA14_REAL_DIALOGUE.md](reports/DATASET_SCHEMA14_REAL_DIALOGUE.md).
+The text-only legitimate-call benchmark, schema-v13/v14 false-positive localization, and sealed
+AppTek partition are documented in
+[reports/APPTEK_CALL_BENCHMARK.md](reports/APPTEK_CALL_BENCHMARK.md).
+The 256-row matched-opening experiment and its rejection are documented in
+[reports/DATASET_SCHEMA15_LEGITIMATE_OPENINGS.md](reports/DATASET_SCHEMA15_LEGITIMATE_OPENINGS.md).
+The full FP32/INT8 ONNX fidelity, latency, memory, and rejection record is in
+[reports/ONNX_SCHEMA13.md](reports/ONNX_SCHEMA13.md).
+The native FP32/FP16 Core ML conversion, full parity, latency, and rejection record is in
+[reports/COREML_SCHEMA13.md](reports/COREML_SCHEMA13.md).
+
+## Quick start
+
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+
+```bash
+uv sync --extra train --extra dev
+make data
+make baseline
+uv run scamguard scan --model artifacts/sg-linear-v0.3.joblib \
+  "Urgent: send the verification code to stop this wire transfer"
+```
+
+After building the schema-v13 ONNX pack, run the actual neural candidate locally:
+
+```bash
+uv run --extra onnx --extra neural scamguard scan \
+  --model artifacts/onnx/schema13-dynamic-pack/scamguard-modernbert-seqdynamic-fp32.onnx \
+  "Urgent: send the verification code to stop this wire transfer"
+```
+
+Run the localhost-only demo:
+
+```bash
+uv run scamguard demo --model artifacts/sg-linear-v0.3.joblib
+```
+
+The SDK is a single call:
+
+```python
+from scamguard import scan
+
+result = scan("Paste a suspicious message here", model_path="artifacts/sg-linear-v0.3.joblib")
+print(result.to_dict())
+```
+
+The built-in heuristic exists only for SDK smoke tests. It is visibly identified as
+`heuristic-unbenchmarked-v0` and must not be presented as a trained model.
+
+Exact training, native arm64 llama.cpp, merge, Q4_K_M export, and post-quantization evaluation
+commands are in [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+The measured ONNX/Core ML/Android export gates are in
+[docs/DEPLOYMENT_PLAN.md](docs/DEPLOYMENT_PLAN.md).
+
+## ScamBench gates
+
+Every candidate is evaluated at one threshold fitted on development data, then frozen:
+
+- scam recall at least 97%;
+- clean-message false-positive rate no more than 2%;
+- macro F1 above 0.94 as a stretch target;
+- calibration reported as Brier score and 15-bin ECE;
+- exact and normalized-template families isolated between train/dev/test;
+- a separately sourced financial-scam set used only as an out-of-domain holdout;
+- a 488-row WSPR holdout with no SAFE rows (409 SCAM and 79 UNCERTAIN);
+- 2,300 disjoint forum OOD rows, including 100 SAFE controls, plus 2,079
+  realistic-placeholder derivatives;
+- a 677-row CC-BY-4.0 Chichewa external diagnostic, privacy-normalized and collapsed to one row per
+  family without counting augmented rows as independently collected real data;
+- a 1,343-row Apache-2.0 multi-turn telephone-scam diagnostic, reduced from 1,600 upstream
+  synthetic dialogues and split by family into 294 selection and 1,049 prediction-sealed rows;
+- a CC0 real-scam-call-derived corpus with 161 early training windows, 70 source-family-held open
+  validation windows, and 80 prediction-sealed OOD windows; the first positive-only training dose
+  is rejected for false-positive regression;
+- a CC-BY-SA-4.0 AppTek legitimate-call roleplay benchmark with 348 selection windows and 1,396
+  prediction-sealed windows, split by shared-speaker/call components and never used for fitting;
+- 600 CC-BY-4.0 human-authored Taskmaster transactional dialogues used as weak SAFE training
+  examples, plus a disjoint 450-dialogue selection slice;
+- a sealed 1,820-row newly sourced Portuguese/Mozambican mobile-money test with 526 SCAM and
+  1,294 SAFE family representatives;
+- desktop single-message p95 verdict latency at most 20 ms, plus separately measured mobile latency;
+- median/p95 latency, routed-model escalation rate, peak memory, and artifact size published.
+
+Scores from a different dataset are context, not a valid head-to-head comparison. See
+[docs/BENCHMARK_PROTOCOL.md](docs/BENCHMARK_PROTOCOL.md) and the
+[dataset-size decision](docs/DATASET_SIZE_DECISION.md).
+
+## Data policy
+
+The build uses hash-pinned datasets, provenance-tagged synthetic variants, hard negatives, exact
+deduplication, and near-template split isolation. ScamBench schema v12 validates 28,125 unique
+processed examples with no family leakage. Its 14,446-row training split retains the unchanged
+schema-v9 dev and regression sets, uses 600 human-authored Taskmaster roleplay dialogues, and admits
+1,495 of 1,536 generated paired synthetic conversations. The processed core and named diagnostics
+now contain 23,798 rows: 13,127 naturally occurring licensed-source rows, 600 human-authored
+crowdsourced roleplays reported separately, and 10,071 controlled synthetic rows.
+Training includes 1,000 evidence-grounded public-forum scam reports, 100 ambiguous forum messages,
+148 real forum SAFE controls, 1,913 WSPR campaign representatives, licensed SMS data, and the three
+synthetic curricula. Synthetic v5 contributes 5,040 original English scenario variants plus 3,024 benign
+lookalikes across seven languages so multilingual input does not become a scam shortcut. Its 24 new
+paired families cover official-advisory gaps such as protect-your-money transfers, task scams,
+government-benefit identity theft, family-bail secrecy, and reshipping jobs. A development-only
+0/1k/3k/all-5,672 learning curve selected the 1k quality-first cap without opening test or OOD outcomes.
+Synthetic dialogue v2 adds 12 balanced scam/legitimate scenarios after the first dialogue
+correction exposed a source-format shortcut. A versioned speaker-neutral transform removes corpus
+role-name cues and retains complete recent turns. The external BothBosu OOD partition and the
+1,820-row MOZ holdout remain prediction-sealed.
+Synthetic counterfactual v1 adds 512 balanced train-only messages in eight paired families after
+schema v11's frozen regression ledger exposed false alarms on known-contact transfers, ordinary
+family updates, in-platform marketplace activity, and official-app reviews. The scam counterparts
+change the trust boundary or requested action; none copies a regression or external-diagnostic row.
+This is an ablation, not an accepted dataset improvement: the schema-v12 run reduced regression FPR
+from 11.57% to 4.18% but generalized the repair into an unsafe identity-scam veto and missed all 72
+rows in the unchanged `identity_case_callback` development family. See
+[`reports/ENCODER_SCHEMA12.md`](reports/ENCODER_SCHEMA12.md) for the frozen failure analysis.
+Schema v13 reduces the correction to 128 rows. Its model-only result is still rejected, while a
+separately reported deterministic trusted-channel policy clears the open short-message binary gates
+without changing dialogue results. See [`reports/ENCODER_SCHEMA13.md`](reports/ENCODER_SCHEMA13.md).
+Schema v14 then adds 161 early windows from 145 CC0 scam-call source families. It completely repairs
+the new source-family-held positive recall diagnostic but creates a broad call/prose shortcut,
+doubles regression false positives, and is rejected. The 80-window OOD partition remains sealed.
+The AppTek open legitimate-call slice localizes that shortcut to early service-call openings:
+schema v13 falsely flags 31/348 SAFE windows and schema v14 flags 77/348, with zero false positives
+from either model on all 174 recent windows. Schema v15 is therefore a 256-row matched-negative
+ablation spanning 16 service scenarios and four opening structures. It copies no AppTek text,
+contains no explicit anti-scam safety cues, and leaves AppTek's 1,396-window OOD partition sealed.
+That experiment is also rejected: it lowers AppTek FPR relative to schema v14 but remains worse
+than schema v13, while unchanged-regression FPR rises to 18.84%. No export or sealed evaluation is
+performed for schema v15.
+Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
+standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
+external action. Source-reported positives without strong message-local fraud evidence are
+`UNCERTAIN`, not SCAM. The current audit workbook has 240 stratified rows and still needs independent
+human labels.
+
+The previous schema-v6, schema-v9, and rejected schema-v10/v11 model reports remain historical regression
+evidence; they are not relabeled as schema-v12 results. Schema v8 adds a separate,
+prediction-sealed 1,820-row MOZ-Smishing holdout after privacy
+normalization, label-conflict quarantine, one-per-family collapse, and overlap removal against every
+previously processed benchmark. It is local-evaluation-only and excluded from training/public row
+redistribution because the publisher's model-oriented OpenRAIL tag lacks a dataset-specific license
+file. See [the online source research](reports/ONLINE_SOURCE_RESEARCH.md) for measured admissions
+and rejections; dataset size is never inflated with unlicensed GitHub collections or duplicate
+repackagings.
+
+Schema v6 replaces real-source email addresses, long phone-like values, and long account-like digit
+sequences with typed placeholders before IDs, family clustering, splitting, or fitting. The validator
+fails closed if any such value survives in a real-source parent row.
+
+Reddit user content is excluded from training and redistribution because Reddit's current Data
+API Terms prohibit ML/AI training on user content without rightsholder permission. Public scam
+reports may inform taxonomy research but cannot become rows in this repository under those terms.
+See [data/README.md](data/README.md) for sources and [docs/DATA_GOVERNANCE.md](docs/DATA_GOVERNANCE.md)
+for the acceptance policy.
+
+## Repository map
+
+```text
+src/scamguard/       local SDK, output schema, signals, CLI, demo
+scripts/             hash-pinned fetch, generation, build, validation
+training/            model-specific training and evaluation
+configs/             immutable experiment configurations and data hashes
+tests/               contract and metric tests
+data/                source documentation; downloaded/generated rows are ignored
+artifacts/           local model outputs; large exports are ignored
+reports/             benchmark protocol and local run records
+```
+
+## Safety boundary
+
+ScamGuard is decision support, not a guarantee that a message is safe or fraudulent. `UNCERTAIN`
+is a first-class result. Evidence spans are extracted from the input; the SDK does not generate a
+hidden chain of thought. Do not automatically delete messages, contact senders, make payments, or
+submit reports without the user's review.
+
+## License
+
+Source code is Apache-2.0. Dataset rows retain their source licenses and attribution requirements;
+model artifacts require a separate release card listing every included source.

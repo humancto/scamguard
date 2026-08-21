@@ -1,0 +1,75 @@
+{
+  "experiment_id": "sg-qwen35-4b-lora-schema9-v0.4",
+  "role": "quality teacher and ambiguous-case escalation candidate after the schema-v9 encoder",
+  "base_model": "Qwen/Qwen3.5-4B",
+  "base_model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "transformers_revision": "0c92811846095910816a87aca50050d10c545270",
+  "seed": 20260820,
+  "epochs": 1.0,
+  "batch_size": 8,
+  "eval_batch_size": 2,
+  "gradient_accumulation": 2,
+  "gradient_checkpointing": true,
+  "trainer_eval": false,
+  "evaluation_policy": "dedicated frozen-slice evaluation after the single training epoch",
+  "learning_rate": 0.0001,
+  "warmup_fraction": 0.05,
+  "weight_decay": 0.01,
+  "max_length": 512,
+  "sampling": "group_by_length",
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "in_proj_qkv",
+      "in_proj_z",
+      "in_proj_b",
+      "in_proj_a",
+      "out_proj",
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "scope": "language tower only; asserted at runtime"
+  },
+  "data": {
+    "schema_version": 9,
+    "manifest_sha256": "c4c2f728e3bfbb0a5be67fde24f1c08c96edd1b0539c419f95320cc568fe0e50",
+    "train_jsonl_sha256": "92ad679aabef095c6cacc67012ede1ec2c451907d062707648901f6857df7efe",
+    "dev_jsonl_sha256": "c6de2838597854ac497812f7c5467172d4bc27c0f7a24a35601be67deaf3d241",
+    "train_examples": 11839,
+    "dev_examples": 2634,
+    "evaluation": {
+      "dev_sha256": "5b1bbf05c56d917d150a93147cf4e6913e6389f6a6e1a734b235cafc882c6b03",
+      "test_sha256": "c55b396197575d32936a44c5432e6adc85b21cdb6f442fb663c760cd026dc554",
+      "ood_financial_sha256": "d664f2ed304f9438cce9cf49a42987b0354820d53a52ba504172de43cc9e9adf",
+      "ood_wspr_sha256": "fc488147a2eaf784d9b4828ec63fc116029faaaf48301551643bf59c670fe328",
+      "forum_validation_sha256": "a31af23130a58cd79b5077841a5fc4488d53c35757743f4506f267eae3453220",
+      "ood_forum_sha256": "b61cda974766d1c0dcf143b8bf8ce0ca100eebd77c0501d164471afdc9293332",
+      "ood_forum_materialized_sha256": "d4a21cad6e051045c7d0862c65c7bec19c5d70bfaf02d2d2ec69fd633805aea1",
+      "adversarial_sha256": "eb0e137318b39b210af3015fa1409737696482c96495d01ae70e51c49eef0547",
+      "ood_azsc_sha256": "b29befed9bd55093e42a7d435f8883eec19b5e64f1fbdd0132a502ac0da84372"
+    },
+    "token_length_audit": {
+      "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "examples": 14473,
+      "full_p95": 237,
+      "full_p99": 270,
+      "full_max": 508,
+      "full_over_max_length": 0,
+      "full_over_384": 8,
+      "minimum_supervised_tokens": 27,
+      "masking": "offset-based first token wholly inside assistant completion"
+    },
+    "evidence_audit": {
+      "train_dev_scam_examples": 4889,
+      "with_verbatim_evidence": 4889,
+      "coverage": 1.0
+    }
+  }
+}

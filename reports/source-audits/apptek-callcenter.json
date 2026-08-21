@@ -1,0 +1,217 @@
+{
+  "artifact_schema_version": 1,
+  "artifacts": {
+    "ood": {
+      "path": "data/external/apptek_callcenter/apptek_call_ood.jsonl",
+      "sha256": "1e6d1176936324f073ca7dd5746bcce5b7849d5be5c4973782479e595f3c3ade"
+    },
+    "selection": {
+      "path": "data/external/apptek_callcenter/apptek_call_selection.jsonl",
+      "sha256": "e0e7ad4de8d378061159df18a8fa6c39fedd69d0cdd0dffe3f72579158290b62"
+    }
+  },
+  "counts": {
+    "accent_calls": {
+      "en-AU": 58,
+      "en-CA": 59,
+      "en-CN": 79,
+      "en-GB": 67,
+      "en-GB_SCT": 66,
+      "en-GB_WLS": 65,
+      "en-IE": 56,
+      "en-IN": 73,
+      "en-MX": 61,
+      "en-SG": 57,
+      "en-US_Aave": 45,
+      "en-US_General": 67,
+      "en-US_Southern": 56,
+      "en-ZA": 64
+    },
+    "candidate_windows": 1746,
+    "domain_calls": {
+      "agriculture": 41,
+      "aviation": 70,
+      "banking": 64,
+      "deliveryservice": 63,
+      "energy": 36,
+      "entertainment": 84,
+      "finance": 29,
+      "food": 69,
+      "health": 57,
+      "hospitality": 54,
+      "insurance": 42,
+      "realestate": 47,
+      "retail": 82,
+      "technology": 38,
+      "telecom": 40,
+      "travel": 57
+    },
+    "duration_seconds_max": 1235.928,
+    "duration_seconds_min": 204.793,
+    "exact_duplicate_windows_removed": 0,
+    "near_overlaps_with_existing_data_removed": 0,
+    "near_template_representatives": 1744,
+    "near_template_rows_removed": 2,
+    "ood_accents": {
+      "en-AU": 97,
+      "en-CA": 118,
+      "en-CN": 122,
+      "en-GB": 111,
+      "en-GB_SCT": 132,
+      "en-GB_WLS": 104,
+      "en-IE": 78,
+      "en-IN": 98,
+      "en-MX": 122,
+      "en-SG": 76,
+      "en-US_Aave": 90,
+      "en-US_General": 78,
+      "en-US_Southern": 68,
+      "en-ZA": 102
+    },
+    "ood_calls": 699,
+    "ood_components": 59,
+    "ood_domains": {
+      "agriculture": 64,
+      "aviation": 99,
+      "banking": 104,
+      "deliveryservice": 94,
+      "energy": 60,
+      "entertainment": 123,
+      "finance": 52,
+      "food": 116,
+      "health": 94,
+      "hospitality": 92,
+      "insurance": 62,
+      "realestate": 80,
+      "retail": 136,
+      "technology": 60,
+      "telecom": 68,
+      "travel": 92
+    },
+    "ood_windows": 1396,
+    "privacy_like_counts_before_normalization": {
+      "email_like_segments": 0,
+      "long_digit_segments": 0,
+      "phone_like_segments": 0
+    },
+    "segments_per_call_max": 263,
+    "segments_per_call_min": 29,
+    "selection_accents": {
+      "en-AU": 18,
+      "en-CN": 36,
+      "en-GB": 22,
+      "en-GB_WLS": 26,
+      "en-IE": 34,
+      "en-IN": 48,
+      "en-SG": 38,
+      "en-US_General": 56,
+      "en-US_Southern": 44,
+      "en-ZA": 26
+    },
+    "selection_calls": 174,
+    "selection_components": 18,
+    "selection_domains": {
+      "agriculture": 18,
+      "aviation": 40,
+      "banking": 24,
+      "deliveryservice": 32,
+      "energy": 12,
+      "entertainment": 44,
+      "finance": 6,
+      "food": 22,
+      "health": 20,
+      "hospitality": 16,
+      "insurance": 22,
+      "realestate": 14,
+      "retail": 28,
+      "technology": 16,
+      "telecom": 12,
+      "travel": 22
+    },
+    "selection_windows": 348,
+    "source_calls": 873,
+    "speaker_components": 77
+  },
+  "near_template_stats": {
+    "largest_near_template_cluster": 2,
+    "near_template_clusters": 1744,
+    "near_template_rows_quarantined": 0,
+    "real_rows_clustered": 1746
+  },
+  "policy": {
+    "audio_downloaded": false,
+    "independent_row_label_review_complete": false,
+    "label": "weak SAFE from legitimate service-roleplay domain",
+    "ood_prediction_sealed_until_candidate_freeze": true,
+    "partition": "one representative per near-template cluster; shared-speaker/call components; deterministic closest-to-20-percent component subset",
+    "raw_text_written_to_manifest": false,
+    "selection_may_inform_candidate_selection": true,
+    "used_for_fitting": false,
+    "used_for_threshold": false
+  },
+  "source": {
+    "collection": "newly collected spontaneous English service-call roleplay; not real customer data",
+    "dataset": "apptek-com/apptek_callcenter_dialogues",
+    "license": "CC-BY-SA-4.0",
+    "metadata_files": {
+      "en-AU": {
+        "bytes": 1156772,
+        "sha256": "c3afc921b1b2a602dffb7ef8c77f751da3c9bbd84976fd75761ee2d7d26f61f4"
+      },
+      "en-CA": {
+        "bytes": 1171827,
+        "sha256": "e96d13b4d66774b1c3df08335c7599e1405965ffaf79d08c6545ab6fa3bccdc6"
+      },
+      "en-CN": {
+        "bytes": 996534,
+        "sha256": "0465e1e80d6bd63821867c2152ccc10dbb7bb86a18d32402948cee1ac30376e7"
+      },
+      "en-GB": {
+        "bytes": 1412857,
+        "sha256": "9a2f19a4045d038330cd53a52ed4e8a81b4b7a782d87ce41f655a329364d8d83"
+      },
+      "en-GB_SCT": {
+        "bytes": 1524634,
+        "sha256": "2b79ca8945989ceab44d6e8b14db5ef5a0e62179393fc2c5635231c739f82c25"
+      },
+      "en-GB_WLS": {
+        "bytes": 1500338,
+        "sha256": "c067a862cabf69fbe5d8cb88a3c5753b8abe3f285c62fd728b7eed76d07c73b6"
+      },
+      "en-IE": {
+        "bytes": 1338187,
+        "sha256": "83f52b0b530bfb416493a68da0a48692f86a0818721091d78c8c1680500dacc7"
+      },
+      "en-IN": {
+        "bytes": 1199680,
+        "sha256": "640081da5996c547d083108a800f23939abee1dd6e9b243bf32fe1d30b7692dd"
+      },
+      "en-MX": {
+        "bytes": 1086287,
+        "sha256": "7d3f9e7920991eebdc6ea9877daabe42647f9dba0dce8e387e0db7bbd45ffce9"
+      },
+      "en-SG": {
+        "bytes": 1120767,
+        "sha256": "f1cc73e3cc5e8a39884b0296590089502eb4d5853bf11e0a6cf17cacbc965df1"
+      },
+      "en-US_Aave": {
+        "bytes": 1262820,
+        "sha256": "72370e6f98a8a73d987f9f8e9e242e44c34ca76ee8baf3e6800242429c66c01a"
+      },
+      "en-US_General": {
+        "bytes": 1266982,
+        "sha256": "2c37db51246dd8be8c3e1946afd8ee5ad15ef5857db4e1a39393abc711524d72"
+      },
+      "en-US_Southern": {
+        "bytes": 1280115,
+        "sha256": "0430583c0ce7de77dcf489ea2ef6c8202800edf9d7e8a2b2bacc46cd7ce4d495"
+      },
+      "en-ZA": {
+        "bytes": 1120686,
+        "sha256": "a1f001460b7e9730c6019328adc84b18a24a0a2e1b6abbb7fc9087d166555362"
+      }
+    },
+    "publisher_designation": "evaluation and analysis only; training out of scope",
+    "revision": "95a8c157e4fd6df2f3c77593160c83db79b75dc7"
+  }
+}
