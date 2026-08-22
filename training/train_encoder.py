@@ -1618,6 +1618,7 @@ def main() -> None:
             rows["call_state_validation"],
             predictions["call_state_validation"],
             action_target_names,
+            action_thresholds,
         )
         result["call_state_validation"]["state_verdict_metrics"] = (
             action_state_verdict_metrics(

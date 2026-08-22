@@ -232,8 +232,8 @@ minimal-pair training rows and holds 192 paired rows out by complete service sce
 | [Sting9](https://sting9.org/license) | The governing license is ODC-BY-NC and excludes startup/product development and commercial model training despite a conflicting CC0 marketing statement. | Reject for ScamGuard's commercial-capable corpus. |
 | Raw Reddit and forum posts | Platform terms, privacy, deletion, provenance, and contamination cannot be resolved by treating public visibility as a training grant. | Copy zero raw posts. Continue using only the licensed, privacy-normalized IMC 2025 research artifact already admitted in the parent corpus. |
 
-The resulting schema-v23 increment is 1,436 rows rather than a bulk scrape: 216 licensed human
-MultiDoGO turns, 864 human-grounded MultiDoGO states, and 356 admitted original FTC-pattern states.
+The resulting schema-v23 increment is 1,431 rows rather than a bulk scrape: 215 licensed human
+MultiDoGO turns, 860 human-grounded MultiDoGO states, and 356 admitted original FTC-pattern states.
 It is frozen in `DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`.
 
 ## Audited but rejected or quarantined

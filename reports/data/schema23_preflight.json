@@ -1,16 +1,16 @@
 {
   "config": "configs/encoder-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right.json",
-  "config_sha256": "835cb138eafd15db68a15bd4ff942f5bfaef27cf5bcdee699e15f470f162dc30",
+  "config_sha256": "754f60cd90085082a7ca8df7606fecc9951c2bf1f061ffcdb7bdbfabe9dbd535",
   "counts": {
     "action_calibration": 400,
-    "action_supervised": 7580,
+    "action_supervised": 7575,
     "ftc_fit": 356,
     "ftc_validation": 84,
-    "licensed": 9543,
-    "synthetic": 13127,
-    "train": 22670
+    "licensed": 9542,
+    "synthetic": 13123,
+    "train": 22665
   },
-  "decisive_visibility_rows": 3944,
+  "decisive_visibility_rows": 3940,
   "failures": [],
   "ftc_admitted_overlap_recheck": {
     "candidate_rows_after_overlap_control": 440,

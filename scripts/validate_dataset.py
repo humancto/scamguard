@@ -53,6 +53,7 @@ SCAM_EXCLUDED_POLICY_FRAGMENTS = (
 )
 SYNTHETIC_REFERENCE_PREFIXES = (
     "https://consumer.ftc.gov/",
+    "https://www.ftc.gov/",
     "https://www.ic3.gov/",
     "https://www.irs.gov/",
     "https://www.uspis.gov/",
@@ -67,6 +68,7 @@ SYNTHETIC_METHODS = {
     "paired_call_evidence_action_counterfactual_advisory_grounded_original_copy",
     "minimal_final_turn_transformation_of_cc_by_human_call_v1",
     "decisive_agent_turn_transformation_with_shared_delayed_continuation_v1",
+    "original_counterfactual_dialogues_grounded_in_ftc_authored_pattern_descriptions_v1",
 }
 TRUSTED_POSITIVE_ONLY_SOURCES = {
     "youtube_scam_calls_cc0": {
@@ -272,6 +274,10 @@ def main() -> None:
         split_names.append("multidogo_call_validation")
     if (args.data / "multidogo_state_validation.jsonl").is_file():
         split_names.append("multidogo_state_validation")
+    if (args.data / "action_calibration.jsonl").is_file():
+        split_names.append("action_calibration")
+    if (args.data / "ftc_pattern_validation.jsonl").is_file():
+        split_names.append("ftc_pattern_validation")
     rows_by_split = {split: read_rows(args.data / f"{split}.jsonl") for split in split_names}
     errors: list[str] = []
     manifest = json.loads((args.data / "manifest.json").read_text(encoding="utf-8"))

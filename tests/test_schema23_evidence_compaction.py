@@ -8,6 +8,7 @@ from scripts.build_schema23_evidence_compaction import (
     CALIBRATION_FAMILIES_PER_DOMAIN,
     MULTIDOGO_REAL_VERDICT_WEIGHT,
     partition_multidogo,
+    remove_exact_duplicate_state_families,
     remove_reference_overlap_families,
     shape_multidogo_state_context,
 )
@@ -123,3 +124,20 @@ def test_multidogo_context_shape_keeps_decisive_and_two_delayed_turns() -> None:
             "AGENT: delayed pause",
         ]
         assert len(str(row["schema23_source_text_sha256"])) == 64
+
+
+def test_shaped_state_dedup_removes_the_complete_later_family() -> None:
+    rows = [
+        {
+            "id": f"{family}-{state}",
+            "contrast_id": family,
+            "contrast_state": state,
+            "text": f"shared {state}",
+        }
+        for family in ("a", "b")
+        for state in ("routine_safe", "verified_safe", "unresolved", "harmful_scam")
+    ]
+    kept, stats = remove_exact_duplicate_state_families(rows)
+    assert {row["contrast_id"] for row in kept} == {"a"}
+    assert stats["families_removed"] == 1
+    assert stats["rows_removed"] == 4

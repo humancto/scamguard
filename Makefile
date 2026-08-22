@@ -1,4 +1,4 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
 
 PYTHON_BIN ?= .venv/bin/python
 
@@ -214,6 +214,17 @@ schema22-service-evidence: schema20-action-states multidogo
 		--expected-schema-version 22 --sealed-data data/processed \
 		--data data/experiments/schema22-service-evidence/processed
 
+schema23-evidence-compaction: schema20-action-states multidogo
+	$(PYTHON_BIN) scripts/generate_ftc_pattern_action_states.py
+	@if [ -f data/experiments/schema23-evidence-compaction/processed/manifest.json ]; then \
+		echo "Reusing immutable schema-v23 experiment; preflight will recheck it"; \
+	else \
+		$(PYTHON_BIN) scripts/build_schema23_evidence_compaction.py; \
+	fi
+	$(PYTHON_BIN) scripts/validate_dataset.py \
+		--expected-schema-version 23 --sealed-data data/processed \
+		--data data/experiments/schema23-evidence-compaction/processed
+
 encoder-schema16-cache:
 	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps
 
@@ -335,6 +346,37 @@ encoder-schema22-service-evidence: encoder-schema22-preflight
 encoder-schema22-gates:
 	$(PYTHON_BIN) scripts/check_encoder_schema22_gates.py \
 		--output reports/runs/sg-modernbert-schema22-service-evidence-actionheads-ret4-aw05-vw025-left.gates.json
+
+encoder-schema23-cache: schema23-evidence-compaction
+	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema20-actionheads-ret4-aw05-vw025-left \
+		--data data/experiments/schema20-action-states/processed/train.jsonl \
+		--output data/experiments/schema23-evidence-compaction/teacher/schema20-evidence-recent-v2-verdict-logits.jsonl \
+		--manifest data/experiments/schema23-evidence-compaction/teacher/manifest-v2.json \
+		--dialogue-policy speaker-neutral-evidence-recent-v2 --max-length 256 --batch-size 32
+
+encoder-schema23-preflight: encoder-schema23-cache
+	$(PYTHON_BIN) scripts/verify_encoder_schema23_config.py
+
+encoder-schema23-evidence-compaction: encoder-schema23-preflight
+	$(PYTHON_BIN) training/train_encoder.py \
+		--data data/experiments/schema23-evidence-compaction/processed \
+		--external-data data/external \
+		--init-checkpoint artifacts/checkpoints/sg-modernbert-schema20-actionheads-ret4-aw05-vw025-left \
+		--teacher-logits data/experiments/schema23-evidence-compaction/teacher/schema20-evidence-recent-v2-verdict-logits.jsonl \
+		--teacher-manifest data/experiments/schema23-evidence-compaction/teacher/manifest-v2.json \
+		--epochs 1 --batch-size 16 --gradient-accumulation 1 --learning-rate 2e-6 \
+		--max-length 256 --truncation-side right --dialogue-policy speaker-neutral-evidence-recent-v2 \
+		--binary-loss-weight 1 --retention-weight 4 --retention-temperature 2 \
+		--action-targets sensitive_action_language,requested_disclosure_or_transfer,caller_controls_target,official_self_navigation,independent_verification,pressure_or_secrecy,irreversible_action \
+		--action-loss-weight 0.5 --action-verdict-weight 0.25 --seed 20260821 \
+		--output artifacts/checkpoints/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right \
+		--report reports/runs/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right.json
+	$(MAKE) encoder-schema23-gates
+
+encoder-schema23-gates:
+	$(PYTHON_BIN) scripts/check_encoder_schema23_gates.py \
+		--output reports/runs/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right.gates.json
 
 apptek-eval-schema13: apptek-callcenter
 	$(PYTHON_BIN) training/eval_encoder_external.py \

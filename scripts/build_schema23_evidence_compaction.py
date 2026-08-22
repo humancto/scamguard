@@ -213,6 +213,37 @@ def shape_multidogo_state_context(
     return sorted(shaped, key=lambda row: str(row["id"]))
 
 
+def remove_exact_duplicate_state_families(
+    rows: list[dict[str, object]],
+    *,
+    protected_texts: set[str] | None = None,
+) -> tuple[list[dict[str, object]], dict[str, int]]:
+    """Remove a complete shaped family when any state duplicates a retained state exactly."""
+
+    seen = set(protected_texts or set())
+    grouped: defaultdict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[str(row["contrast_id"])].append(row)
+    kept: list[dict[str, object]] = []
+    removed_families = 0
+    for contrast_id in sorted(grouped):
+        family = grouped[contrast_id]
+        texts = {" ".join(str(row["text"]).casefold().split()) for row in family}
+        if seen & texts or len(texts) != len(family):
+            removed_families += 1
+            continue
+        kept.extend(family)
+        seen.update(texts)
+    return sorted(kept, key=lambda row: str(row["id"])), {
+        "candidate_rows": len(rows),
+        "candidate_families": len(grouped),
+        "families_removed": removed_families,
+        "rows_removed": len(rows) - len(kept),
+        "retained_rows": len(kept),
+        "retained_families": len({str(row["contrast_id"]) for row in kept}),
+    }
+
+
 def remove_reference_overlap_families(
     candidate_rows: list[dict[str, object]], reference_rows: list[dict[str, object]]
 ) -> tuple[list[dict[str, object]], dict[str, int]]:
@@ -285,6 +316,18 @@ def build(
     validate_state_rows(state_validation, MULTIDOGO_STATE_SOURCE)
     state_train = shape_multidogo_state_context(state_train)
     state_validation = shape_multidogo_state_context(state_validation)
+    state_validation, validation_shape_dedup = remove_exact_duplicate_state_families(
+        state_validation
+    )
+    validation_texts = {
+        " ".join(str(row["text"]).casefold().split()) for row in state_validation
+    }
+    state_train, train_shape_dedup = remove_exact_duplicate_state_families(
+        state_train,
+        protected_texts=validation_texts,
+    )
+    validate_state_rows(state_train, MULTIDOGO_STATE_SOURCE)
+    validate_state_rows(state_validation, MULTIDOGO_STATE_SOURCE)
     multidogo_increment, action_calibration, calibration_states = partition_multidogo(
         real_train, state_train
     )
@@ -406,6 +449,12 @@ def build(
                 "multidogo_delayed_turns_after_action": (
                     MULTIDOGO_DELAYED_TURNS_AFTER_ACTION
                 ),
+                "multidogo_shaped_state_exact_dedup": {
+                    "validation": validation_shape_dedup,
+                    "train": train_shape_dedup,
+                    "whole_family_removal": True,
+                    "validation_protected_before_train": True,
+                },
                 "ftc_pattern_source": FTC_SOURCE,
                 "ftc_pattern_license": FTC_LICENSE,
                 "ftc_pattern_manifest_sha256": file_sha256(ftc_manifest_path),

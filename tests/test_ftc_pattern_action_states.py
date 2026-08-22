@@ -13,6 +13,7 @@ from scripts.generate_ftc_pattern_action_states import (
     generate,
     validate,
 )
+from scripts.validate_dataset import SYNTHETIC_METHODS, SYNTHETIC_REFERENCE_PREFIXES
 
 
 def test_ftc_pattern_rows_are_balanced_and_scenario_disjoint() -> None:
@@ -47,8 +48,10 @@ def test_ftc_pattern_families_change_only_the_decisive_turn() -> None:
 
 def test_ftc_pattern_provenance_and_targets_are_explicit() -> None:
     train, validation = generate()
+    assert METHOD in SYNTHETIC_METHODS
     for row in train + validation:
         assert row["synthetic_method"] == METHOD
+        assert str(row["pattern_reference"]).startswith(SYNTHETIC_REFERENCE_PREFIXES)
         assert row["rights_reference"] == FTC_WEBSITE_POLICY
         assert row["external_transcript_text_copied"] is False
         assert tuple(row["action_targets"]) == TARGET_KEYS
