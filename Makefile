@@ -1,4 +1,4 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 youtube-eval-schema16 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
 
 PYTHON_BIN ?= .venv/bin/python
 
@@ -134,6 +134,35 @@ encoder-schema15-legitimate-openings: schema15-legitimate-openings
 		--output artifacts/checkpoints/sg-modernbert-schema15-legitimate-openings-dose16 \
 		--report reports/runs/sg-modernbert-schema15-legitimate-openings-dose16.json
 
+schema17-call-minimal-pairs:
+	$(PYTHON_BIN) scripts/generate_call_minimal_pairs.py
+	@if [ -f data/experiments/schema17-call-minimal-pairs/processed/manifest.json ]; then \
+		echo "Reusing immutable schema-v17 experiment; validation will recheck it"; \
+	else \
+		$(PYTHON_BIN) scripts/build_schema17_call_minimal_pairs.py; \
+	fi
+	$(PYTHON_BIN) scripts/validate_dataset.py \
+		--expected-schema-version 17 --sealed-data data/processed \
+		--data data/experiments/schema17-call-minimal-pairs/processed
+
+encoder-schema16-cache:
+	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps
+
+encoder-schema16-preflight: encoder-schema16-cache
+	$(PYTHON_BIN) scripts/verify_encoder_continual_config.py
+
+encoder-schema16-retention: encoder-schema16-preflight
+	$(PYTHON_BIN) training/train_encoder.py \
+		--data data/experiments/schema15-legitimate-openings-dose16/processed \
+		--init-checkpoint artifacts/checkpoints/sg-modernbert-schema13-dose16 \
+		--teacher-logits data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl \
+		--teacher-manifest data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json \
+		--epochs 1 --learning-rate 5e-6 --batch-size 16 \
+		--dialogue-policy speaker-neutral-v1 \
+		--retention-weight 2 --retention-temperature 2 --source-balance-alpha 0.5 \
+		--output artifacts/checkpoints/sg-modernbert-schema16-retention-alpha05-w2 \
+		--report reports/runs/sg-modernbert-schema16-retention-alpha05-w2.json
+
 apptek-eval-schema13: apptek-callcenter
 	$(PYTHON_BIN) training/eval_encoder_external.py \
 		--checkpoint artifacts/checkpoints/sg-modernbert-schema13-dose16 \
@@ -160,6 +189,24 @@ apptek-eval-schema15: apptek-callcenter
 		--split apptek_call_selection --dialogue-policy speaker-neutral-v1 \
 		--report reports/runs/sg-modernbert-schema15-legitimate-openings-dose16.apptek-call-selection.json \
 		--predictions reports/runs/sg-modernbert-schema15-legitimate-openings-dose16.apptek-call-selection.predictions.jsonl
+
+apptek-eval-schema16: apptek-callcenter
+	$(PYTHON_BIN) training/eval_encoder_external.py \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema16-retention-alpha05-w2 \
+		--data data/external/apptek_callcenter/apptek_call_selection.jsonl \
+		--manifest data/external/apptek_callcenter/manifest.json \
+		--split apptek_call_selection --dialogue-policy speaker-neutral-v1 \
+		--report reports/runs/sg-modernbert-schema16-retention-alpha05-w2.apptek-call-selection.json \
+		--predictions reports/runs/sg-modernbert-schema16-retention-alpha05-w2.apptek-call-selection.predictions.jsonl
+
+youtube-eval-schema16: youtube-scam-calls
+	$(PYTHON_BIN) training/eval_encoder_external.py \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema16-retention-alpha05-w2 \
+		--data data/external/youtube_scam_calls/youtube_scam_validation.jsonl \
+		--manifest data/external/youtube_scam_calls/manifest.json \
+		--split youtube_scam_validation --dialogue-policy speaker-neutral-v1 \
+		--report reports/runs/sg-modernbert-schema16-retention-alpha05-w2.youtube-scam-validation.json \
+		--predictions reports/runs/sg-modernbert-schema16-retention-alpha05-w2.youtube-scam-validation.predictions.jsonl
 
 encoder-onnx-export:
 	$(PYTHON_BIN) scripts/export_encoder_onnx.py \

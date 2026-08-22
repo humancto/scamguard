@@ -17,7 +17,7 @@ import torch
 import torch.nn.functional as functional
 from scipy.optimize import minimize_scalar
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, WeightedRandomSampler
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -46,8 +46,10 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
         tokenizer: Any,
         max_length: int,
         dialogue_policy: str = "none",
+        teacher_logits: dict[str, tuple[float, float, float]] | None = None,
     ) -> None:
         self.rows = rows
+        self.teacher_logits = teacher_logits
         self.encodings = tokenizer(
             [prepare_model_text(str(row["text"]), dialogue_policy) for row in rows],
             max_length=max_length,
@@ -61,7 +63,83 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         item = {key: torch.tensor(values[index]) for key, values in self.encodings.items()}
         item["labels"] = torch.tensor(LABEL_TO_ID[str(self.rows[index]["label"])])
+        if self.teacher_logits is not None:
+            logits = self.teacher_logits.get(str(self.rows[index]["id"]))
+            item["teacher_logits"] = torch.tensor(logits or (0.0, 0.0, 0.0))
+            item["retention_mask"] = torch.tensor(float(logits is not None))
         return item
+
+
+def load_teacher_logits(
+    ledger_path: Path,
+    manifest_path: Path,
+) -> tuple[dict[str, tuple[float, float, float]], dict[str, object]]:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("ledger_sha256") != file_sha256(ledger_path):
+        raise ValueError("teacher-logit ledger differs from its manifest")
+    records = read_jsonl(ledger_path)
+    logits_by_id: dict[str, tuple[float, float, float]] = {}
+    for record in records:
+        if set(record) != {"id", "logits"}:
+            raise ValueError("teacher-logit record has an unexpected schema")
+        identifier = str(record["id"])
+        values = record["logits"]
+        if (
+            not identifier
+            or identifier in logits_by_id
+            or not isinstance(values, list)
+            or len(values) != len(LABELS)
+            or not all(isinstance(value, (int, float)) and math.isfinite(value) for value in values)
+        ):
+            raise ValueError(f"invalid teacher-logit record: {identifier!r}")
+        logits_by_id[identifier] = tuple(float(value) for value in values)  # type: ignore[assignment]
+    if manifest.get("rows") != len(logits_by_id):
+        raise ValueError("teacher-logit manifest row count differs from ledger")
+    return logits_by_id, manifest
+
+
+def source_sample_weights(
+    rows: list[dict[str, Any]], alpha: float
+) -> tuple[list[float], dict[str, float]]:
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError("source-balance alpha must be between zero and one")
+    counts = Counter(str(row["source"]) for row in rows)
+    weights = [counts[str(row["source"])] ** (-alpha) for row in rows]
+    total_weight = sum(weights)
+    probability = {
+        source: sum(
+            weight
+            for row, weight in zip(rows, weights, strict=True)
+            if str(row["source"]) == source
+        )
+        / total_weight
+        for source in sorted(counts)
+    }
+    return weights, probability
+
+
+def retention_kl_loss(
+    student_logits: torch.Tensor,
+    teacher_logits: torch.Tensor,
+    retention_mask: torch.Tensor,
+    temperature: float,
+) -> torch.Tensor:
+    selected = retention_mask.to(student_logits.device).bool()
+    if not selected.any():
+        return student_logits.sum() * 0.0
+    teacher_probabilities = functional.softmax(
+        teacher_logits.to(student_logits.device)[selected] / temperature,
+        dim=-1,
+    )
+    student_log_probabilities = functional.log_softmax(
+        student_logits[selected] / temperature,
+        dim=-1,
+    )
+    return functional.kl_div(
+        student_log_probabilities,
+        teacher_probabilities,
+        reduction="batchmean",
+    ) * (temperature**2)
 
 
 class WeightedTrainer(Trainer):
@@ -71,12 +149,35 @@ class WeightedTrainer(Trainer):
         class_weights: torch.Tensor,
         binary_loss_weight: float,
         binary_positive_weight: float,
+        retention_weight: float = 0.0,
+        retention_temperature: float = 2.0,
+        sample_weights: list[float] | None = None,
+        sampler_seed: int = 0,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.class_weights = class_weights
         self.binary_loss_weight = binary_loss_weight
         self.binary_positive_weight = binary_positive_weight
+        self.retention_weight = retention_weight
+        self.retention_temperature = retention_temperature
+        self.sample_weights = sample_weights
+        self.sampler_seed = sampler_seed
+
+    def _get_train_sampler(self, train_dataset: Dataset | None = None) -> Any:
+        if self.sample_weights is None:
+            return super()._get_train_sampler(train_dataset)
+        dataset = train_dataset or self.train_dataset
+        if dataset is None or len(dataset) != len(self.sample_weights):
+            raise ValueError("source-balanced sample weights differ from training dataset")
+        generator = torch.Generator()
+        generator.manual_seed(self.sampler_seed)
+        return WeightedRandomSampler(
+            self.sample_weights,
+            num_samples=len(self.sample_weights),
+            replacement=True,
+            generator=generator,
+        )
 
     def compute_loss(
         self,
@@ -86,6 +187,8 @@ class WeightedTrainer(Trainer):
         num_items_in_batch: torch.Tensor | None = None,
     ) -> torch.Tensor | tuple[torch.Tensor, Any]:
         labels = inputs.pop("labels")
+        teacher_logits = inputs.pop("teacher_logits", None)
+        retention_mask = inputs.pop("retention_mask", None)
         outputs = model(**inputs)
         multiclass_loss = functional.cross_entropy(
             outputs.logits,
@@ -109,6 +212,18 @@ class WeightedTrainer(Trainer):
             ),
         )
         loss = multiclass_loss + self.binary_loss_weight * binary_loss
+        # Retention is a training-only objective. Evaluation datasets intentionally contain no
+        # teacher fields so their metrics remain the ordinary supervised product contract.
+        if self.retention_weight and model.training:
+            if teacher_logits is None or retention_mask is None:
+                raise ValueError("retention loss requires teacher logits and a retention mask")
+            retention_loss = retention_kl_loss(
+                outputs.logits,
+                teacher_logits,
+                retention_mask,
+                self.retention_temperature,
+            )
+            loss = loss + self.retention_weight * retention_loss
         return (loss, outputs) if return_outputs else loss
 
 
@@ -383,6 +498,21 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--init-checkpoint",
+        type=Path,
+        help="Initialize a new continual-training run from this local classifier checkpoint.",
+    )
+    parser.add_argument(
+        "--teacher-logits",
+        type=Path,
+        help="Text-free JSONL teacher logits used to retain the prior decision boundary.",
+    )
+    parser.add_argument(
+        "--teacher-manifest",
+        type=Path,
+        help="Manifest pinning the teacher-logit ledger, source data, and checkpoint.",
+    )
+    parser.add_argument(
         "--report", type=Path, default=Path("reports/runs/sg-modernbert-schema9-safety.json")
     )
     parser.add_argument("--epochs", type=float, default=4.0)
@@ -398,6 +528,14 @@ def main() -> None:
     parser.add_argument("--dialogue-policy", choices=DIALOGUE_POLICIES, default="none")
     parser.add_argument("--max-fpr", type=float, default=0.02)
     parser.add_argument("--binary-loss-weight", type=float, default=1.0)
+    parser.add_argument("--retention-weight", type=float, default=0.0)
+    parser.add_argument("--retention-temperature", type=float, default=2.0)
+    parser.add_argument(
+        "--source-balance-alpha",
+        type=float,
+        default=0.0,
+        help="Per-row source weight is source_count ** -alpha; zero keeps random sampling.",
+    )
     parser.add_argument(
         "--binary-positive-weight",
         type=float,
@@ -416,8 +554,22 @@ def main() -> None:
         help="Recompute calibration and reports from the checkpoint already at --output.",
     )
     args = parser.parse_args()
-    if args.evaluate_only and args.resume_from_checkpoint:
-        parser.error("--resume-from-checkpoint cannot be combined with --evaluate-only")
+    if args.evaluate_only and (args.resume_from_checkpoint or args.init_checkpoint):
+        parser.error(
+            "--resume-from-checkpoint/--init-checkpoint cannot be combined with --evaluate-only"
+        )
+    if args.init_checkpoint and args.resume_from_checkpoint:
+        parser.error("--init-checkpoint and --resume-from-checkpoint are mutually exclusive")
+    if args.retention_weight < 0 or args.retention_temperature <= 0:
+        parser.error("retention weight must be nonnegative and temperature must be positive")
+    if not 0.0 <= args.source_balance_alpha <= 1.0:
+        parser.error("--source-balance-alpha must be between zero and one")
+    if args.retention_weight and not (
+        args.init_checkpoint and args.teacher_logits and args.teacher_manifest
+    ):
+        parser.error(
+            "retention loss requires --init-checkpoint, --teacher-logits, and --teacher-manifest"
+        )
     set_seed(args.seed)
 
     row_paths = {
@@ -454,6 +606,19 @@ def main() -> None:
         model = AutoModelForSequenceClassification.from_pretrained(
             load_path, local_files_only=True
         )
+    elif args.init_checkpoint:
+        if not args.init_checkpoint.is_dir():
+            raise FileNotFoundError(f"missing initialization checkpoint: {args.init_checkpoint}")
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.init_checkpoint,
+            local_files_only=True,
+        )
+        model = AutoModelForSequenceClassification.from_pretrained(
+            args.init_checkpoint,
+            local_files_only=True,
+        )
+        if args.gradient_checkpointing:
+            model.gradient_checkpointing_enable()
     else:
         tokenizer = AutoTokenizer.from_pretrained(args.model, revision=args.revision)
         model = AutoModelForSequenceClassification.from_pretrained(
@@ -465,15 +630,43 @@ def main() -> None:
         )
         if args.gradient_checkpointing:
             model.gradient_checkpointing_enable()
-    datasets = {
-        split: EncodedDataset(
+    teacher_logits: dict[str, tuple[float, float, float]] | None = None
+    teacher_manifest: dict[str, object] | None = None
+    if args.teacher_logits or args.teacher_manifest:
+        if not args.teacher_logits or not args.teacher_manifest:
+            parser.error("--teacher-logits and --teacher-manifest must be provided together")
+        teacher_logits, teacher_manifest = load_teacher_logits(
+            args.teacher_logits,
+            args.teacher_manifest,
+        )
+        train_ids = {str(row["id"]) for row in rows["train"]}
+        unexpected_teacher_ids = set(teacher_logits) - train_ids
+        if unexpected_teacher_ids:
+            raise ValueError(
+                f"teacher ledger contains {len(unexpected_teacher_ids)} IDs outside training data"
+            )
+        if args.init_checkpoint:
+            init_model_file = args.init_checkpoint / "model.safetensors"
+            if not init_model_file.is_file():
+                init_model_file = args.init_checkpoint / "pytorch_model.bin"
+            if teacher_manifest.get("checkpoint_model_sha256") != file_sha256(init_model_file):
+                raise ValueError("teacher ledger checkpoint differs from initialization model")
+    datasets = {}
+    for split, split_rows in rows.items():
+        datasets[split] = EncodedDataset(
             split_rows,
             tokenizer,
             args.max_length,
             dialogue_policy=args.dialogue_policy,
+            teacher_logits=teacher_logits if split == "train" else None,
         )
-        for split, split_rows in rows.items()
-    }
+
+    sample_weights: list[float] | None = None
+    source_sampling_probability: dict[str, float] | None = None
+    if args.source_balance_alpha:
+        sample_weights, source_sampling_probability = source_sample_weights(
+            rows["train"], args.source_balance_alpha
+        )
 
     counts = Counter(str(row["label"]) for row in rows["train"])
     total = sum(counts.values())
@@ -502,7 +695,12 @@ def main() -> None:
         greater_is_better=True,
         save_total_limit=1,
         report_to=[],
-        train_sampling_strategy="random" if args.evaluate_only else "group_by_length",
+        remove_unused_columns=False,
+        train_sampling_strategy=(
+            "random"
+            if args.evaluate_only or args.source_balance_alpha
+            else "group_by_length"
+        ),
         seed=args.seed,
         data_seed=args.seed,
     )
@@ -531,6 +729,10 @@ def main() -> None:
         class_weights=weights,
         binary_loss_weight=args.binary_loss_weight,
         binary_positive_weight=binary_positive_weight,
+        retention_weight=args.retention_weight,
+        retention_temperature=args.retention_temperature,
+        sample_weights=sample_weights,
+        sampler_seed=args.seed,
     )
     if args.evaluate_only:
         previous = json.loads(args.report.read_text()) if args.report.exists() else {}
@@ -602,6 +804,15 @@ def main() -> None:
             "binary": "SCAM versus logsumexp(SAFE, UNCERTAIN) BCEWithLogits",
             "binary_loss_weight": args.binary_loss_weight,
             "binary_positive_weight": binary_positive_weight,
+            "initialization_checkpoint": (
+                str(args.init_checkpoint) if args.init_checkpoint else None
+            ),
+            "retention_weight": args.retention_weight,
+            "retention_temperature": args.retention_temperature,
+            "teacher_logit_manifest": teacher_manifest,
+            "teacher_anchor_rows": len(teacher_logits or {}),
+            "source_balance_alpha": args.source_balance_alpha,
+            "source_sampling_probability": source_sampling_probability,
             "checkpoint_selection": "development recall at the configured maximum FPR",
             "gradient_accumulation": args.gradient_accumulation,
             "gradient_checkpointing": args.gradient_checkpointing,

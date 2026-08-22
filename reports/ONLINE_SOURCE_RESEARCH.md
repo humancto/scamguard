@@ -161,6 +161,20 @@ The completed correction is rejected: AppTek FPR remains 15.52%, unchanged-regre
 18.84%, and BothBosu records 69.50% recall / 35.29% FPR. This is evidence against simply increasing
 the same synthetic SAFE dose; it does not justify opening the sealed AppTek partition.
 
+### 2026-08-21 GitHub and Hub refresh
+
+| Candidate | Current evidence | Decision |
+|---|---|---|
+| [ThaiScamCall](https://huggingface.co/datasets/Paam1/ThaiScamCall) | CC-BY-4.0 and Thai, but the card says the calls are AI-generated scripted TTS. The current Hub viewer exposes 100 rows while the card claims 21,287 audio clips. | Do not count as real calls or text-training data. Revisit only as an audio-robustness candidate after the release shape, scripts, and transcript availability are reconciled with native-language review. |
+| [Vietnamese scam dialogues](https://huggingface.co/datasets/adamtc/scam_dialogues) | Apache-2.0, 3,840 rows, explicitly synthetic, with long generated dialogue plus generated explanations. The card does not identify a generator, prompt, revision, or independent label audit. | Do not fit. It may become a multilingual synthetic diagnostic after native review, generator provenance, family clustering, and overlap checks against known synthetic dialogue releases. |
+| [FraudLens-RU v1](https://huggingface.co/datasets/Abdurohman/fraudlens-ru-v1) | CC-BY-4.0, 6,330 Russian rows from nine public anti-fraud channels, with article/post text, summaries, and analyst-style fraud taxonomy. The examples are educational reports, not message-local victim communications or call transcripts. | Taxonomy research only. Do not let educational phrases become an easy SCAM shortcut or count the rows as real scam conversations. Source-level rights and duplication still require audit. |
+| [Korean voice-phishing GitHub fork](https://github.com/kimdesok/Text-classification-of-voice-phishing-transcipts) | Claims 2,927 call transcripts and sub-10-ms inference, but the repository exposes no dataset license and says required source text files are not provided there. The reported benign and scam classes also come from different source domains. | Reject for training and headline comparison. Repository-code licensing cannot grant rights to missing underlying transcripts, and the source/label confound makes the reported latency/accuracy non-comparable. |
+
+The refresh does not change the rights-clean source decision. It supports a small, controlled
+structure-matched increment over bulk ingestion. Schema v17 therefore adds 576 balanced original
+minimal-pair training rows and holds 192 paired rows out by complete service scenario; see
+[`DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md`](DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md).
+
 ## Audited but rejected or quarantined
 
 | Candidate | Finding | Decision |
@@ -179,7 +193,8 @@ the same synthetic SAFE dose; it does not justify opening the sealed AppTek part
 | [FraudSMSWalker](https://arxiv.org/abs/2606.16659) | Strong new 699-chain bilingual SMS-to-webpage benchmark with 367 hard benign cases, but it evaluates sanitized webpage evidence as well as SMS and currently points to an anonymous artifact without a verified release license. | Track as a cross-channel external benchmark; do not merge it into message-only training or current ScamBench scores. |
 | [COVA-X / ScamLingua](https://scamlingua.org/) | Approximately 11,000 fully synthetic multi-turn conversations generated with Qwen 2.5 14B. Access is by request, noncommercial-research-only, and redistribution is prohibited. | Valuable future research comparison, but reject for the distributable product corpus. The admitted Apache-2.0 dialogue diagnostic supplies a reproducible first stress test. |
 
-Direct Reddit collection remains off-limits under Reddit's current
+Direct Reddit collection remains off-limits under Reddit's Data API Terms, last revised July 20,
+2026. The current
 [Data API Terms](https://redditinc.com/policies/data-api-terms). Public discussions may guide the
 threat taxonomy, but individual content is not copied into the corpus. The IMC 2025 release is the
 approved forum-derived source because its researchers handled collection, labeling, release rights,
@@ -199,8 +214,8 @@ inflating metrics and teaching shortcuts. Current status and next actions are:
    selection slice before any new dialogue training run.
 5. Audit ES-Port as a possible authentic Spanish SAFE-call source, but do not admit it until privacy,
    weak-label, language-shortcut, and share-alike questions are resolved.
-6. Do not escalate the rejected schema-v15 synthetic SAFE dose. Test a source-balanced paired or
-   distillation objective with regression-logit retention before collecting more of the same form.
+6. Use schema v17's 576 family-split structure-matched rows with a pair-aware objective and
+   schema-v13 logit retention; do not repeat schema v16's generic source-balancing formulation.
 7. Measure the fast encoder and any Qwen fallback separately; do not represent 4B generation
    latency as a sub-20-ms mobile detector.
 

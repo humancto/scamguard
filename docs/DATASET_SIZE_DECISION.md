@@ -25,6 +25,22 @@ The completed run is rejected: AppTek FPR is 15.52%, unchanged-regression FPR is
 BothBosu selection result is 69.50% recall / 35.29% FPR. The smaller 8.91% schema-v13 AppTek FPR
 remains the stronger baseline, though it also fails the 2% gate.
 
+Schema v16 adds **zero rows**. It trains one epoch on the same 14,479-row schema-v15 corpus from the
+schema-v13 checkpoint, uses text-free frozen logits on the 14,062 inherited rows, and square-root
+source balancing. The formulation improves unchanged-regression FPR from schema v15's 18.84% to
+3.15%, but it still fails the 2% cap and raises AppTek FPR to 30.17%. Its high YouTube and BothBosu
+scam recall comes with 69.93% BothBosu SAFE FPR. This rejects further dose tuning of the same
+independent-row curriculum; the next justified data budget is paired structure-matched minimal
+contrasts, followed by independent review and family-held evaluation.
+
+Schema v17 is that predeclared data increment: **14,799 training examples** plus a separate
+**192-row paired validation diagnostic**, for **28,670 unique processed examples**. It starts from
+schema v14 and adds 288 balanced training pairs (576 rows), not the rejected schema-v15 SAFE dose.
+Every pair shares four turns and changes only the final action across 16 scenarios, four call
+structures, and six risk mechanisms. Four entire scenarios supply 96 unseen validation pairs.
+This is the smallest complete scenario × structure × mechanism matrix; no paraphrase replicas are
+authorized before the first pair-aware, retention-controlled run.
+
 Schema v12's 23,798-row core and named diagnostics contain three explicit provenance tiers: 13,127
 naturally occurring licensed-source rows, 600 human-authored crowdsourced roleplay dialogues, and
 10,071 controlled synthetic rows. Schema v13 has the same 13,127 licensed-natural and 600

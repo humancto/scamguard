@@ -47,6 +47,7 @@ fitting row and did not refit calibration or thresholds.
 | schema 13 dose-16 | 31 / 348 | 8.91% (6.35–12.37%) | 31 / 174 | 0 / 174 | reject |
 | schema 14 natural dialogue | 77 / 348 | 22.13% (18.08–26.78%) | 77 / 174 | 0 / 174 | reject |
 | schema 15 legitimate openings | 54 / 348 | 15.52% (12.09–19.70%) | 53 / 174 | 1 / 174 | reject |
+| schema 16 continual retention | 105 / 348 | 30.17% (25.59–35.19%) | 105 / 174 | 0 / 174 | reject |
 
 Schema 14's positive-only real scam-call increment made legitimate openings substantially worse.
 All 108 false alarms across the two candidates occur in early windows, while both produce zero
@@ -77,6 +78,14 @@ recall / 35.29% SAFE FPR. YouTube-call recall remains 100% and Taskmaster remain
 narrow successes cannot compensate for the safety regressions. Schema 15 and its increment are
 rejected; see [`DATASET_SCHEMA15_LEGITIMATE_OPENINGS.md`](DATASET_SCHEMA15_LEGITIMATE_OPENINGS.md).
 
+Schema 16 changes the learning formulation without adding rows: it initializes from schema 13,
+retains schema-13 logits on all inherited rows, and applies square-root source balancing to the
+fixed schema-15 corpus. It improves unchanged-regression FPR to 3.15% and reaches 98.57% YouTube
+call recall, but worsens AppTek to 30.17% FPR. All 105 false alarms occur in early openings. This
+rejects source balancing plus generic retention as a sufficient correction and motivates
+structure-matched scam/legitimate minimal contrasts. See
+[`ENCODER_SCHEMA16_RETENTION.md`](ENCODER_SCHEMA16_RETENTION.md).
+
 ## Reproduction
 
 ```bash
@@ -86,6 +95,9 @@ make apptek-eval-schema14
 make schema15-legitimate-openings
 make encoder-schema15-legitimate-openings
 make apptek-eval-schema15
+make encoder-schema16-retention
+make apptek-eval-schema16
+make youtube-eval-schema16
 ```
 
 Generated/raw/model artifacts are ignored by Git. The repository publishes acquisition,

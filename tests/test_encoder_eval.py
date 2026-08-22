@@ -1,11 +1,36 @@
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
+import torch
 
+from scamguard.metrics import file_sha256
 from training.eval_encoder_external import metadata_slices
-from training.train_encoder import predict_in_dataset_order, safety_selection_metrics
+from training.train_encoder import (
+    WeightedTrainer,
+    load_teacher_logits,
+    predict_in_dataset_order,
+    retention_kl_loss,
+    safety_selection_metrics,
+    source_sample_weights,
+)
+
+
+class StubClassifier(torch.nn.Module):
+    def forward(self, input_ids: torch.Tensor) -> SimpleNamespace:
+        return SimpleNamespace(logits=input_ids.to(torch.float32))
+
+
+def bare_weighted_trainer() -> WeightedTrainer:
+    trainer = WeightedTrainer.__new__(WeightedTrainer)
+    trainer.class_weights = torch.ones(3)
+    trainer.binary_loss_weight = 1.0
+    trainer.binary_positive_weight = 1.0
+    trainer.retention_weight = 2.0
+    trainer.retention_temperature = 2.0
+    return trainer
 
 
 class StubTrainer:
@@ -93,3 +118,92 @@ def test_external_metadata_slices_are_text_free() -> None:
     serialized = json.dumps(slices)
     assert "private fixture phrase" not in serialized
     assert "by_language" not in serialized
+
+
+def test_source_balance_uses_sqrt_source_mass_at_alpha_half() -> None:
+    rows = [
+        {"source": "large"},
+        {"source": "large"},
+        {"source": "large"},
+        {"source": "large"},
+        {"source": "small"},
+    ]
+
+    weights, probability = source_sample_weights(rows, alpha=0.5)
+
+    assert weights == [0.5, 0.5, 0.5, 0.5, 1.0]
+    assert probability == pytest.approx({"large": 2 / 3, "small": 1 / 3})
+
+
+def test_retention_kl_uses_only_anchored_rows() -> None:
+    teacher = torch.tensor([[3.0, 0.0, -1.0], [0.0, 0.0, 3.0]])
+    student = teacher.clone()
+    student[1] = torch.tensor([3.0, 0.0, -1.0])
+
+    anchored_first = retention_kl_loss(
+        student,
+        teacher,
+        torch.tensor([1.0, 0.0]),
+        temperature=2.0,
+    )
+    anchored_both = retention_kl_loss(
+        student,
+        teacher,
+        torch.tensor([1.0, 1.0]),
+        temperature=2.0,
+    )
+
+    assert anchored_first.item() == pytest.approx(0.0, abs=1e-6)
+    assert anchored_both.item() > 0.1
+
+
+def test_weighted_trainer_skips_retention_for_teacher_free_evaluation() -> None:
+    trainer = bare_weighted_trainer()
+    model = StubClassifier()
+    model.eval()
+
+    loss = trainer.compute_loss(
+        model,
+        {
+            "input_ids": torch.tensor([[3.0, 0.0, -1.0]]),
+            "labels": torch.tensor([0]),
+        },
+    )
+
+    assert torch.isfinite(loss)
+
+
+def test_weighted_trainer_requires_teacher_fields_during_retention_training() -> None:
+    trainer = bare_weighted_trainer()
+    model = StubClassifier()
+    model.train()
+
+    with pytest.raises(ValueError, match="retention loss requires teacher logits"):
+        trainer.compute_loss(
+            model,
+            {
+                "input_ids": torch.tensor([[3.0, 0.0, -1.0]]),
+                "labels": torch.tensor([0]),
+            },
+        )
+
+
+def test_teacher_logit_ledger_is_hash_and_schema_pinned(tmp_path: Path) -> None:
+    ledger = tmp_path / "teacher.jsonl"
+    ledger.write_text(
+        json.dumps({"id": "one", "logits": [1.0, 0.0, -1.0]}) + "\n",
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps({"rows": 1, "ledger_sha256": file_sha256(ledger)}),
+        encoding="utf-8",
+    )
+
+    values, loaded_manifest = load_teacher_logits(ledger, manifest)
+
+    assert values == {"one": (1.0, 0.0, -1.0)}
+    assert loaded_manifest["rows"] == 1
+    ledger.write_text(ledger.read_text() + "{}\n")
+    with pytest.raises(ValueError, match="differs from its manifest"):
+        load_teacher_logits(ledger, manifest)

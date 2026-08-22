@@ -62,6 +62,7 @@ SYNTHETIC_METHODS = {
     "deterministic_service_dialogue_error_audit_grounded_original_copy",
     "paired_deterministic_slot_filling_original_advisory_grounded_copy",
     "paired_deterministic_slot_filling_error_audit_grounded_original_copy",
+    "paired_call_structure_minimal_contrast_advisory_grounded_original_copy",
 }
 TRUSTED_POSITIVE_ONLY_SOURCES = {
     "youtube_scam_calls_cc0": {
@@ -253,6 +254,8 @@ def main() -> None:
     ]
     if (args.data / "ood_azsc.jsonl").is_file():
         split_names.append("ood_azsc")
+    if (args.data / "call_pair_validation.jsonl").is_file():
+        split_names.append("call_pair_validation")
     rows_by_split = {split: read_rows(args.data / f"{split}.jsonl") for split in split_names}
     errors: list[str] = []
     manifest = json.loads((args.data / "manifest.json").read_text(encoding="utf-8"))
@@ -271,7 +274,7 @@ def main() -> None:
             "ood"
             if split.startswith("ood_")
             else "validation"
-            if split == "forum_validation"
+            if split.endswith("_validation")
             else split
         )
         labels = Counter(str(row.get("label")) for row in rows)

@@ -177,6 +177,20 @@ contains no explicit anti-scam safety cues, and leaves AppTek's 1,396-window OOD
 That experiment is also rejected: it lowers AppTek FPR relative to schema v14 but remains worse
 than schema v13, while unchanged-regression FPR rises to 18.84%. No export or sealed evaluation is
 performed for schema v15.
+Schema v16 changes the objective without adding rows: it initializes from schema v13, preserves
+schema-v13 logits on all 14,062 inherited examples, and square-root balances the fixed schema-v15
+sources. It improves development and unchanged-regression behavior, but is still rejected: AppTek
+SAFE FPR rises to 30.17%, BothBosu SAFE FPR rises to 69.93%, and desktop CPU end-to-end p95 is
+32.31 ms. The result proves that retention and source balancing do not remove the call-opening
+shortcut. No export or sealed evaluation is performed; the next increment must use
+structure-matched minimal contrasts. See
+[`reports/ENCODER_SCHEMA16_RETENTION.md`](reports/ENCODER_SCHEMA16_RETENTION.md).
+Schema v17 is the frozen next-data increment, not a model claim. It starts again from schema v14 and
+adds 576 balanced structure-matched minimal-contrast rows: each pair shares four call turns and
+changes only the final legitimate/risky action. Another 192 rows are held out by four complete
+service scenarios. The resulting 14,799-row training set validates at 28,670 unique processed rows;
+all new dialogues fit within 114 ModernBERT tokens. See
+[`reports/DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md`](reports/DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md).
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are

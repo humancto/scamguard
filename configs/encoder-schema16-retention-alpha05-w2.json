@@ -1,0 +1,85 @@
+{
+  "experiment_id": "sg-modernbert-schema16-retention-alpha05-w2",
+  "training_recipe_version": 16,
+  "predeclared_before_training": true,
+  "role": "continual call-language learner with schema-13 regression retention",
+  "initialization": {
+    "checkpoint": "artifacts/checkpoints/sg-modernbert-schema13-dose16",
+    "model_sha256": "31b4d17cf752e6d79319506c62f0cc8e406ddb70d317fae0421672f7854f2d99"
+  },
+  "data": {
+    "directory": "data/experiments/schema15-legitimate-openings-dose16/processed",
+    "schema_version": 15,
+    "manifest_sha256": "aa24e34b48c58d1fbdeb1854c6dd261828891e764302381ebf5c59f1786ac9bf",
+    "train_sha256": "4d0f03a946d407f81a354911a8da68f1c2b8e84c2fc00943da454317f3057214",
+    "dev_sha256": "5b1bbf05c56d917d150a93147cf4e6913e6389f6a6e1a734b235cafc882c6b03",
+    "test_sha256": "c55b396197575d32936a44c5432e6adc85b21cdb6f442fb663c760cd026dc554",
+    "train_rows": 14479,
+    "new_supervised_rows": {
+      "youtube_scam_calls_cc0": 161,
+      "scamguard_synthetic_legitimate_call_openings_v1": 256
+    }
+  },
+  "teacher": {
+    "ledger": "data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl",
+    "ledger_sha256": "5a718418debb2897f1078e43724d2ee9a072bb9725bb66aff53d3fa191b591a3",
+    "manifest": "data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json",
+    "manifest_sha256": "c8699f153567fd062c1fbd927dd9cdcf49013b0861448fefe467706e6dc5a36a",
+    "anchor_rows": 14062,
+    "contains_text": false
+  },
+  "training": {
+    "epochs": 1.0,
+    "batch_size": 16,
+    "gradient_accumulation": 1,
+    "learning_rate": 0.000005,
+    "max_length": 256,
+    "dialogue_policy": "speaker-neutral-v1",
+    "binary_loss_weight": 1.0,
+    "retention_weight": 2.0,
+    "retention_temperature": 2.0,
+    "source_balance_alpha": 0.5,
+    "seed": 20260820,
+    "checkpoint_selection": "development recall at the frozen 2-percent FPR cap"
+  },
+  "expected_sampling_probability": {
+    "imc25_public_forum_smishing": 0.10871226937542809,
+    "mendeley_sms_phishing": 0.20391679078220948,
+    "scamguard_synthetic_counterfactual_v1": 0.03481578998209657,
+    "scamguard_synthetic_dialogue_v2": 0.11898490424064025,
+    "scamguard_synthetic_legitimate_call_openings_v1": 0.049236962377414234,
+    "scamguard_synthetic_v5": 0.19800284919036318,
+    "taskmaster1_woz_dialogues": 0.07537839644329788,
+    "uci_sms_spam": 0.03731040269601688,
+    "wspr_sms_phishing": 0.13459494647611456,
+    "youtube_scam_calls_cc0": 0.03904668843637597
+  },
+  "evaluation_policy": {
+    "threshold_source": "unchanged development SAFE/SCAM rows only",
+    "permitted_selection": [
+      "youtube_scam_validation",
+      "apptek_call_selection",
+      "scam_dialogue_validation",
+      "taskmaster_validation"
+    ],
+    "sealed_not_opened": [
+      "primary_test_v8",
+      "ood_scam_dialogue",
+      "youtube_scam_ood",
+      "apptek_call_ood"
+    ]
+  },
+  "acceptance": {
+    "development_recall_min": 0.97,
+    "development_fpr_max": 0.02,
+    "regression_recall_min": 0.97,
+    "regression_fpr_max": 0.02,
+    "apptek_selection_fpr_must_beat": 0.08908045977011494,
+    "youtube_selection_recall_min": 0.97,
+    "bothbosu_selection_recall_min": 0.97,
+    "bothbosu_selection_fpr_max": 0.02,
+    "taskmaster_selection_fpr_max": 0.02,
+    "desktop_end_to_end_p95_ms_max": 20.0
+  },
+  "failure_policy": "reject without export or sealed evaluation if any acceptance gate fails"
+}
