@@ -108,7 +108,7 @@ def main() -> None:
         candidates = np.flatnonzero(owner_array == row_index)
         best_ordinal = int(np.argmax(turn_probabilities[candidates, 2]))
         best = int(candidates[best_ordinal])
-        selected_logits[row_index] = turn_logits[best]
+        selected_logits[row_index] = turn_logits[best, : len(LABELS)]
         selected_turn_ordinal[row_index] = best_ordinal
 
     manifest = None

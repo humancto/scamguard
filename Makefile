@@ -1,4 +1,4 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
 
 PYTHON_BIN ?= .venv/bin/python
 
@@ -196,6 +196,24 @@ schema21-human-calls: schema20-action-states harper-valley
 		--expected-schema-version 21 --sealed-data data/processed \
 		--data data/experiments/schema21-human-calls/processed
 
+multidogo: schema20-action-states
+	$(PYTHON_BIN) scripts/fetch_multidogo.py
+	@if [ -f data/external/multidogo/manifest.json ]; then \
+		echo "Reusing immutable MultiDoGO derivative; manifest will be rechecked"; \
+	else \
+		$(PYTHON_BIN) scripts/build_multidogo_dialogues.py; \
+	fi
+
+schema22-service-evidence: schema20-action-states multidogo
+	@if [ -f data/experiments/schema22-service-evidence/processed/manifest.json ]; then \
+		echo "Reusing immutable schema-v22 experiment; validation will recheck it"; \
+	else \
+		$(PYTHON_BIN) scripts/build_schema22_service_evidence.py; \
+	fi
+	$(PYTHON_BIN) scripts/validate_dataset.py \
+		--expected-schema-version 22 --sealed-data data/processed \
+		--data data/experiments/schema22-service-evidence/processed
+
 encoder-schema16-cache:
 	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps
 
@@ -295,6 +313,28 @@ encoder-schema21-human-calls: encoder-schema21-preflight
 		--action-loss-weight 0.5 --action-verdict-weight 0.25 \
 		--output artifacts/checkpoints/sg-modernbert-schema21-human-calls-actionheads-ret4-aw05-vw025-left \
 		--report reports/runs/sg-modernbert-schema21-human-calls-actionheads-ret4-aw05-vw025-left.json
+
+encoder-schema22-preflight: schema22-service-evidence encoder-schema16-cache
+	$(PYTHON_BIN) scripts/verify_encoder_schema22_config.py
+
+encoder-schema22-service-evidence: encoder-schema22-preflight
+	$(PYTHON_BIN) training/train_encoder.py \
+		--data data/experiments/schema22-service-evidence/processed \
+		--init-checkpoint artifacts/checkpoints/sg-modernbert-schema13-dose16 \
+		--teacher-logits data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl \
+		--teacher-manifest data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json \
+		--epochs 1 --learning-rate 5e-6 --batch-size 16 \
+		--truncation-side left --dialogue-policy speaker-neutral-v1 \
+		--retention-weight 4 --retention-temperature 2 \
+		--action-targets sensitive_action_language,requested_disclosure_or_transfer,caller_controls_target,official_self_navigation,independent_verification,pressure_or_secrecy,irreversible_action \
+		--action-loss-weight 0.5 --action-verdict-weight 0.25 \
+		--output artifacts/checkpoints/sg-modernbert-schema22-service-evidence-actionheads-ret4-aw05-vw025-left \
+		--report reports/runs/sg-modernbert-schema22-service-evidence-actionheads-ret4-aw05-vw025-left.json
+	$(MAKE) encoder-schema22-gates
+
+encoder-schema22-gates:
+	$(PYTHON_BIN) scripts/check_encoder_schema22_gates.py \
+		--output reports/runs/sg-modernbert-schema22-service-evidence-actionheads-ret4-aw05-vw025-left.gates.json
 
 apptek-eval-schema13: apptek-callcenter
 	$(PYTHON_BIN) training/eval_encoder_external.py \

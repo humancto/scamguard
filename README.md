@@ -25,7 +25,9 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v17 pair retention) | rejected paired-action ablation | 602.0 MB training artifact | BothBosu recall reached 98.58%, but SAFE FPR was 23.53% and held-pair recall was 70.83%; rejected |
 | ModernBERT-base, 149M (schema v18 action retention) | rejected stronger paired-action ablation | 602.0 MB training artifact | held pairs reached 100% recall / 0% FPR, but regression FPR was 2.23% and BothBosu was 73.76% recall / 15.69% FPR |
 | ModernBERT-base, 149M (schema v19 long windows) | rejected length-matched call ablation | 602.0 MB training artifact | long pairs and Taskmaster passed, but regression FPR was 3.15% and BothBosu was 92.91% recall / 42.48% FPR; 21.51 ms PyTorch p95 |
-| ModernBERT-base, 149M (schema v20 action states) | next multi-task teacher experiment | not trained | frozen 21,234-row data mix separates action evidence from verification/context before student compression |
+| ModernBERT-base, 149M (schema v20 action states) | rejected multi-task teacher | 602.0 MB training artifact | dev/regression and controlled states passed, but BothBosu was 93.62% recall / 42.48% FPR; rejected |
+| ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
+| ModernBERT-base, 149M (schema v22 service evidence) | frozen quality-teacher experiment | not trained | 24,208 rows; bounded MultiDoGO roleplay plus insurance/software held-domain action states |
 | Qwen3.5-0.8B, 4-bit | compact schema/explanation specialist | about 0.6 GB | compression challenger |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
@@ -66,7 +68,10 @@ The successive pair, long-window, and action-state decisions are in
 [reports/ENCODER_SCHEMA17_PAIR_RETENTION.md](reports/ENCODER_SCHEMA17_PAIR_RETENTION.md),
 [reports/ENCODER_SCHEMA18_ACTION_RETENTION.md](reports/ENCODER_SCHEMA18_ACTION_RETENTION.md),
 [reports/ENCODER_SCHEMA19_WINDOWMIX.md](reports/ENCODER_SCHEMA19_WINDOWMIX.md), and
-[reports/DATASET_SCHEMA20_ACTION_STATES.md](reports/DATASET_SCHEMA20_ACTION_STATES.md).
+[reports/DATASET_SCHEMA20_ACTION_STATES.md](reports/DATASET_SCHEMA20_ACTION_STATES.md). The rejected
+human-call ablation and the bounded schema-v22 service-evidence replacement are in
+[reports/ENCODER_SCHEMA21_HUMAN_CALLS.md](reports/ENCODER_SCHEMA21_HUMAN_CALLS.md) and
+[reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md](reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
 
 ## Quick start
 
@@ -163,7 +168,9 @@ government-benefit identity theft, family-bail secrecy, and reshipping jobs. A d
 Synthetic dialogue v2 adds 12 balanced scam/legitimate scenarios after the first dialogue
 correction exposed a source-format shortcut. A versioned speaker-neutral transform removes corpus
 role-name cues and retains complete recent turns. The external BothBosu OOD partition and the
-1,820-row MOZ holdout remain prediction-sealed.
+1,820-row MOZ holdout were initially prediction-sealed. BothBosu was later opened for model-error
+diagnosis and is now reported only as a prior-open regression diagnostic; the MOZ holdout remains
+sealed.
 Synthetic counterfactual v1 adds 512 balanced train-only messages in eight paired families after
 schema v11's frozen regression ledger exposed false alarms on known-contact transfers, ordinary
 family updates, in-platform marketplace activity, and official-app reviews. The scam counterparts
@@ -208,6 +215,13 @@ verified SAFE, unresolved UNCERTAIN, or caller-controlled SCAM actions. Seven de
 targets support a multi-task teacher; 2,048 rows from four complete service domains remain held out.
 The full frozen composition, hashes, source rights, and latency rationale are in
 [`reports/DATASET_SCHEMA20_ACTION_STATES.md`](reports/DATASET_SCHEMA20_ACTION_STATES.md).
+Schema v21 then added a full-weight HarperValleyBank roleplay dose. It passed controlled states but
+failed unchanged-regression, original-call, and BothBosu gates, so no export or sealed evaluation
+was run. Schema v22 returns to schema v20 and adds 1,790 licensed MultiDoGO human-authored service
+views plus 1,184 human-grounded state variants. Action states train on airline, fast food, finance,
+and media while insurance and software stay validation-only. The 24,208-row teacher recipe and all
+source, overlap, token-window, and gate identities are frozen in
+[`reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md`](reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are

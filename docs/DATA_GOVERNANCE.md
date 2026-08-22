@@ -39,12 +39,13 @@ deduplication, clustering, or splitting, then independently fails validation if 
 retains one of the prohibited patterns. This also reduces contact-value memorization as a shortcut.
 
 Schema v12 introduced explicit generation methods and authoritative pattern-reference URLs on
-synthetic rows. The active schema-v21 training experiment contains 8,134 naturally occurring
-licensed-source or real-scam-call-derived rows, 2,262 human-authored or human-spoken roleplays, and
-16,183 controlled synthetic rows. The roleplay tier is never described as naturally occurring
-communication or independently scam-labelled. Taskmaster and HarperValleyBank original calls have
-weak legitimate-domain SAFE labels; the matched Harper final-turn transformations remain synthetic
-in all accounting.
+synthetic rows. The frozen schema-v22 training experiment contains 8,134 naturally occurring
+licensed-source or real-scam-call-derived rows, 2,983 human-authored roleplays, and 13,091
+controlled synthetic rows. The roleplay tier is never described as naturally occurring
+communication or independently scam-labelled. Taskmaster and MultiDoGO original dialogues have
+weak legitimate-domain SAFE labels; every matched state transformation remains synthetic in all
+accounting. Schema v22 starts from the safer schema-v20 parent after schema v21's full-weight
+HarperValleyBank dose was rejected for regression and call false positives.
 
 HarperValleyBank is pinned by Git revision, license hash, complete transcript-tree hash, and
 complete metadata-tree hash. Only transcripts and metadata are acquired. Six entire banking tasks
@@ -52,10 +53,18 @@ and 1,069 calls enter training; two other tasks and 377 calls remain validation-
 transformed versions stay in the same call family. See
 `reports/DATASET_SCHEMA21_HUMAN_CALLS.md` for the frozen hashes, counts, and experiment gates.
 
+MultiDoGO is pinned by Git revision, license hash, and the combined SHA-256 of six raw domain
+files. A deterministic per-domain audit pool is exact/near-template clustered before sampling;
+one representative per family survives. The schema-v22 state curriculum trains on four service
+domains while insurance and software remain validation-only. Original rows and derived states
+stay in the same conversation family, and any family with a near match to a schema-v20 artifact is
+removed in full. See `reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md` for the frozen contract.
+
 A newly sourced 1,820-row schema-v8 holdout remains prediction-sealed and excluded from training
 and public redistribution. The 677-row Chichewa and 1,343-row BothBosu multi-turn artifacts are
-external diagnostics. The latter is entirely synthetic: 294 rows may inform candidate selection,
-while 1,049 families remain prediction-sealed. Neither increases the licensed-real total.
+external diagnostics. The latter is entirely synthetic and was opened during earlier model
+diagnosis; schema v22 therefore records it as a prior-open regression diagnostic, not untouched
+evidence. Neither increases the licensed-real total.
 
 ## Near-template isolation
 

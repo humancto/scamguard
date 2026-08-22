@@ -1,0 +1,71 @@
+{
+  "candidate": "data/external/multidogo/multidogo_call_validation.jsonl",
+  "candidate_rows": 896,
+  "empty_or_unlabeled_rows_dropped": 0,
+  "labels": {
+    "SAFE": 896
+  },
+  "privacy_findings_after_normalization": {
+    "rows_with_email": 0,
+    "rows_with_long_digit_sequence": 0,
+    "rows_with_phone_like": 0
+  },
+  "privacy_findings_before_normalization": {
+    "rows_with_email": 0,
+    "rows_with_long_digit_sequence": 0,
+    "rows_with_phone_like": 0
+  },
+  "reference": {
+    "directory": "data/experiments/schema20-action-states/processed",
+    "exact_overlap_rows": 0,
+    "near_hamming_max": 6,
+    "near_overlap_rows_including_exact": 0,
+    "overlap_by_file": {
+      "call_state_validation.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "call_window_validation.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "dev.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "forum_validation.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "ood_azsc.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "ood_financial.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "ood_forum.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "ood_wspr.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "test.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      },
+      "train.jsonl": {
+        "exact_overlap_rows": 0,
+        "near_overlap_rows_including_exact": 0
+      }
+    },
+    "rows": 37408
+  },
+  "within_candidate": {
+    "exact_conflicting_label_groups": 0,
+    "exact_duplicate_rows": 0
+  }
+}

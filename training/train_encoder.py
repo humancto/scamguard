@@ -689,6 +689,22 @@ def report_slice(
                     threshold,
                     include_sources=False,
                 )
+        if any(row.get("source_domain") for row in rows):
+            domains = sorted({str(row.get("source_domain")) for row in rows})
+            result["by_source_domain"] = {}
+            for domain in domains:
+                indices = [
+                    index
+                    for index, row in enumerate(rows)
+                    if str(row.get("source_domain")) == domain
+                ]
+                result["by_source_domain"][domain] = report_slice(
+                    [rows[index] for index in indices],
+                    logits[indices],
+                    temperature,
+                    threshold,
+                    include_sources=False,
+                )
     return result
 
 
@@ -755,6 +771,7 @@ def action_target_metrics(
     predicted = probabilities >= 0.5
     target_reports: dict[str, Any] = {}
     f1_values: list[float] = []
+    roc_auc_values: list[float] = []
     for target_index, name in enumerate(action_target_names):
         target_truth = truth[:, target_index]
         target_predicted = predicted[:, target_index]
@@ -766,6 +783,13 @@ def action_target_metrics(
         recall = tp / (tp + fn) if tp + fn else 0.0
         f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
         f1_values.append(f1)
+        roc_auc = (
+            float(roc_auc_score(target_truth, probabilities[:, target_index]))
+            if len(np.unique(target_truth)) == 2
+            else None
+        )
+        if roc_auc is not None:
+            roc_auc_values.append(roc_auc)
         target_reports[name] = {
             "positives": int(target_truth.sum()),
             "negatives": int(len(target_truth) - target_truth.sum()),
@@ -776,16 +800,13 @@ def action_target_metrics(
             "precision_at_0_5": precision,
             "recall_at_0_5": recall,
             "f1_at_0_5": f1,
-            "roc_auc": (
-                float(roc_auc_score(target_truth, probabilities[:, target_index]))
-                if len(np.unique(target_truth)) == 2
-                else None
-            ),
+            "roc_auc": roc_auc,
         }
     return {
         "examples": len(indices),
         "exact_match_at_0_5": float(np.mean(np.all(predicted == truth, axis=1))),
         "macro_f1_at_0_5": float(np.mean(f1_values)),
+        "macro_roc_auc": float(np.mean(roc_auc_values)) if roc_auc_values else None,
         "targets": target_reports,
     }
 
@@ -1079,7 +1100,12 @@ def main() -> None:
     call_state_validation_path = args.data / "call_state_validation.jsonl"
     if call_state_validation_path.exists():
         row_paths["call_state_validation"] = call_state_validation_path
-    for split in ("harper_call_validation", "harper_state_validation"):
+    for split in (
+        "harper_call_validation",
+        "harper_state_validation",
+        "multidogo_call_validation",
+        "multidogo_state_validation",
+    ):
         path = args.data / f"{split}.jsonl"
         if path.exists():
             row_paths[split] = path
@@ -1440,6 +1466,8 @@ def main() -> None:
         "call_state_validation",
         "harper_call_validation",
         "harper_state_validation",
+        "multidogo_call_validation",
+        "multidogo_state_validation",
     ):
         if split not in rows:
             continue
@@ -1481,6 +1509,22 @@ def main() -> None:
             action_state_verdict_metrics(
                 rows["harper_state_validation"],
                 predictions["harper_state_validation"],
+                temperature,
+                threshold,
+            )
+        )
+    if "multidogo_state_validation" in rows:
+        result["multidogo_state_validation"]["action_target_metrics"] = (
+            action_target_metrics(
+                rows["multidogo_state_validation"],
+                predictions["multidogo_state_validation"],
+                action_target_names,
+            )
+        )
+        result["multidogo_state_validation"]["state_verdict_metrics"] = (
+            action_state_verdict_metrics(
+                rows["multidogo_state_validation"],
+                predictions["multidogo_state_validation"],
                 temperature,
                 threshold,
             )

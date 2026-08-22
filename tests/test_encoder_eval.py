@@ -21,6 +21,7 @@ from training.train_encoder import (
     paired_validation_metrics,
     pairwise_scam_margin_loss,
     predict_in_dataset_order,
+    report_slice,
     retention_kl_loss,
     safety_selection_metrics,
     source_sample_weights,
@@ -204,6 +205,38 @@ def test_external_action_target_names_follow_classifier_order() -> None:
     ]
 
 
+def test_report_slice_includes_source_domain_false_positive_breakdown() -> None:
+    rows = [
+        {
+            "text": "routine airline service",
+            "label": "SAFE",
+            "category": "NONE",
+            "source": "fixture",
+            "source_domain": "airline",
+        },
+        {
+            "text": "routine airline service falsely flagged",
+            "label": "SAFE",
+            "category": "NONE",
+            "source": "fixture",
+            "source_domain": "airline",
+        },
+        {
+            "text": "routine software service",
+            "label": "SAFE",
+            "category": "NONE",
+            "source": "fixture",
+            "source_domain": "software",
+        },
+    ]
+    logits = np.array([[5.0, 0.0, 0.0], [0.0, 0.0, 5.0], [5.0, 0.0, 0.0]])
+
+    report = report_slice(rows, logits, temperature=1.0, threshold=0.5)
+
+    assert report["by_source_domain"]["airline"]["binary_safety"]["fp"] == 1
+    assert report["by_source_domain"]["software"]["binary_safety"]["fp"] == 0
+
+
 def test_source_balance_uses_sqrt_source_mass_at_alpha_half() -> None:
     rows = [
         {"source": "large"},
@@ -290,6 +323,7 @@ def test_action_target_metrics_report_each_dense_head() -> None:
     assert metrics["examples"] == 2
     assert metrics["exact_match_at_0_5"] == 1.0
     assert metrics["macro_f1_at_0_5"] == 1.0
+    assert metrics["macro_roc_auc"] == 1.0
     assert all(report["roc_auc"] == 1.0 for report in metrics["targets"].values())
 
 

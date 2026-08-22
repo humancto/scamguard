@@ -14,6 +14,7 @@ uses for the downloaded files.
 | [NCSU WSPR SMS Phishing](https://github.com/wspr-ncsu/sms-phishing/commit/ef7da01dfc145ce283a2af380e5dd8b817191ee7) | 68,029 reports | MIT | one example per near-template campaign cluster; 1,913 training rows and a 488-row no-SAFE holdout |
 | [IMC 2025 Public-Forum Smishing](https://github.com/reportsmishing/Smishing-Dataset-IMC25/tree/a6175560b57387199871e51fbef6bc523d2516b4) | 33,869 labeled reports | CC-BY-4.0 | 1,248 train, 1,125 selection-only validation, and 2,300 unseen-family OOD rows after filtering |
 | [Google Taskmaster-1 WOz dialogues](https://github.com/google-research-datasets/Taskmaster/tree/d92cb6af3005f1dc09c39e75e7daf4a04905e00b/TM-1-2019) | 5,507 two-person dialogues | CC-BY-4.0 | 600 privacy-normalized, human-authored weak SAFE training windows and 450 disjoint selection windows; not counted as naturally occurring communications |
+| [AWS MultiDoGO](https://github.com/awslabs/multi-domain-goal-oriented-dialogues-dataset/tree/baa30639c4b271f394b81443c842193407cdf26d) | 86,719 human-human service roleplays | CDLA-Permissive-1.0 | schema-v22 adds 1,790 weak-SAFE training views from 895 families and 1,184 controlled state derivatives; insurance/software states remain validation-only |
 | [YouTube Scam Phone Call Transcripts v2](https://www.kaggle.com/datasets/rivalcults/youtube-scam-phone-call-transcripts) | 243 partial transcripts / 222 source URLs | CC0-1.0 | 161 early windows in rejected schema-v14 ablation, 70 family-held selection windows, and 80 prediction-sealed OOD windows; counted only as real scam-call-derived language |
 | [AppTek Call-Center Dialogues](https://huggingface.co/datasets/apptek-com/apptek_callcenter_dialogues) | 873 spontaneous service-call roleplays | CC-BY-SA-4.0 | evaluation only: 348 open and 1,396 prediction-sealed SAFE windows split by shared-speaker/call components; no audio and zero fitting rows |
 | [AZ-SC Azerbaijani SMS Collection](https://doi.org/10.25045/jpit.v17.i1.04) | 4,538 | CC-BY-4.0 | new multilingual OOD diagnostic only; never fitting or selection |
@@ -67,7 +68,9 @@ keeps 1,049 rows prediction-sealed. Their artifact SHA-256 values are
 `c473c94a6d3cc7b6c114c5e6b29f86a31e454310558f5282d9c1133bb51741a0` and
 `33d480aa505f16014e18a7193f379b618e7a9feeb90262c93e77433c022c1193`, respectively.
 It is external synthetic evidence only: it cannot increase the licensed-real count, fit a threshold,
-or enter training. Its local manifest is generated at `data/external/scam_dialogue/manifest.json`.
+or enter training. Earlier model-error analysis opened both partitions, so schema v22 treats the
+artifact as a prior-open regression diagnostic rather than untouched evidence. Its local manifest
+is generated at `data/external/scam_dialogue/manifest.json`.
 
 Taskmaster-1 supplies the legitimate conversation shape missing from the original short-message
 curriculum. Only its two-person Wizard-of-Oz subset is admitted. Each context is capped at complete
@@ -84,6 +87,16 @@ At model input, multi-party dialogue roles are mapped by first appearance to com
 (`A:`, `B:`, and so on). The transform activates only for at least four recognized turns and two
 distinct speakers, so ordinary short messages remain byte-for-byte unchanged. All 5,507 eligible
 Taskmaster dialogues fit below 150 tokens after the complete-recent-turn cap.
+
+MultiDoGO supplies licensed human-authored service dialogue across airline, fast food, finance,
+insurance, media, and software. ScamGuard first filters source structure, then exact/near-template
+clusters a deterministic 3,000-conversation audit pool per domain and retains one representative
+per family. Each admitted conversation contributes a recent-context view and a frozen-lexicon
+highest-risk agent-turn view. The original rows are weak SAFE roleplay, not naturally occurring
+customer records. Four-state derivatives remain synthetic; their action-state train domains are
+disjoint from held-out insurance and software. Whole families are removed if any view is near a
+schema-v20 artifact. See
+[`reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md`](../reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
 
 ## Sealed evaluation-only source
 

@@ -41,8 +41,30 @@ except ModuleNotFoundError:  # Direct `python scripts/audit_source_overlap.py` e
 
 def read_candidate(path: Path, text_column: str, label_column: str) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
+    if path.suffix.casefold() == ".jsonl":
+        with path.open(encoding="utf-8", errors="replace") as handle:
+            source_rows = [json.loads(line) for line in handle if line.strip()]
+        for source_row in source_rows:
+            if not isinstance(source_row, dict):
+                raise ValueError("JSONL candidate rows must be objects")
+            text_value = source_row.get(text_column)
+            label_value = source_row.get(label_column)
+            raw_text = clean_text(text_value) if isinstance(text_value, str) else ""
+            label = clean_text(label_value) if isinstance(label_value, str) else ""
+            if raw_text and label:
+                rows.append(
+                    {
+                        "raw_text": raw_text,
+                        "text": privacy_normalize_real_text(raw_text),
+                        "label": label,
+                    }
+                )
+        return rows
+    if path.suffix.casefold() not in {".csv", ".tsv"}:
+        raise ValueError(f"unsupported candidate format: {path.suffix}")
+    delimiter = "\t" if path.suffix.casefold() == ".tsv" else ","
     with path.open(encoding="utf-8-sig", errors="replace", newline="") as handle:
-        for source_row in csv.DictReader(handle):
+        for source_row in csv.DictReader(handle, delimiter=delimiter):
             raw_text = clean_text(source_row.get(text_column, ""))
             label = clean_text(source_row.get(label_column, ""))
             if raw_text and label:
@@ -73,17 +95,21 @@ def read_reference_rows(directory: Path) -> list[dict[str, object]]:
 def near_overlap_indices(
     candidate_rows: list[dict[str, str]], reference_rows: list[dict[str, object]], radius: int
 ) -> set[int]:
-    reference_signatures = [
-        simhash64(family_skeleton(str(row["text"]))) for row in reference_rows
-    ]
+    candidate_signatures = [simhash64(family_skeleton(row["text"])) for row in candidate_rows]
+    reference_signatures = [simhash64(family_skeleton(str(row["text"]))) for row in reference_rows]
+    return near_overlap_signatures(candidate_signatures, reference_signatures, radius)
+
+
+def near_overlap_signatures(
+    candidate_signatures: list[int], reference_signatures: list[int], radius: int
+) -> set[int]:
     buckets: defaultdict[tuple[int, int], list[int]] = defaultdict(list)
     for index, signature in enumerate(reference_signatures):
         for key in simhash_bands(signature, max_hamming=radius):
             buckets[key].append(index)
 
     overlaps: set[int] = set()
-    for candidate_index, row in enumerate(candidate_rows):
-        signature = simhash64(family_skeleton(row["text"]))
+    for candidate_index, signature in enumerate(candidate_signatures):
         candidates: set[int] = set()
         for key in simhash_bands(signature, max_hamming=radius):
             candidates.update(buckets[key])
@@ -113,17 +139,33 @@ def main() -> None:
 
     exact_reference_keys = {normalized(str(row["text"])) for row in reference_rows}
     exact_overlap = sum(normalized(row["text"]) in exact_reference_keys for row in candidate_rows)
-    near_overlaps = near_overlap_indices(candidate_rows, reference_rows, args.near_hamming)
+    candidate_signatures = [
+        simhash64(family_skeleton(row["text"])) for row in candidate_rows
+    ]
+    reference_signatures = [
+        simhash64(family_skeleton(str(row["text"]))) for row in reference_rows
+    ]
+    near_overlaps = near_overlap_signatures(
+        candidate_signatures, reference_signatures, args.near_hamming
+    )
     overlap_by_file: dict[str, dict[str, int]] = {}
     for filename in sorted({str(row["_audit_file"]) for row in reference_rows}):
-        file_rows = [row for row in reference_rows if row["_audit_file"] == filename]
+        file_indexes = [
+            index
+            for index, row in enumerate(reference_rows)
+            if row["_audit_file"] == filename
+        ]
+        file_rows = [reference_rows[index] for index in file_indexes]
+        file_signatures = [reference_signatures[index] for index in file_indexes]
         file_keys = {normalized(str(row["text"])) for row in file_rows}
         overlap_by_file[filename] = {
             "exact_overlap_rows": sum(
                 normalized(row["text"]) in file_keys for row in candidate_rows
             ),
             "near_overlap_rows_including_exact": len(
-                near_overlap_indices(candidate_rows, file_rows, args.near_hamming)
+                near_overlap_signatures(
+                    candidate_signatures, file_signatures, args.near_hamming
+                )
             ),
         }
     exact_duplicate_rows = sum(len(rows) - 1 for rows in normalized_groups.values())

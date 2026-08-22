@@ -152,6 +152,34 @@ This is a bounded response to schema 20's external error ledger, not an invitati
 available service dialogue. It adds authentic conversational rhythm and sensitive legitimate
 actions while preserving interpretable task-disjoint measurement.
 
+### MultiDoGO: admitted human-authored service evidence
+
+- Primary repository:
+  <https://github.com/awslabs/multi-domain-goal-oriented-dialogues-dataset>
+- Paper: <https://aclanthology.org/D19-1460/>
+- License: CDLA-Permissive-1.0
+- Pinned revision: `baa30639c4b271f394b81443c842193407cdf26d`
+- Provenance: human customers roleplayed six service domains with trained human agents. These are
+  human-authored conversations, not naturally occurring customer-support logs.
+- Raw scope: 86,719 conversations; 84,129 pass frozen structural quality filters. The fetcher
+  acquires only six dialogue files, README, notice, and license; no audio.
+- Template control: a deterministic 18,000-conversation audit pool collapses to 3,485 exact/near-
+  template representatives before sampling. One source conversation may enter only one split.
+- Admission: 1,790 weak-SAFE training views from 895 families and 896 validation views from 448
+  disjoint families. Another 1,184 train and 592 validation rows are controlled four-state
+  derivatives and remain synthetic in all accounting.
+- Domain holdout: action states train on airline, fast food, finance, and media; insurance and
+  software are validation-only. Five train and two validation families were removed because a view
+  was near a schema-v20 artifact.
+- Decision: admit as schema v22's bounded service-dialogue increment. Original rows use half verdict
+  weight and weak auxiliary action labels; the experiment starts from the safer schema-v20 parent.
+  See `DATASET_SCHEMA22_SERVICE_EVIDENCE.md` for exact hashes and gates.
+
+MultiDoGO was selected over broad Schema-Guided Dialogue ingestion because its trained-agent roleplay
+more directly matches ScamGuard's unresolved gap: sensitive but legitimate service actions. The
+bounded family sample makes failure attribution possible and avoids turning repeated service scripts
+into an inflated data-volume claim.
+
 The repository now includes a pinned CC0 fetcher/builder for the YouTube-call source, plus the
 pinned gated TeleAntiFraud fetcher and text-free admission auditor. The YouTube builder rejects
 unsafe ZIP members, validates the exact publisher schema and character lengths, masks privacy-like

@@ -41,6 +41,23 @@ structures, and six risk mechanisms. Four entire scenarios supply 96 unseen vali
 This is the smallest complete scenario × structure × mechanism matrix; no paraphrase replicas are
 authorized before the first pair-aware, retention-controlled run.
 
+Schema v22 is the current frozen quality-teacher experiment: **24,208 training examples** and
+**41,870 unique validated examples** across development, regression, diagnostics, and the still-
+sealed primary test. It returns to the safer 21,234-row schema-v20 parent, then adds 1,790 licensed
+MultiDoGO human-authored service views and 1,184 controlled state derivatives. The increment is not
+the full 84,129-conversation eligible source. A deterministic 18,000-conversation audit pool is
+exact/near-template clustered to 3,485 representatives before a bounded 895-family train sample and
+448-family validation sample are selected. This makes the new source large enough to cover six
+service domains but small enough that the 14,062 retained parent rows still anchor the verdict
+boundary.
+
+The state budget is 296 train families and 148 held-domain families, with four states per family.
+Airline, fast food, finance, and media supply state training; insurance and software supply only
+state validation. This domain holdout is more informative than adding thousands of repeated SAFE
+service scripts. The 256-token deployed window is checked independently: every decisive state line
+must survive left truncation before training can start. See
+[`reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md`](../reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
+
 Schema v12's 23,798-row core and named diagnostics contain three explicit provenance tiers: 13,127
 naturally occurring licensed-source rows, 600 human-authored crowdsourced roleplay dialogues, and
 10,071 controlled synthetic rows. Schema v13 has the same 13,127 licensed-natural and 600
