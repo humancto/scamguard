@@ -87,13 +87,7 @@ def validate_schema24_manifest(manifest: dict[str, Any], processed: Path) -> Non
     increment = manifest.get("schema24_increment")
     if not isinstance(increment, dict):
         raise ValueError("schema-v24 manifest lacks its annotation increment")
-    required_true = (
-        "independent_human_label_audit_passed",
-        "paper_dev_test_rows_used_for_fitting",
-    )
-    if increment.get(required_true[0]) is not True:
-        raise ValueError("schema-v24 independent human label audit has not passed")
-    if increment.get(required_true[1]) is not False:
+    if increment.get("paper_dev_test_rows_used_for_fitting") is not False:
         raise ValueError("schema-v24 paper dev/test rows must remain outside fitting")
     for field in ("annotation_train_rows", "annotation_dev_rows", "annotation_test_rows"):
         value = increment.get(field)
@@ -133,9 +127,27 @@ def validate_token_audit(
         raise ValueError("Qwen token audit report is missing")
 
 
+def validate_label_audit(
+    report: dict[str, Any], report_path: Path, data_manifest_path: Path
+) -> None:
+    if (
+        report.get("release_gate_passed") is not True
+        or report.get("rows") != report.get("complete_rows")
+        or report.get("incorrect_label_rows") != 0
+        or report.get("sensitive_data_rows") != 0
+        or report.get("errors") != []
+    ):
+        raise ValueError("schema-v24 independent human label audit has not passed")
+    if report.get("data_manifest_sha256") != file_sha256(data_manifest_path):
+        raise ValueError("schema-v24 label audit is not bound to this data manifest")
+    if not report_path.is_file():
+        raise ValueError("schema-v24 label audit report is missing")
+
+
 def freeze(
     processed: Path,
     token_audit_path: Path,
+    label_audit_path: Path,
     output: Path,
     checkpoint_output: Path,
     experiment_id: str,
@@ -154,6 +166,8 @@ def freeze(
         raise ValueError("schema-v24 manifest counts differ from Qwen SFT data")
     token_audit = json.loads(token_audit_path.read_text(encoding="utf-8"))
     validate_token_audit(token_audit, token_audit_path, sft_audit)
+    label_audit = json.loads(label_audit_path.read_text(encoding="utf-8"))
+    validate_label_audit(label_audit, label_audit_path, manifest_path)
 
     evaluation = {
         f"{path.stem}_sha256": file_sha256(path)
@@ -212,6 +226,14 @@ def freeze(
                 "full_over_max_length": token_audit["full_over_max_length"],
                 "minimum_supervised_tokens": token_audit["supervised_tokens"]["min"],
             },
+            "label_audit": {
+                "report_path": str(label_audit_path),
+                "report_sha256": file_sha256(label_audit_path),
+                "rows": label_audit["rows"],
+                "agreement": label_audit["agreement"],
+                "release_gate_passed": label_audit["release_gate_passed"],
+                "data_manifest_sha256": label_audit["data_manifest_sha256"],
+            },
             "evidence_audit": {
                 "train_dev_scam_examples": sft_audit["train_dev_scam_examples"],
                 "with_verbatim_evidence": sft_audit["with_verbatim_evidence"],
@@ -228,6 +250,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--processed", type=Path, required=True)
     parser.add_argument("--token-audit", type=Path, required=True)
+    parser.add_argument("--label-audit", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--checkpoint-output", type=Path, required=True)
     parser.add_argument("--experiment-id", required=True)
@@ -237,6 +260,7 @@ def main() -> None:
             freeze(
                 args.processed,
                 args.token_audit,
+                args.label_audit,
                 args.output,
                 args.checkpoint_output,
                 args.experiment_id,

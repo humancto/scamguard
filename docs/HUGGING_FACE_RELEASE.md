@@ -30,6 +30,10 @@ label audits are frozen.
    config or smoke reports.
 
    ```bash
+   make schema24-annotated-hard-negatives
+   make schema24-audit
+   # An independent reviewer completes data/audit/schema24-label-audit.csv.
+   make schema24-audit-check
    make qwen-08b-full-data
    make qwen-08b-full-token-audit
    make qwen-08b-full-freeze

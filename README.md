@@ -248,7 +248,12 @@ The pending schema-v24 path begins with `make multidogo-annotation-curriculum`. 
 pinned publisher intent/slot files and their text-free alignment audit, preserves both the existing
 ScamGuard family boundary and the publisher's train/dev/test boundary, and stratifies difficult
 legitimate-service examples without misrepresenting intent labels as independently reviewed scam
-labels. The target currently fails closed because the annotation blobs have not been materialized.
+labels. `make schema24-annotated-hard-negatives` then removes parent/held collisions and whole
+families with exact or radius-six near overlap before admitting publisher-train rows. The separate
+`schema24-audit` workbook is bound to that exact manifest; after human review,
+`schema24-audit-check` rejects every incomplete decision, label disagreement, sensitive-data
+finding, workbook change, or dataset change. The first target currently fails closed because the
+annotation blobs have not been materialized.
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are

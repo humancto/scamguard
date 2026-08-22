@@ -53,6 +53,8 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
     dev.write_text('{"id":"dev-1"}\n', encoding="utf-8")
     token_audit = tmp_path / "token-audit.json"
     token_audit.write_text('{"full_over_max_length":0}', encoding="utf-8")
+    label_audit = tmp_path / "label-audit.json"
+    label_audit.write_text('{"release_gate_passed":true}', encoding="utf-8")
     output = tmp_path / "checkpoint"
     args = argparse.Namespace(
         model="Qwen/Qwen3.5-0.8B",
@@ -109,6 +111,12 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
                 "minimum_supervised_tokens": 8,
             },
             "evidence_audit": {"coverage": 1.0},
+            "label_audit": {
+                "report_path": str(label_audit),
+                "report_sha256": file_sha256(label_audit),
+                "release_gate_passed": True,
+                "data_manifest_sha256": file_sha256(manifest),
+            },
         },
     }
     return args, config

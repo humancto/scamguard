@@ -59,3 +59,45 @@ def test_audit_summary_rejects_inconsistent_correctness(tmp_path: Path) -> None:
 
     assert errors
     assert not summary["release_gate_passed"]
+
+
+def test_audit_summary_rejects_confirmed_label_error(tmp_path: Path) -> None:
+    path = tmp_path / "audit.csv"
+    write_audit(
+        path,
+        [
+            {
+                "label": "SCAM",
+                "auditor_label": "SAFE",
+                "label_correct": "no",
+                "contains_sensitive_data": "no",
+            }
+        ],
+    )
+
+    summary, errors = audit_summary(path)
+
+    assert not errors
+    assert summary["incorrect_label_rows"] == 1
+    assert not summary["release_gate_passed"]
+
+
+def test_audit_summary_rejects_sensitive_data(tmp_path: Path) -> None:
+    path = tmp_path / "audit.csv"
+    write_audit(
+        path,
+        [
+            {
+                "label": "SAFE",
+                "auditor_label": "SAFE",
+                "label_correct": "yes",
+                "contains_sensitive_data": "yes",
+            }
+        ],
+    )
+
+    summary, errors = audit_summary(path)
+
+    assert not errors
+    assert summary["sensitive_data_rows"] == 1
+    assert not summary["release_gate_passed"]

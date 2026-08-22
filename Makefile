@@ -1,10 +1,11 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
 QWEN08_FULL_CONFIG ?= configs/qwen35-08b-schema24-lora.json
 QWEN08_FULL_OUTPUT ?= artifacts/checkpoints/qwen35-08b-schema24-lora
 QWEN08_FULL_TOKEN_AUDIT ?= reports/runs/qwen35-08b-schema24-token-audit.json
+QWEN08_FULL_LABEL_AUDIT ?= reports/data/schema24-label-audit-completion.json
 
 install:
 	uv sync --extra train --extra dev
@@ -235,6 +236,32 @@ schema23-evidence-compaction: schema20-action-states multidogo
 	$(PYTHON_BIN) scripts/validate_dataset.py \
 		--expected-schema-version 23 --sealed-data data/processed \
 		--data data/experiments/schema23-evidence-compaction/processed
+
+schema24-annotated-hard-negatives: schema23-evidence-compaction multidogo-annotation-curriculum
+	@if [ -f $(QWEN08_FULL_DATA)/manifest.json ]; then \
+		echo "Reusing immutable schema-v24 experiment; validation will recheck it"; \
+	else \
+		$(PYTHON_BIN) scripts/build_schema24_annotated_hard_negatives.py \
+			--output "$(QWEN08_FULL_DATA)"; \
+	fi
+	$(PYTHON_BIN) scripts/validate_dataset.py \
+		--expected-schema-version 24 --sealed-data data/processed \
+		--data "$(QWEN08_FULL_DATA)"
+
+schema24-audit: schema24-annotated-hard-negatives
+	$(PYTHON_BIN) scripts/create_audit_sample.py \
+		--data "$(QWEN08_FULL_DATA)" \
+		--output data/audit/schema24-label-audit.csv \
+		--manifest-output data/audit/schema24-label-audit.manifest.json \
+		--seed scamguard-schema24-audit-v1 \
+		--extra-split multidogo_annotation_dev \
+		--extra-split multidogo_annotation_test
+
+schema24-audit-check:
+	$(PYTHON_BIN) scripts/check_audit_completion.py \
+		--audit data/audit/schema24-label-audit.csv \
+		--audit-manifest data/audit/schema24-label-audit.manifest.json \
+		--output "$(QWEN08_FULL_LABEL_AUDIT)"
 
 encoder-schema16-cache:
 	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps
@@ -606,9 +633,10 @@ qwen-08b-full-token-audit: qwen-08b-full-data
 		--data "$(QWEN08_FULL_DATA)/qwen_sft" --max-length 512 \
 		--output "$(QWEN08_FULL_TOKEN_AUDIT)"
 
-qwen-08b-full-freeze: qwen-08b-full-token-audit
+qwen-08b-full-freeze: qwen-08b-full-token-audit schema24-audit-check
 	uv run --extra train --extra qwen python scripts/freeze_qwen08_full_experiment.py \
 		--processed "$(QWEN08_FULL_DATA)" --token-audit "$(QWEN08_FULL_TOKEN_AUDIT)" \
+		--label-audit "$(QWEN08_FULL_LABEL_AUDIT)" \
 		--output "$(QWEN08_FULL_CONFIG)" --checkpoint-output "$(QWEN08_FULL_OUTPUT)" \
 		--experiment-id sg-qwen35-08b-schema24-full-v1
 

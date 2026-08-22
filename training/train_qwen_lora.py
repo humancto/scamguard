@@ -148,6 +148,19 @@ def experiment_config_errors(args: argparse.Namespace, config: dict[str, Any]) -
         evidence_audit = data.get("evidence_audit")
         if not isinstance(evidence_audit, dict) or evidence_audit.get("coverage") != 1.0:
             errors.append("full run requires complete verbatim-evidence coverage")
+        label_audit = data.get("label_audit")
+        if not isinstance(label_audit, dict):
+            errors.append("full run requires an independent label-audit declaration")
+        else:
+            label_report = Path(str(label_audit.get("report_path", "")))
+            if not label_report.is_file():
+                errors.append(f"missing frozen label audit: {label_report}")
+            elif sha256(label_report) != label_audit.get("report_sha256"):
+                errors.append(f"label audit hash mismatch: {label_report}")
+            if label_audit.get("release_gate_passed") is not True:
+                errors.append("full run label audit release gate is not passed")
+            if label_audit.get("data_manifest_sha256") != data.get("manifest_sha256"):
+                errors.append("full run label audit is bound to a different data manifest")
     return errors
 
 
