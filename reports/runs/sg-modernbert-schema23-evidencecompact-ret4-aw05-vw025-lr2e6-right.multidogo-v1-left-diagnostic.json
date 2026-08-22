@@ -1,0 +1,1817 @@
+{
+  "model_id": "sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right",
+  "checkpoint": "artifacts/checkpoints/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right",
+  "checkpoint_model_sha256": "20f9287fb5c0fff238d0a64710d6bb1557a94ce75afc9b9d7f02ca2b29febc57",
+  "checkpoint_artifact_bytes": 602057462,
+  "calibration_sha256": "a383f4ac1a609ee7b93fb52ee2bc6b2d883cf4380d005fd19daeeb048f2c3a14",
+  "calibration": {
+    "model_id": "sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right",
+    "temperature": 3.169781859545115,
+    "scam_threshold": 0.2490113079547882,
+    "safe_threshold": 0.2,
+    "labels": [
+      "SAFE",
+      "UNCERTAIN",
+      "SCAM"
+    ],
+    "threshold_source": "dev SAFE/SCAM only",
+    "action_thresholds": {
+      "sensitive_action_language": 0.23074362429957082,
+      "requested_disclosure_or_transfer": 0.4750039880214475,
+      "caller_controls_target": 0.8944227774293143,
+      "official_self_navigation": 0.6989943117387111,
+      "independent_verification": 0.8546500932386284,
+      "pressure_or_secrecy": 0.8698250732226805,
+      "irreversible_action": 0.7418042450969613
+    },
+    "action_threshold_source": "family-disjoint action_calibration rows only",
+    "input_transform": {
+      "dialogue_policy": "speaker-neutral-evidence-recent-v2",
+      "truncation_side": "right",
+      "max_length": 256
+    }
+  },
+  "split": "multidogo-call-schema23-v1-left-diagnostic",
+  "data_sha256": "f3cda50dbff1d077c12b6a81e71df383df5d57d88fa93d65ee59c7d91cbbd8ff",
+  "external_manifest": null,
+  "data_use": "diagnostic only; no fitting or threshold selection",
+  "input_transform": {
+    "dialogue_policy": "speaker-neutral-v1"
+  },
+  "sequence_window": {
+    "max_tokens": 256,
+    "truncated_examples": 130,
+    "truncated_fraction": 0.14508928571428573,
+    "token_length_p50": 76,
+    "token_length_p95": 311,
+    "token_length_max": 354,
+    "truncation_side": "left"
+  },
+  "environment": {
+    "python_arch": "arm64",
+    "torch": "2.13.0",
+    "device": "mps",
+    "mps_available": true,
+    "batch_size": 32
+  },
+  "metrics": {
+    "examples": 896,
+    "labels": {
+      "SAFE": 896
+    },
+    "accuracy_argmax": 0.8136160714285714,
+    "macro_f1_argmax": 0.2990769230769231,
+    "confusion_argmax": [
+      [
+        729,
+        4,
+        163
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "binary_safety": {
+      "threshold": 0.2490113079547882,
+      "scam_precision": 0.0,
+      "scam_precision_ci95": [
+        0.0,
+        0.012519360439290965
+      ],
+      "scam_recall": 0.0,
+      "scam_recall_ci95": [
+        0.0,
+        1.0
+      ],
+      "scam_f1": 0.0,
+      "false_positive_rate": 0.33816964285714285,
+      "false_positive_rate_ci95": [
+        0.3079423039820815,
+        0.3697787021381906
+      ],
+      "brier": 0.12134180217981339,
+      "ece_15": 0.2343523898161948,
+      "tn": 593,
+      "fp": 303,
+      "fn": 0,
+      "tp": 0
+    },
+    "scam_by_category": {},
+    "by_language": {
+      "English": {
+        "examples": 896,
+        "labels": {
+          "SAFE": 896
+        },
+        "accuracy_argmax": 0.8136160714285714,
+        "macro_f1_argmax": 0.2990769230769231,
+        "confusion_argmax": [
+          [
+            729,
+            4,
+            163
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.012519360439290965
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.33816964285714285,
+          "false_positive_rate_ci95": [
+            0.3079423039820815,
+            0.3697787021381906
+          ],
+          "brier": 0.12134180217981339,
+          "ece_15": 0.2343523898161948,
+          "tn": 593,
+          "fp": 303,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      }
+    },
+    "by_source_domain": {
+      "airline": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.8933333333333333,
+        "macro_f1_argmax": 0.3145539906103286,
+        "confusion_argmax": [
+          [
+            134,
+            0,
+            16
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.09890099232440402
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.23333333333333334,
+          "false_positive_rate_ci95": [
+            0.17282631511397295,
+            0.3071578152156679
+          ],
+          "brier": 0.07664595544338226,
+          "ece_15": 0.16400347888469696,
+          "tn": 115,
+          "fp": 35,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      },
+      "fastfood": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.8533333333333334,
+        "macro_f1_argmax": 0.30695443645083936,
+        "confusion_argmax": [
+          [
+            128,
+            1,
+            21
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.07707356308558039
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.30666666666666664,
+          "false_positive_rate_ci95": [
+            0.23847004316661521,
+            0.3845184513223743
+          ],
+          "brier": 0.09264745563268661,
+          "ece_15": 0.1953995539123813,
+          "tn": 104,
+          "fp": 46,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      },
+      "finance": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.7933333333333333,
+        "macro_f1_argmax": 0.2949194547707559,
+        "confusion_argmax": [
+          [
+            119,
+            0,
+            31
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.061129370526788386
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.3933333333333333,
+          "false_positive_rate_ci95": [
+            0.318759856976774,
+            0.47323379515508224
+          ],
+          "brier": 0.14571179449558258,
+          "ece_15": 0.27633225490649543,
+          "tn": 91,
+          "fp": 59,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      },
+      "insurance": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.7,
+        "macro_f1_argmax": 0.2745098039215686,
+        "confusion_argmax": [
+          [
+            105,
+            0,
+            45
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.05747119958885172
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.42,
+          "false_positive_rate_ci95": [
+            0.3439800445299174,
+            0.5000151945689748
+          ],
+          "brier": 0.18478474020957947,
+          "ece_15": 0.310724923113982,
+          "tn": 87,
+          "fp": 63,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      },
+      "media": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.8533333333333334,
+        "macro_f1_argmax": 0.30695443645083936,
+        "confusion_argmax": [
+          [
+            128,
+            1,
+            21
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.07707356308558039
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.30666666666666664,
+          "false_positive_rate_ci95": [
+            0.23847004316661521,
+            0.3845184513223743
+          ],
+          "brier": 0.10852471739053726,
+          "ece_15": 0.2155262257655462,
+          "tn": 104,
+          "fp": 46,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      },
+      "software": {
+        "examples": 146,
+        "labels": {
+          "SAFE": 146
+        },
+        "accuracy_argmax": 0.7876712328767124,
+        "macro_f1_argmax": 0.2937420178799489,
+        "confusion_argmax": [
+          [
+            115,
+            2,
+            29
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.0664135880908964
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.3698630136986301,
+          "false_positive_rate_ci95": [
+            0.2958290304162287,
+            0.45056959450991935
+          ],
+          "brier": 0.11969208717346191,
+          "ece_15": 0.24439569159525712,
+          "tn": 92,
+          "fp": 54,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {}
+      }
+    }
+  },
+  "metadata_slices": {
+    "source_domain": {
+      "airline": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.8933333333333333,
+        "macro_f1_argmax": 0.3145539906103286,
+        "confusion_argmax": [
+          [
+            134,
+            0,
+            16
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.09890099232440402
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.23333333333333334,
+          "false_positive_rate_ci95": [
+            0.17282631511397295,
+            0.3071578152156679
+          ],
+          "brier": 0.07664595544338226,
+          "ece_15": 0.16400347888469696,
+          "tn": 115,
+          "fp": 35,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "airline": {
+            "examples": 150,
+            "labels": {
+              "SAFE": 150
+            },
+            "accuracy_argmax": 0.8933333333333333,
+            "macro_f1_argmax": 0.3145539906103286,
+            "confusion_argmax": [
+              [
+                134,
+                0,
+                16
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.09890099232440402
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.23333333333333334,
+              "false_positive_rate_ci95": [
+                0.17282631511397295,
+                0.3071578152156679
+              ],
+              "brier": 0.07664595544338226,
+              "ece_15": 0.16400347888469696,
+              "tn": 115,
+              "fp": 35,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      },
+      "fastfood": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.8533333333333334,
+        "macro_f1_argmax": 0.30695443645083936,
+        "confusion_argmax": [
+          [
+            128,
+            1,
+            21
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.07707356308558039
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.30666666666666664,
+          "false_positive_rate_ci95": [
+            0.23847004316661521,
+            0.3845184513223743
+          ],
+          "brier": 0.09264745563268661,
+          "ece_15": 0.1953995539123813,
+          "tn": 104,
+          "fp": 46,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "fastfood": {
+            "examples": 150,
+            "labels": {
+              "SAFE": 150
+            },
+            "accuracy_argmax": 0.8533333333333334,
+            "macro_f1_argmax": 0.30695443645083936,
+            "confusion_argmax": [
+              [
+                128,
+                1,
+                21
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.07707356308558039
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.30666666666666664,
+              "false_positive_rate_ci95": [
+                0.23847004316661521,
+                0.3845184513223743
+              ],
+              "brier": 0.09264745563268661,
+              "ece_15": 0.1953995539123813,
+              "tn": 104,
+              "fp": 46,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      },
+      "finance": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.7933333333333333,
+        "macro_f1_argmax": 0.2949194547707559,
+        "confusion_argmax": [
+          [
+            119,
+            0,
+            31
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.061129370526788386
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.3933333333333333,
+          "false_positive_rate_ci95": [
+            0.318759856976774,
+            0.47323379515508224
+          ],
+          "brier": 0.14571179449558258,
+          "ece_15": 0.27633225490649543,
+          "tn": 91,
+          "fp": 59,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "finance": {
+            "examples": 150,
+            "labels": {
+              "SAFE": 150
+            },
+            "accuracy_argmax": 0.7933333333333333,
+            "macro_f1_argmax": 0.2949194547707559,
+            "confusion_argmax": [
+              [
+                119,
+                0,
+                31
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.061129370526788386
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.3933333333333333,
+              "false_positive_rate_ci95": [
+                0.318759856976774,
+                0.47323379515508224
+              ],
+              "brier": 0.14571179449558258,
+              "ece_15": 0.27633225490649543,
+              "tn": 91,
+              "fp": 59,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      },
+      "insurance": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.7,
+        "macro_f1_argmax": 0.2745098039215686,
+        "confusion_argmax": [
+          [
+            105,
+            0,
+            45
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.05747119958885172
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.42,
+          "false_positive_rate_ci95": [
+            0.3439800445299174,
+            0.5000151945689748
+          ],
+          "brier": 0.18478474020957947,
+          "ece_15": 0.310724923113982,
+          "tn": 87,
+          "fp": 63,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "insurance": {
+            "examples": 150,
+            "labels": {
+              "SAFE": 150
+            },
+            "accuracy_argmax": 0.7,
+            "macro_f1_argmax": 0.2745098039215686,
+            "confusion_argmax": [
+              [
+                105,
+                0,
+                45
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.05747119958885172
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.42,
+              "false_positive_rate_ci95": [
+                0.3439800445299174,
+                0.5000151945689748
+              ],
+              "brier": 0.18478474020957947,
+              "ece_15": 0.310724923113982,
+              "tn": 87,
+              "fp": 63,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      },
+      "media": {
+        "examples": 150,
+        "labels": {
+          "SAFE": 150
+        },
+        "accuracy_argmax": 0.8533333333333334,
+        "macro_f1_argmax": 0.30695443645083936,
+        "confusion_argmax": [
+          [
+            128,
+            1,
+            21
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.07707356308558039
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.30666666666666664,
+          "false_positive_rate_ci95": [
+            0.23847004316661521,
+            0.3845184513223743
+          ],
+          "brier": 0.10852471739053726,
+          "ece_15": 0.2155262257655462,
+          "tn": 104,
+          "fp": 46,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "media": {
+            "examples": 150,
+            "labels": {
+              "SAFE": 150
+            },
+            "accuracy_argmax": 0.8533333333333334,
+            "macro_f1_argmax": 0.30695443645083936,
+            "confusion_argmax": [
+              [
+                128,
+                1,
+                21
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.07707356308558039
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.30666666666666664,
+              "false_positive_rate_ci95": [
+                0.23847004316661521,
+                0.3845184513223743
+              ],
+              "brier": 0.10852471739053726,
+              "ece_15": 0.2155262257655462,
+              "tn": 104,
+              "fp": 46,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      },
+      "software": {
+        "examples": 146,
+        "labels": {
+          "SAFE": 146
+        },
+        "accuracy_argmax": 0.7876712328767124,
+        "macro_f1_argmax": 0.2937420178799489,
+        "confusion_argmax": [
+          [
+            115,
+            2,
+            29
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.0664135880908964
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.3698630136986301,
+          "false_positive_rate_ci95": [
+            0.2958290304162287,
+            0.45056959450991935
+          ],
+          "brier": 0.11969208717346191,
+          "ece_15": 0.24439569159525712,
+          "tn": 92,
+          "fp": 54,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "software": {
+            "examples": 146,
+            "labels": {
+              "SAFE": 146
+            },
+            "accuracy_argmax": 0.7876712328767124,
+            "macro_f1_argmax": 0.2937420178799489,
+            "confusion_argmax": [
+              [
+                115,
+                2,
+                29
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.0664135880908964
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.3698630136986301,
+              "false_positive_rate_ci95": [
+                0.2958290304162287,
+                0.45056959450991935
+              ],
+              "brier": 0.11969208717346191,
+              "ece_15": 0.24439569159525712,
+              "tn": 92,
+              "fp": 54,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      }
+    },
+    "source_window": {
+      "highest_risk_agent_turn": {
+        "examples": 448,
+        "labels": {
+          "SAFE": 448
+        },
+        "accuracy_argmax": 0.8928571428571429,
+        "macro_f1_argmax": 0.31446540880503143,
+        "confusion_argmax": [
+          [
+            400,
+            4,
+            44
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.04475062369010033
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.18303571428571427,
+          "false_positive_rate_ci95": [
+            0.14997345506936424,
+            0.22148749775855944
+          ],
+          "brier": 0.0756223052740097,
+          "ece_15": 0.1564401403634942,
+          "tn": 366,
+          "fp": 82,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "airline": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.9866666666666667,
+            "macro_f1_argmax": 0.33109619686800895,
+            "confusion_argmax": [
+              [
+                74,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.3903342879021653
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.08,
+              "false_positive_rate_ci95": [
+                0.03718012435033387,
+                0.16374790333522304
+              ],
+              "brier": 0.02501361444592476,
+              "ece_15": 0.07828184624512992,
+              "tn": 69,
+              "fp": 6,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "fastfood": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.8133333333333334,
+            "macro_f1_argmax": 0.29901960784313725,
+            "confusion_argmax": [
+              [
+                61,
+                1,
+                13
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.16817922405261626
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.25333333333333335,
+              "false_positive_rate_ci95": [
+                0.16860049363552168,
+                0.36210326865599607
+              ],
+              "brier": 0.09808710217475891,
+              "ece_15": 0.19453677753607432,
+              "tn": 56,
+              "fp": 19,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "finance": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.8933333333333333,
+            "macro_f1_argmax": 0.3145539906103286,
+            "confusion_argmax": [
+              [
+                67,
+                0,
+                8
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.21333333333333335,
+              "false_positive_rate_ci95": [
+                0.1358020117971739,
+                0.31879965789296816
+              ],
+              "brier": 0.09085709601640701,
+              "ece_15": 0.1903181614478429,
+              "tn": 59,
+              "fp": 16,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "insurance": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.84,
+            "macro_f1_argmax": 0.3043478260869565,
+            "confusion_argmax": [
+              [
+                63,
+                0,
+                12
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.16817922405261626
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.25333333333333335,
+              "false_positive_rate_ci95": [
+                0.16860049363552168,
+                0.36210326865599607
+              ],
+              "brier": 0.11927411705255508,
+              "ece_15": 0.2085600433746974,
+              "tn": 56,
+              "fp": 19,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "media": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.92,
+            "macro_f1_argmax": 0.3194444444444445,
+            "confusion_argmax": [
+              [
+                69,
+                1,
+                5
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.2588329669680317
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.14666666666666667,
+              "false_positive_rate_ci95": [
+                0.08391717009472589,
+                0.24384767859312362
+              ],
+              "brier": 0.060042914003133774,
+              "ece_15": 0.1261094551285108,
+              "tn": 64,
+              "fp": 11,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "software": {
+            "examples": 73,
+            "labels": {
+              "SAFE": 73
+            },
+            "accuracy_argmax": 0.9041095890410958,
+            "macro_f1_argmax": 0.31654676258992803,
+            "confusion_argmax": [
+              [
+                66,
+                2,
+                5
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.2588329669680317
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.1506849315068493,
+              "false_positive_rate_ci95": [
+                0.086276766635949,
+                0.25001901974408225
+              ],
+              "brier": 0.06004352495074272,
+              "ece_15": 0.1404070042277852,
+              "tn": 62,
+              "fp": 11,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      },
+      "recent_complete_turns": {
+        "examples": 448,
+        "labels": {
+          "SAFE": 448
+        },
+        "accuracy_argmax": 0.734375,
+        "macro_f1_argmax": 0.2822822822822823,
+        "confusion_argmax": [
+          [
+            329,
+            0,
+            119
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "binary_safety": {
+          "threshold": 0.2490113079547882,
+          "scam_precision": 0.0,
+          "scam_precision_ci95": [
+            0.0,
+            0.017085189007591345
+          ],
+          "scam_recall": 0.0,
+          "scam_recall_ci95": [
+            0.0,
+            1.0
+          ],
+          "scam_f1": 0.0,
+          "false_positive_rate": 0.49330357142857145,
+          "false_positive_rate_ci95": [
+            0.44726204113404155,
+            0.5394589649116187
+          ],
+          "brier": 0.16706129908561707,
+          "ece_15": 0.3122646313027612,
+          "tn": 227,
+          "fp": 221,
+          "fn": 0,
+          "tp": 0
+        },
+        "scam_by_category": {},
+        "by_source_domain": {
+          "airline": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.8,
+            "macro_f1_argmax": 0.2962962962962963,
+            "confusion_argmax": [
+              [
+                60,
+                0,
+                15
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.11696979849974075
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.38666666666666666,
+              "false_positive_rate_ci95": [
+                0.284552171134325,
+                0.4998252331617777
+              ],
+              "brier": 0.12827830016613007,
+              "ece_15": 0.24972512106100717,
+              "tn": 46,
+              "fp": 29,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "fastfood": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.8933333333333333,
+            "macro_f1_argmax": 0.3145539906103286,
+            "confusion_argmax": [
+              [
+                67,
+                0,
+                8
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.12455502974186705
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.36,
+              "false_positive_rate_ci95": [
+                0.26064928908616347,
+                0.47299338680902214
+              ],
+              "brier": 0.08720780909061432,
+              "ece_15": 0.19626233374079066,
+              "tn": 48,
+              "fp": 27,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "finance": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.6933333333333334,
+            "macro_f1_argmax": 0.27296587926509186,
+            "confusion_argmax": [
+              [
+                52,
+                0,
+                23
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.08200980322579117
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.5733333333333334,
+              "false_positive_rate_ci95": [
+                0.46052792329276937,
+                0.6789925798097526
+              ],
+              "brier": 0.20056648552417755,
+              "ece_15": 0.36234636127948766,
+              "tn": 32,
+              "fp": 43,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "insurance": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.56,
+            "macro_f1_argmax": 0.23931623931623933,
+            "confusion_argmax": [
+              [
+                42,
+                0,
+                33
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.08029560375848066
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.5866666666666667,
+              "false_positive_rate_ci95": [
+                0.47366515860704367,
+                0.6912227086959367
+              ],
+              "brier": 0.25029537081718445,
+              "ece_15": 0.4128898133834203,
+              "tn": 31,
+              "fp": 44,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "media": {
+            "examples": 75,
+            "labels": {
+              "SAFE": 75
+            },
+            "accuracy_argmax": 0.7866666666666666,
+            "macro_f1_argmax": 0.2935323383084577,
+            "confusion_argmax": [
+              [
+                59,
+                0,
+                16
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.09890099232440402
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.4666666666666667,
+              "false_positive_rate_ci95": [
+                0.35815696338970343,
+                0.5784246261091504
+              ],
+              "brier": 0.15700654685497284,
+              "ece_15": 0.30494299133618674,
+              "tn": 40,
+              "fp": 35,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          },
+          "software": {
+            "examples": 73,
+            "labels": {
+              "SAFE": 73
+            },
+            "accuracy_argmax": 0.6712328767123288,
+            "macro_f1_argmax": 0.2677595628415301,
+            "confusion_argmax": [
+              [
+                49,
+                0,
+                24
+              ],
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0
+              ]
+            ],
+            "binary_safety": {
+              "threshold": 0.2490113079547882,
+              "scam_precision": 0.0,
+              "scam_precision_ci95": [
+                0.0,
+                0.08200980322579117
+              ],
+              "scam_recall": 0.0,
+              "scam_recall_ci95": [
+                0.0,
+                1.0
+              ],
+              "scam_f1": 0.0,
+              "false_positive_rate": 0.589041095890411,
+              "false_positive_rate_ci95": [
+                0.4744922324418476,
+                0.6946872729906935
+              ],
+              "brier": 0.179340660572052,
+              "ece_15": 0.3483843819225487,
+              "tn": 30,
+              "fp": 43,
+              "fn": 0,
+              "tp": 0
+            },
+            "scam_by_category": {}
+          }
+        }
+      }
+    }
+  }
+}

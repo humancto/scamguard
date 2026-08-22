@@ -2,11 +2,13 @@
 
 ## Decision
 
-Schema v23 is **frozen for one predeclared quality-teacher experiment; no model result is included
-in this document**. It starts from schema v20 rather than either rejected full-dose service
-ablation. The change is deliberately small: a participant-balanced, bounded dialogue input
-contract; 215 licensed human MultiDoGO agent turns; 860 human-grounded action-state rows; and 356
-original FTC-pattern-grounded action-state rows.
+Schema v23 is **frozen and its one predeclared candidate is rejected**. It starts from schema v20
+rather than either rejected full-dose service ablation. The change is deliberately small: a
+participant-balanced, bounded dialogue input contract; 215 licensed human MultiDoGO agent turns;
+860 human-grounded action-state rows; and 356 original FTC-pattern-grounded action-state rows.
+The measured checkpoint passed 18 of 36 internal gates, so external selection, export, and sealed
+evaluation were not authorized. See `reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md` for the
+complete result and failure analysis.
 
 The training set has **22,665 unique rows**. Row count does not determine inference latency. The
 under-20-ms target is gated separately on the exported runtime, sequence length, quantization, and
@@ -162,3 +164,13 @@ Frozen SHA-256 identities:
 The frozen configuration is
 `configs/encoder-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right.json`. The machine-readable
 preflight result is `reports/data/schema23_preflight.json`.
+
+## Measured outcome
+
+The frozen run completed successfully, but the candidate was rejected. It preserved 99.61%
+development recall at 1.44% SAFE FPR and 100.00% unchanged-regression recall at 1.03% FPR. It also
+measured 16.97 ms end-to-end p95 in the unoptimized PyTorch/MPS desktop diagnostic. However, held
+MultiDoGO original-call FPR was 23.10%, prior-open BothBosu was 77.30% recall at 13.73% FPR, and
+calibrated action exact match was 65.28% on original states, 63.85% on held MultiDoGO states, and
+48.81% on the FTC pattern holdout. Quality failure stopped the release ladder before external or
+mobile evaluation.

@@ -1,0 +1,284 @@
+{
+  "distillation_or_export_authorized": false,
+  "experiment_id": "sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right",
+  "external_selection_authorized": false,
+  "failed_gates": [
+    "original state verified SAFE FPR",
+    "original state unresolved scam rate",
+    "original state ordered contrasts",
+    "original state calibrated action exact match",
+    "FTC pattern holdout unresolved scam rate",
+    "FTC pattern holdout action macro AUC",
+    "FTC pattern holdout calibrated action exact match",
+    "held-domain MultiDoGO state routine SAFE FPR",
+    "held-domain MultiDoGO state calibrated action exact match",
+    "MultiDoGO original-call SAFE FPR",
+    "MultiDoGO airline SAFE FPR",
+    "MultiDoGO fastfood SAFE FPR",
+    "MultiDoGO finance SAFE FPR",
+    "MultiDoGO insurance SAFE FPR",
+    "MultiDoGO media SAFE FPR",
+    "MultiDoGO software SAFE FPR",
+    "prior-open BothBosu recall",
+    "prior-open BothBosu SAFE FPR"
+  ],
+  "gates": [
+    {
+      "actual": 0.9961089494163424,
+      "name": "development recall",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.01444223107569721,
+      "name": "development SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 1.0,
+      "name": "unchanged regression recall",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.010309278350515464,
+      "name": "unchanged regression SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.99609375,
+      "name": "original state harmful recall",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.015625,
+      "name": "original state routine SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.05078125,
+      "name": "original state verified SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.02
+    },
+    {
+      "actual": 0.248046875,
+      "name": "original state unresolved scam rate",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.1
+    },
+    {
+      "actual": 0.869140625,
+      "name": "original state ordered contrasts",
+      "operator": ">=",
+      "passed": false,
+      "required": 0.95
+    },
+    {
+      "actual": 0.9918504626972979,
+      "name": "original state action macro AUC",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.65283203125,
+      "name": "original state calibrated action exact match",
+      "operator": ">=",
+      "passed": false,
+      "required": 0.9
+    },
+    {
+      "actual": 1.0,
+      "name": "FTC pattern holdout harmful recall",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.0,
+      "name": "FTC pattern holdout routine SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.0,
+      "name": "FTC pattern holdout verified SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.19047619047619047,
+      "name": "FTC pattern holdout unresolved scam rate",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.1
+    },
+    {
+      "actual": 1.0,
+      "name": "FTC pattern holdout ordered contrasts",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.95
+    },
+    {
+      "actual": 0.9590576971529351,
+      "name": "FTC pattern holdout action macro AUC",
+      "operator": ">=",
+      "passed": false,
+      "required": 0.97
+    },
+    {
+      "actual": 0.4880952380952381,
+      "name": "FTC pattern holdout calibrated action exact match",
+      "operator": ">=",
+      "passed": false,
+      "required": 0.9
+    },
+    {
+      "actual": 1.0,
+      "name": "held-domain MultiDoGO state harmful recall",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.2702702702702703,
+      "name": "held-domain MultiDoGO state routine SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.02
+    },
+    {
+      "actual": 0.0,
+      "name": "held-domain MultiDoGO state verified SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.006756756756756757,
+      "name": "held-domain MultiDoGO state unresolved scam rate",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.1
+    },
+    {
+      "actual": 0.9864864864864865,
+      "name": "held-domain MultiDoGO state ordered contrasts",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.95
+    },
+    {
+      "actual": 0.9792919958648826,
+      "name": "held-domain MultiDoGO state action macro AUC",
+      "operator": ">=",
+      "passed": true,
+      "required": 0.97
+    },
+    {
+      "actual": 0.6385135135135135,
+      "name": "held-domain MultiDoGO state calibrated action exact match",
+      "operator": ">=",
+      "passed": false,
+      "required": 0.9
+    },
+    {
+      "actual": 0.23102678571428573,
+      "name": "MultiDoGO original-call SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.02
+    },
+    {
+      "actual": 0.12,
+      "name": "MultiDoGO airline SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.03
+    },
+    {
+      "actual": 0.29333333333333333,
+      "name": "MultiDoGO fastfood SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.03
+    },
+    {
+      "actual": 0.23333333333333334,
+      "name": "MultiDoGO finance SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.03
+    },
+    {
+      "actual": 0.3333333333333333,
+      "name": "MultiDoGO insurance SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.03
+    },
+    {
+      "actual": 0.2,
+      "name": "MultiDoGO media SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.03
+    },
+    {
+      "actual": 0.2054794520547945,
+      "name": "MultiDoGO software SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.03
+    },
+    {
+      "actual": 0.0044742729306487695,
+      "name": "long-call SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.0,
+      "name": "Taskmaster SAFE FPR",
+      "operator": "<=",
+      "passed": true,
+      "required": 0.02
+    },
+    {
+      "actual": 0.7730496453900709,
+      "name": "prior-open BothBosu recall",
+      "operator": ">=",
+      "passed": false,
+      "required": 0.97
+    },
+    {
+      "actual": 0.13725490196078433,
+      "name": "prior-open BothBosu SAFE FPR",
+      "operator": "<=",
+      "passed": false,
+      "required": 0.02
+    }
+  ],
+  "passed_gates": 18,
+  "quality_status": "rejected",
+  "runtime_status": "not evaluated until quality passes",
+  "sealed_evaluation_authorized": false,
+  "total_gates": 36
+}

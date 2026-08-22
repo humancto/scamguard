@@ -7,7 +7,11 @@ import pytest
 import torch
 
 from scamguard.metrics import file_sha256
-from training.eval_encoder_external import action_target_names, metadata_slices
+from training.eval_encoder_external import (
+    action_target_names,
+    build_external_dataset,
+    metadata_slices,
+)
 from training.train_encoder import (
     ACTION_TARGETS,
     EncodedDataset,
@@ -203,6 +207,47 @@ def test_external_action_target_names_follow_classifier_order() -> None:
         "requested_disclosure_or_transfer",
         "independent_verification",
     ]
+
+
+def test_external_dataset_accepts_checkpoint_action_rows() -> None:
+    target_names = (
+        "requested_disclosure_or_transfer",
+        "independent_verification",
+    )
+    model = SimpleNamespace(
+        config=SimpleNamespace(
+            num_labels=5,
+            id2label={
+                0: "SAFE",
+                1: "UNCERTAIN",
+                2: "SCAM",
+                3: f"ACTION_{target_names[0]}",
+                4: f"ACTION_{target_names[1]}",
+            },
+        )
+    )
+    rows = [
+        {
+            "id": "licensed-action-row",
+            "text": "Please verify in the official app.",
+            "label": "SAFE",
+            "action_targets": {
+                target_names[0]: False,
+                target_names[1]: True,
+            },
+        }
+    ]
+
+    dataset, detected_names = build_external_dataset(
+        rows,
+        StubTokenizer(),
+        max_length=256,
+        dialogue_policy="none",
+        model=model,
+    )
+
+    assert detected_names == target_names
+    assert dataset[0]["action_mask"].item() == pytest.approx(1.0)
 
 
 def test_report_slice_includes_source_domain_false_positive_breakdown() -> None:

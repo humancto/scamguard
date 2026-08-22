@@ -43,6 +43,25 @@ def action_target_names(model: Any) -> list[str]:
     return names
 
 
+def build_external_dataset(
+    rows: list[dict[str, Any]],
+    tokenizer: Any,
+    max_length: int,
+    dialogue_policy: str,
+    model: Any,
+) -> tuple[EncodedDataset, tuple[str, ...]]:
+    """Build an evaluation dataset using the checkpoint's auxiliary-head contract."""
+    target_names = tuple(action_target_names(model))
+    dataset = EncodedDataset(
+        rows,
+        tokenizer,
+        max_length,
+        dialogue_policy=dialogue_policy,
+        action_target_names=target_names,
+    )
+    return dataset, target_names
+
+
 def metadata_slices(
     rows: list[dict[str, object]],
     predictions: np.ndarray,
@@ -122,11 +141,12 @@ def main() -> None:
         args.checkpoint, local_files_only=True
     ).to(device)
     model.eval()
-    dataset = EncodedDataset(
+    dataset, model_action_target_names = build_external_dataset(
         rows,
         tokenizer,
         args.max_length,
-        dialogue_policy=args.dialogue_policy,
+        args.dialogue_policy,
+        model,
     )
     loader = DataLoader(
         dataset,
@@ -208,7 +228,7 @@ def main() -> None:
     args.report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     if args.predictions:
         probabilities = softmax(predictions[:, :3], temperature)
-        action_names = action_target_names(model)
+        action_names = list(model_action_target_names)
         action_probabilities = (
             torch.sigmoid(torch.from_numpy(predictions[:, 3:])).numpy()
             if action_names
