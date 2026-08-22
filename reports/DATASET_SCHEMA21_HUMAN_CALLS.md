@@ -2,11 +2,16 @@
 
 ## Decision
 
-Schema v21 is admitted for one frozen teacher experiment. It adds licensed human-spoken call
+Schema v21 was admitted for one frozen teacher experiment. It adds licensed human-spoken call
 structure and conversation-grounded action contrasts without changing the unchanged development,
 regression, or external benchmark text. This is a dataset decision, not a production or SOTA
 claim; the checkpoint must still clear every predeclared quality gate before export or sealed
 evaluation.
+
+The frozen experiment is now complete and **rejected**. It passed development and controlled-state
+gates but failed unchanged-regression FPR (4.64%), original held-out Harper-call FPR (4.24%),
+BothBosu recall (90.07%), and BothBosu FPR (39.22%). The complete result and failure analysis are in
+`reports/ENCODER_SCHEMA21_HUMAN_CALLS.md`. No export, distillation, or sealed evaluation was run.
 
 The final training set has **26,579 unique rows**. That is the deliberate scale for this stage:
 large enough to expose the encoder to 1,069 new human call families and 4,276 matched action-state
