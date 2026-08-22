@@ -108,6 +108,16 @@ before the 256-token right-truncated encoder input. Preflight found zero decisiv
 3,940 checked state rows. See
 [`reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`](../reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md).
 
+Schema v23 is rejected after 18/36 frozen gates. Its evidence compactor improved held MultiDoGO
+specificity in controlled diagnostics, but the weak lexical action labels and bounded legitimate
+service dose did not establish a transferable caller-control boundary. Schema v24 preparation now
+targets the same pinned source's turn- and sentence-level customer intent/slot annotations. The
+fetcher pins the annotation Git tree, and the text-free auditor fails closed on file completeness,
+headers, customer-role alignment, source-turn text alignment, and conversation leakage across the
+publisher's train/dev/test splits. These annotation blobs are not yet materialized on this machine
+because the current Codex network approval is usage-limited; zero annotation-derived rows are
+admitted until `make multidogo-annotations` succeeds and its audit is frozen.
+
 ## Sealed evaluation-only source
 
 The newly sourced [MOZ-Smishing](https://doi.org/10.18653/v1/2025.africanlp-1.23) file contains

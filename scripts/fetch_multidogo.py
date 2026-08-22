@@ -20,7 +20,13 @@ LICENSE = "CDLA-Permissive-1.0"
 LICENSE_SHA256 = "8be8b09ba4230a6ab89a62439b45e3374e15870360d27c9a51131592b91a2f10"
 README_SHA256 = "1a36fb24ceb44a75224ca4566b816024abc0b05ba13d27c959809b243440008b"
 DIALOGUE_TREE_SHA256 = "0196e5ae82fc3b8c488b82d0a3cdf8dca74911a8bab5fa5ed5e1bf6ceee2ae97"
+ANNOTATION_TREE_GIT_OID = "5add780ac12b5aaceab9b746786d64ae8d7b0c8e"
 DOMAINS = ("airline", "fastfood", "finance", "insurance", "media", "software")
+ANNOTATION_GRANULARITIES = (
+    "splits_annotated_at_sentence_level",
+    "splits_annotated_at_turn_level",
+)
+ANNOTATION_SPLITS = ("train", "dev", "test")
 EXPECTED_FILE_SHA256 = {
     "airline": "d820e68f3199464700e6a5911ceb3f53f5cecc7606d65165874157567c038246",
     "fastfood": "1924c74a7c2a334205d8e9181f50b58b9a2d01391784687fc1c035ae4b00d00d",
@@ -46,7 +52,16 @@ def tree_sha256(paths: list[Path], root: Path) -> str:
     return digest.hexdigest()
 
 
-def verify_repository(path: Path) -> dict[str, object]:
+def annotation_paths(path: Path) -> list[Path]:
+    return [
+        path / "data" / "paper_splits" / granularity / domain / f"{split}.tsv"
+        for granularity in ANNOTATION_GRANULARITIES
+        for domain in DOMAINS
+        for split in ANNOTATION_SPLITS
+    ]
+
+
+def verify_repository(path: Path, require_annotations: bool = False) -> dict[str, object]:
     revision = run("git", "rev-parse", "HEAD", cwd=path)
     if revision != REVISION:
         raise RuntimeError(f"MultiDoGO revision differs: {revision}")
@@ -62,7 +77,7 @@ def verify_repository(path: Path) -> dict[str, object]:
             raise RuntimeError(f"MultiDoGO {domain} file differs from the pinned artifact")
     if tree_sha256(files, path) != DIALOGUE_TREE_SHA256:
         raise RuntimeError("MultiDoGO dialogue tree differs from the pinned release")
-    return {
+    manifest: dict[str, object] = {
         "repository": REPOSITORY,
         "revision": REVISION,
         "license": LICENSE,
@@ -74,28 +89,51 @@ def verify_repository(path: Path) -> dict[str, object]:
         "audio_downloaded": False,
         "citation": "https://aclanthology.org/D19-1460/",
     }
+    if require_annotations:
+        annotation_files = annotation_paths(path)
+        if not all(item.is_file() for item in annotation_files):
+            raise RuntimeError("MultiDoGO intent/slot annotation tree is incomplete")
+        annotation_tree_oid = run("git", "rev-parse", "HEAD:data/paper_splits", cwd=path)
+        if annotation_tree_oid != ANNOTATION_TREE_GIT_OID:
+            raise RuntimeError("MultiDoGO annotation tree differs from the pinned release")
+        manifest.update(
+            {
+                "annotation_files": len(annotation_files),
+                "annotation_tree_git_oid": ANNOTATION_TREE_GIT_OID,
+                "annotation_granularities": list(ANNOTATION_GRANULARITIES),
+                "annotation_splits": list(ANNOTATION_SPLITS),
+            }
+        )
+    return manifest
 
 
-def fetch(output: Path) -> dict[str, object]:
+def fetch(output: Path, include_annotations: bool = False) -> dict[str, object]:
     if output.exists():
-        return verify_repository(output)
+        if include_annotations and not all(item.is_file() for item in annotation_paths(output)):
+            run("git", "sparse-checkout", "add", "/data/paper_splits/", cwd=output)
+        return verify_repository(output, require_annotations=include_annotations)
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="multidogo-", dir=output.parent) as temporary:
         checkout = Path(temporary) / "repository"
         run("git", "clone", "--filter=blob:none", "--no-checkout", REPOSITORY, str(checkout))
+        sparse_paths = [
+            "/LICENSE.txt",
+            "/README.md",
+            "/NOTICE",
+            "/data/unannotated/",
+        ]
+        if include_annotations:
+            sparse_paths.append("/data/paper_splits/")
         run(
             "git",
             "sparse-checkout",
             "set",
             "--no-cone",
-            "/LICENSE.txt",
-            "/README.md",
-            "/NOTICE",
-            "/data/unannotated/",
+            *sparse_paths,
             cwd=checkout,
         )
         run("git", "checkout", "--detach", REVISION, cwd=checkout)
-        manifest = verify_repository(checkout)
+        manifest = verify_repository(checkout, require_annotations=include_annotations)
         os.replace(checkout, output)
     return manifest
 
@@ -106,10 +144,15 @@ def main() -> None:
         "--output", type=Path, default=Path("data/raw/multidogo/repository")
     )
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--annotations",
+        action="store_true",
+        help="Also materialize the pinned turn- and sentence-level intent/slot annotations.",
+    )
     args = parser.parse_args()
     if args.force and args.output.exists():
         shutil.rmtree(args.output)
-    manifest = fetch(args.output)
+    manifest = fetch(args.output, include_annotations=args.annotations)
     manifest_path = args.output.parent / "source.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(manifest, indent=2))

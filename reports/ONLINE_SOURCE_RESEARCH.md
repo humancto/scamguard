@@ -234,7 +234,18 @@ minimal-pair training rows and holds 192 paired rows out by complete service sce
 
 The resulting schema-v23 increment is 1,431 rows rather than a bulk scrape: 215 licensed human
 MultiDoGO turns, 860 human-grounded MultiDoGO states, and 356 admitted original FTC-pattern states.
-It is frozen in `DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`.
+It is frozen in `DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`. The trained candidate is rejected after
+18/36 gates: held MultiDoGO SAFE FPR is 23.10%, while prior-open BothBosu is 77.30% recall at
+13.73% FPR. Controlled scoring shows that evidence compaction helps, but neither the schema-v20,
+v22, nor v23 training mixture learns the joint sensitivity-specificity boundary.
+
+The same pinned MultiDoGO revision contains 36 CDLA-Permissive turn- and sentence-level customer
+intent/slot files that were omitted from the original sparse checkout. Schema-v24 preparation adds
+a pinned-tree fetch contract and text-free source audit for those files. Materialization is pending
+because the current Codex network approval is usage-limited; no mirror, revision change, or download
+bypass was attempted, and zero annotation-derived rows are admitted. Once available, intent/slot
+metadata may ground participant-aware matched contrast families; it will not be counted as new
+human dialogue beyond the underlying conversations.
 
 ## Audited but rejected or quarantined
 
@@ -267,16 +278,18 @@ More rows do not make inference slower; model architecture, sequence length, run
 determine the under-20-ms target. More low-quality or duplicated rows do make experiments worse by
 inflating metrics and teaching shortcuts. Current status and next actions are:
 
-1. Train only the predeclared schema-v23 evidence-compaction recipe; do not tune it on BothBosu.
-2. Reject the candidate immediately if any internal gate fails, before export or external selection.
-3. Keep AppTek evaluation-only and its 1,396-window OOD partition sealed.
-4. Obtain authorized access to TeleAntiFraud-28k, then audit per-row construction provenance,
+1. Keep schema v23 rejected; do not export, externally select, or tune it on BothBosu.
+2. Materialize and audit the pinned MultiDoGO intent/slot tree before defining schema-v24 rows.
+3. Require source-aligned, participant-aware action labels and complete matched contrast families;
+   do not spend another neural run if a family-disjoint label audit cannot reach 90% exact match.
+4. Keep AppTek evaluation-only and its 1,396-window OOD partition sealed.
+5. Obtain authorized access to TeleAntiFraud-28k, then audit per-row construction provenance,
    privacy, family duplication, source/label shortcuts, and license files before admitting a row.
-5. Keep the publisher's TeleAntiFraud test split external and create a family-disjoint open
+6. Keep the publisher's TeleAntiFraud test split external and create a family-disjoint open
    selection slice before any new dialogue training run.
-6. Audit ES-Port as a possible authentic Spanish SAFE-call source, but do not admit it until privacy,
+7. Audit ES-Port as a possible authentic Spanish SAFE-call source, but do not admit it until privacy,
    weak-label, language-shortcut, and share-alike questions are resolved.
-7. Measure the fast encoder and any Qwen fallback separately; do not represent 4B generation
+8. Measure the fast encoder and any Qwen fallback separately; do not represent 4B generation
    latency as a sub-20-ms mobile detector.
 
 This gives ScamGuard enough training mass for a serious experiment while preserving an honest,
