@@ -244,6 +244,11 @@ frozen dataset and measured rejection are documented in
 [`reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`](reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md)
 and
 [`reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md`](reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md).
+The pending schema-v24 path begins with `make multidogo-annotation-curriculum`. It requires all 36
+pinned publisher intent/slot files and their text-free alignment audit, preserves both the existing
+ScamGuard family boundary and the publisher's train/dev/test boundary, and stratifies difficult
+legitimate-service examples without misrepresenting intent labels as independently reviewed scam
+labels. The target currently fails closed because the annotation blobs have not been materialized.
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are
