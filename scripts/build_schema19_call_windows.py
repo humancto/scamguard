@@ -103,7 +103,10 @@ def shared_long_extension(row: dict[str, object]) -> str:
     """Create label-invariant, scenario-specific history before the final action."""
     scenario = str(row["scenario"])
     spec = SCENARIOS[scenario]
-    variant = int(short_hash(str(row["pair_id"]), 8), 16)
+    family_key = str(row.get("pair_id") or row.get("contrast_id") or "").strip()
+    if not family_key:
+        raise ValueError("long context row lacks a pair_id or contrast_id")
+    variant = int(short_hash(family_key, 8), 16)
     desk = spec["desk"][variant % len(spec["desk"])]
     topic = spec["topic"][(variant // 3) % len(spec["topic"])]
     detail = spec["detail"][(variant // 7) % len(spec["detail"])]

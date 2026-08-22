@@ -58,6 +58,7 @@ SYNTHETIC_REFERENCE_PREFIXES = (
     "https://www.uspis.gov/",
 )
 SYNTHETIC_METHODS = {
+    "call_action_state_counterfactual_advisory_grounded_original_copy",
     "deterministic_slot_filling_original_copy",
     "deterministic_service_dialogue_error_audit_grounded_original_copy",
     "paired_deterministic_slot_filling_original_advisory_grounded_copy",
@@ -257,6 +258,8 @@ def main() -> None:
         split_names.append("ood_azsc")
     if (args.data / "call_pair_validation.jsonl").is_file():
         split_names.append("call_pair_validation")
+    if (args.data / "call_state_validation.jsonl").is_file():
+        split_names.append("call_state_validation")
     if (args.data / "call_window_validation.jsonl").is_file():
         split_names.append("call_window_validation")
     rows_by_split = {split: read_rows(args.data / f"{split}.jsonl") for split in split_names}

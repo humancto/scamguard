@@ -22,6 +22,10 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v13 dose-16) | current fast-path research candidate | 602.5 MB complete FP32 Core ML pack | exact open-set verdict parity and 5.65 ms Core ML p95 on Mac; policy clears open short-message binary gates, but dialogue and macro F1 still fail |
 | ModernBERT-base, 149M (schema v14 real dialogue) | rejected positive-only call ablation | 602.0 MB training artifact | new real-call recall 34.29%→100%, but regression SAFE FPR 8.48% and dialogue SAFE FPR 73.20%; rejected before export |
 | ModernBERT-base, 149M (schema v15 legitimate openings) | rejected matched-negative call ablation | 602.0 MB training artifact | AppTek FPR 15.52%, regression FPR 18.84%, BothBosu 69.50% recall / 35.29% FPR; rejected despite 12.12 ms p95 |
+| ModernBERT-base, 149M (schema v17 pair retention) | rejected paired-action ablation | 602.0 MB training artifact | BothBosu recall reached 98.58%, but SAFE FPR was 23.53% and held-pair recall was 70.83%; rejected |
+| ModernBERT-base, 149M (schema v18 action retention) | rejected stronger paired-action ablation | 602.0 MB training artifact | held pairs reached 100% recall / 0% FPR, but regression FPR was 2.23% and BothBosu was 73.76% recall / 15.69% FPR |
+| ModernBERT-base, 149M (schema v19 long windows) | rejected length-matched call ablation | 602.0 MB training artifact | long pairs and Taskmaster passed, but regression FPR was 3.15% and BothBosu was 92.91% recall / 42.48% FPR; 21.51 ms PyTorch p95 |
+| ModernBERT-base, 149M (schema v20 action states) | next multi-task teacher experiment | not trained | frozen 21,234-row data mix separates action evidence from verification/context before student compression |
 | Qwen3.5-0.8B, 4-bit | compact schema/explanation specialist | about 0.6 GB | compression challenger |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
@@ -58,6 +62,11 @@ The full FP32/INT8 ONNX fidelity, latency, memory, and rejection record is in
 [reports/ONNX_SCHEMA13.md](reports/ONNX_SCHEMA13.md).
 The native FP32/FP16 Core ML conversion, full parity, latency, and rejection record is in
 [reports/COREML_SCHEMA13.md](reports/COREML_SCHEMA13.md).
+The successive pair, long-window, and action-state decisions are in
+[reports/ENCODER_SCHEMA17_PAIR_RETENTION.md](reports/ENCODER_SCHEMA17_PAIR_RETENTION.md),
+[reports/ENCODER_SCHEMA18_ACTION_RETENTION.md](reports/ENCODER_SCHEMA18_ACTION_RETENTION.md),
+[reports/ENCODER_SCHEMA19_WINDOWMIX.md](reports/ENCODER_SCHEMA19_WINDOWMIX.md), and
+[reports/DATASET_SCHEMA20_ACTION_STATES.md](reports/DATASET_SCHEMA20_ACTION_STATES.md).
 
 ## Quick start
 
@@ -191,6 +200,14 @@ changes only the final legitimate/risky action. Another 192 rows are held out by
 service scenarios. The resulting 14,799-row training set validates at 28,670 unique processed rows;
 all new dialogues fit within 114 ModernBERT tokens. See
 [`reports/DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md`](reports/DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md).
+Schemas v18 and v19 prove that larger and length-matched binary action pairs can reach perfect
+held-pair ordering without producing a transferable absolute call boundary. Schema v20 therefore
+changes the target instead of adding undifferentiated volume. Its 21,234-row training mix includes
+6,144 four-state long contrasts whose byte-identical histories end in routine SAFE, independently
+verified SAFE, unresolved UNCERTAIN, or caller-controlled SCAM actions. Seven dense action/context
+targets support a multi-task teacher; 2,048 rows from four complete service domains remain held out.
+The full frozen composition, hashes, source rights, and latency rationale are in
+[`reports/DATASET_SCHEMA20_ACTION_STATES.md`](reports/DATASET_SCHEMA20_ACTION_STATES.md).
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are
