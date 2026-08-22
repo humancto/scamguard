@@ -63,6 +63,7 @@ SYNTHETIC_METHODS = {
     "paired_deterministic_slot_filling_original_advisory_grounded_copy",
     "paired_deterministic_slot_filling_error_audit_grounded_original_copy",
     "paired_call_structure_minimal_contrast_advisory_grounded_original_copy",
+    "paired_call_evidence_action_counterfactual_advisory_grounded_original_copy",
 }
 TRUSTED_POSITIVE_ONLY_SOURCES = {
     "youtube_scam_calls_cc0": {
