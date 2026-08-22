@@ -2,9 +2,10 @@
 
 ## Decision
 
-Schema v22 is frozen for one quality-teacher experiment. It returns to the safer schema-v20
-parent and adds a bounded amount of licensed human-authored service dialogue plus human-grounded
-four-state action evidence. It does not inherit schema v21's over-weighted bank-call dose.
+Schema v22 was frozen for one quality-teacher experiment and has now been **rejected**. It returned
+to the safer schema-v20 parent and adds a bounded amount of licensed human-authored service
+dialogue plus human-grounded four-state action evidence. It does not inherit schema v21's
+over-weighted bank-call dose.
 
 The training set has **24,208 unique rows**. This is the right scale for the experiment: enough to
 add 895 service-conversation families and 296 grounded state families without drowning the
@@ -13,8 +14,11 @@ Training-row count does not determine inference latency. The under-20-ms deploym
 separate gate on sequence length, architecture, runtime, quantization, and hardware after quality
 passes.
 
-This is a dataset and experiment-contract freeze, not a performance or SOTA claim. The checkpoint
-must pass every predeclared internal gate before any distillation, export, or sealed evaluation.
+The trained checkpoint passed 20 of 29 predeclared gates. It restored unchanged-regression FPR to
+0.63% and cut prior-open BothBosu FPR to 1.96%, but BothBosu recall fell to 41.13%; held-domain
+harmful recall, routine-state FPR, action exact match, and several original-call domain FPR gates
+also failed. No distillation, export, external selection, or sealed evaluation was authorized. See
+`reports/ENCODER_SCHEMA22_SERVICE_EVIDENCE.md` for the complete measured result.
 
 ## New licensed source
 

@@ -27,7 +27,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v19 long windows) | rejected length-matched call ablation | 602.0 MB training artifact | long pairs and Taskmaster passed, but regression FPR was 3.15% and BothBosu was 92.91% recall / 42.48% FPR; 21.51 ms PyTorch p95 |
 | ModernBERT-base, 149M (schema v20 action states) | rejected multi-task teacher | 602.0 MB training artifact | dev/regression and controlled states passed, but BothBosu was 93.62% recall / 42.48% FPR; rejected |
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
-| ModernBERT-base, 149M (schema v22 service evidence) | frozen quality-teacher experiment | not trained | 24,208 rows; bounded MultiDoGO roleplay plus insurance/software held-domain action states |
+| ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | Qwen3.5-0.8B, 4-bit | compact schema/explanation specialist | about 0.6 GB | compression challenger |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
@@ -69,9 +69,11 @@ The successive pair, long-window, and action-state decisions are in
 [reports/ENCODER_SCHEMA18_ACTION_RETENTION.md](reports/ENCODER_SCHEMA18_ACTION_RETENTION.md),
 [reports/ENCODER_SCHEMA19_WINDOWMIX.md](reports/ENCODER_SCHEMA19_WINDOWMIX.md), and
 [reports/DATASET_SCHEMA20_ACTION_STATES.md](reports/DATASET_SCHEMA20_ACTION_STATES.md). The rejected
-human-call ablation and the bounded schema-v22 service-evidence replacement are in
+human-call ablation, bounded schema-v22 dataset, and rejected schema-v22 result are in
 [reports/ENCODER_SCHEMA21_HUMAN_CALLS.md](reports/ENCODER_SCHEMA21_HUMAN_CALLS.md) and
-[reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md](reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
+[reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md](reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md), with
+the measured result in
+[reports/ENCODER_SCHEMA22_SERVICE_EVIDENCE.md](reports/ENCODER_SCHEMA22_SERVICE_EVIDENCE.md).
 
 ## Quick start
 
