@@ -9,6 +9,7 @@ import math
 import platform
 import time
 from collections import Counter
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,7 @@ import torch
 import torch.nn.functional as functional
 from scipy.optimize import minimize_scalar
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
-from torch.utils.data import Dataset, WeightedRandomSampler
+from torch.utils.data import Dataset, Sampler, WeightedRandomSampler
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -47,9 +48,15 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
         max_length: int,
         dialogue_policy: str = "none",
         teacher_logits: dict[str, tuple[float, float, float]] | None = None,
+        include_pair_metadata: bool = False,
     ) -> None:
         self.rows = rows
         self.teacher_logits = teacher_logits
+        pair_ids = sorted(
+            {str(row["pair_id"]) for row in rows if str(row.get("pair_id", "")).strip()}
+        )
+        self.pair_groups = {pair_id: index + 1 for index, pair_id in enumerate(pair_ids)}
+        self.include_pair_metadata = include_pair_metadata
         self.encodings = tokenizer(
             [prepare_model_text(str(row["text"]), dialogue_policy) for row in rows],
             max_length=max_length,
@@ -67,6 +74,10 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
             logits = self.teacher_logits.get(str(self.rows[index]["id"]))
             item["teacher_logits"] = torch.tensor(logits or (0.0, 0.0, 0.0))
             item["retention_mask"] = torch.tensor(float(logits is not None))
+        if self.include_pair_metadata:
+            pair_id = str(self.rows[index].get("pair_id", ""))
+            item["pair_group"] = torch.tensor(self.pair_groups.get(pair_id, 0))
+            item["pair_mask"] = torch.tensor(float(bool(pair_id)))
         return item
 
 
@@ -142,6 +153,88 @@ def retention_kl_loss(
     ) * (temperature**2)
 
 
+def pairwise_scam_margin_loss(
+    scam_margins: torch.Tensor,
+    labels: torch.Tensor,
+    pair_groups: torch.Tensor,
+    pair_mask: torch.Tensor,
+    margin: float,
+) -> torch.Tensor:
+    """Require each matched SCAM row to outrank its exact-context SAFE partner."""
+    selected = pair_mask.to(scam_margins.device).bool()
+    if not selected.any():
+        return scam_margins.sum() * 0.0
+    selected_groups = pair_groups.to(scam_margins.device)[selected]
+    selected_labels = labels.to(scam_margins.device)[selected]
+    selected_margins = scam_margins[selected]
+    losses: list[torch.Tensor] = []
+    for group in torch.unique(selected_groups):
+        group_mask = selected_groups == group
+        group_labels = selected_labels[group_mask]
+        if group.item() <= 0 or group_mask.sum().item() != 2:
+            raise ValueError("pair-aware batch contains an incomplete pair family")
+        safe = group_labels == LABEL_TO_ID["SAFE"]
+        scam = group_labels == LABEL_TO_ID["SCAM"]
+        if safe.sum().item() != 1 or scam.sum().item() != 1:
+            raise ValueError("pair-aware family must contain one SAFE and one SCAM row")
+        difference = selected_margins[group_mask][scam][0] - selected_margins[group_mask][safe][0]
+        losses.append(functional.softplus(scam_margins.new_tensor(margin) - difference))
+    return torch.stack(losses).mean()
+
+
+class PairPreservingSampler(Sampler[int]):
+    """Shuffle examples while keeping complete minimal pairs inside the same even-sized batch."""
+
+    def __init__(self, rows: list[dict[str, Any]], batch_size: int, seed: int) -> None:
+        if batch_size <= 0 or batch_size % 2:
+            raise ValueError("pair-aware training requires a positive even batch size")
+        grouped: dict[str, list[int]] = {}
+        ordinary: list[int] = []
+        for index, row in enumerate(rows):
+            pair_id = str(row.get("pair_id", "")).strip()
+            if pair_id:
+                grouped.setdefault(pair_id, []).append(index)
+            else:
+                ordinary.append(index)
+        if not grouped:
+            raise ValueError("pair-aware training data contains no pair families")
+        pairs: list[tuple[int, int]] = []
+        for pair_id, indices in sorted(grouped.items()):
+            if len(indices) != 2 or {str(rows[index]["label"]) for index in indices} != {
+                "SAFE",
+                "SCAM",
+            }:
+                raise ValueError(f"invalid pair-aware family: {pair_id}")
+            pairs.append((indices[0], indices[1]))
+        self.ordinary = ordinary
+        self.pairs = pairs
+        self.batch_size = batch_size
+        self.seed = seed
+        self.epoch = 0
+        self.row_count = len(rows)
+
+    def __len__(self) -> int:
+        return self.row_count
+
+    def __iter__(self) -> Iterator[int]:
+        generator = torch.Generator()
+        generator.manual_seed(self.seed + self.epoch)
+        self.epoch += 1
+        ordinary_order = torch.randperm(len(self.ordinary), generator=generator).tolist()
+        ordinary = [self.ordinary[index] for index in ordinary_order]
+        pair_order = torch.randperm(len(self.pairs), generator=generator).tolist()
+        pairs: list[int] = []
+        for pair_position in pair_order:
+            pair = self.pairs[pair_position]
+            if torch.randint(0, 2, (1,), generator=generator).item():
+                pair = (pair[1], pair[0])
+            pairs.extend(pair)
+        tail_size = len(ordinary) % self.batch_size
+        ordinary_main = ordinary[:-tail_size] if tail_size else ordinary
+        ordinary_tail = ordinary[-tail_size:] if tail_size else []
+        return iter(ordinary_main + pairs + ordinary_tail)
+
+
 class WeightedTrainer(Trainer):
     def __init__(
         self,
@@ -151,6 +244,9 @@ class WeightedTrainer(Trainer):
         binary_positive_weight: float,
         retention_weight: float = 0.0,
         retention_temperature: float = 2.0,
+        pair_loss_weight: float = 0.0,
+        pair_margin: float = 2.0,
+        pair_sampler: Sampler[int] | None = None,
         sample_weights: list[float] | None = None,
         sampler_seed: int = 0,
         **kwargs: Any,
@@ -161,10 +257,18 @@ class WeightedTrainer(Trainer):
         self.binary_positive_weight = binary_positive_weight
         self.retention_weight = retention_weight
         self.retention_temperature = retention_temperature
+        self.pair_loss_weight = pair_loss_weight
+        self.pair_margin = pair_margin
+        self.pair_sampler = pair_sampler
         self.sample_weights = sample_weights
         self.sampler_seed = sampler_seed
 
     def _get_train_sampler(self, train_dataset: Dataset | None = None) -> Any:
+        if self.pair_sampler is not None:
+            dataset = train_dataset or self.train_dataset
+            if dataset is None or len(dataset) != len(self.pair_sampler):
+                raise ValueError("pair-aware sampler differs from training dataset")
+            return self.pair_sampler
         if self.sample_weights is None:
             return super()._get_train_sampler(train_dataset)
         dataset = train_dataset or self.train_dataset
@@ -189,6 +293,8 @@ class WeightedTrainer(Trainer):
         labels = inputs.pop("labels")
         teacher_logits = inputs.pop("teacher_logits", None)
         retention_mask = inputs.pop("retention_mask", None)
+        pair_groups = inputs.pop("pair_group", None)
+        pair_mask = inputs.pop("pair_mask", None)
         outputs = model(**inputs)
         multiclass_loss = functional.cross_entropy(
             outputs.logits,
@@ -224,6 +330,17 @@ class WeightedTrainer(Trainer):
                 self.retention_temperature,
             )
             loss = loss + self.retention_weight * retention_loss
+        if self.pair_loss_weight and model.training:
+            if pair_groups is None or pair_mask is None:
+                raise ValueError("pair loss requires pair groups and a pair mask")
+            pair_loss = pairwise_scam_margin_loss(
+                scam_margin,
+                labels,
+                pair_groups,
+                pair_mask,
+                self.pair_margin,
+            )
+            loss = loss + self.pair_loss_weight * pair_loss
         return (loss, outputs) if return_outputs else loss
 
 
@@ -401,6 +518,39 @@ def report_slice(
     return result
 
 
+def paired_validation_metrics(
+    rows: list[dict[str, Any]], logits: np.ndarray, temperature: float
+) -> dict[str, float | int]:
+    probabilities = softmax(logits, temperature)[:, LABEL_TO_ID["SCAM"]]
+    grouped: dict[str, list[int]] = {}
+    for index, row in enumerate(rows):
+        pair_id = str(row.get("pair_id", "")).strip()
+        if not pair_id:
+            raise ValueError("paired validation row lacks pair_id")
+        grouped.setdefault(pair_id, []).append(index)
+    gaps: list[float] = []
+    correctly_ordered = 0
+    for pair_id, indices in grouped.items():
+        if len(indices) != 2 or {str(rows[index]["label"]) for index in indices} != {
+            "SAFE",
+            "SCAM",
+        }:
+            raise ValueError(f"invalid paired validation family: {pair_id}")
+        safe_index = next(index for index in indices if rows[index]["label"] == "SAFE")
+        scam_index = next(index for index in indices if rows[index]["label"] == "SCAM")
+        gap = float(probabilities[scam_index] - probabilities[safe_index])
+        gaps.append(gap)
+        correctly_ordered += int(gap > 0.0)
+    return {
+        "pairs": len(gaps),
+        "correctly_ordered": correctly_ordered,
+        "pair_order_accuracy": correctly_ordered / len(gaps),
+        "scam_probability_gap_mean": float(np.mean(gaps)),
+        "scam_probability_gap_p05": float(np.percentile(gaps, 5)),
+        "scam_probability_gap_min": float(np.min(gaps)),
+    }
+
+
 def latency(
     model: torch.nn.Module,
     tokenizer: Any,
@@ -530,6 +680,8 @@ def main() -> None:
     parser.add_argument("--binary-loss-weight", type=float, default=1.0)
     parser.add_argument("--retention-weight", type=float, default=0.0)
     parser.add_argument("--retention-temperature", type=float, default=2.0)
+    parser.add_argument("--pair-loss-weight", type=float, default=0.0)
+    parser.add_argument("--pair-margin", type=float, default=2.0)
     parser.add_argument(
         "--source-balance-alpha",
         type=float,
@@ -562,6 +714,12 @@ def main() -> None:
         parser.error("--init-checkpoint and --resume-from-checkpoint are mutually exclusive")
     if args.retention_weight < 0 or args.retention_temperature <= 0:
         parser.error("retention weight must be nonnegative and temperature must be positive")
+    if args.pair_loss_weight < 0 or args.pair_margin <= 0:
+        parser.error("pair loss weight must be nonnegative and pair margin must be positive")
+    if args.pair_loss_weight and args.batch_size % 2:
+        parser.error("pair-aware training requires an even --batch-size")
+    if args.pair_loss_weight and args.source_balance_alpha:
+        parser.error("pair-aware sampling and source-balanced replacement sampling are exclusive")
     if not 0.0 <= args.source_balance_alpha <= 1.0:
         parser.error("--source-balance-alpha must be between zero and one")
     if args.retention_weight and not (
@@ -583,6 +741,9 @@ def main() -> None:
         path = args.data / f"{split}.jsonl"
         if path.exists():
             row_paths[split] = path
+    call_pair_validation_path = args.data / "call_pair_validation.jsonl"
+    if call_pair_validation_path.exists():
+        row_paths["call_pair_validation"] = call_pair_validation_path
     adversarial_path = args.data / "adversarial.jsonl"
     if adversarial_path.exists():
         row_paths["adversarial"] = adversarial_path
@@ -659,6 +820,7 @@ def main() -> None:
             args.max_length,
             dialogue_policy=args.dialogue_policy,
             teacher_logits=teacher_logits if split == "train" else None,
+            include_pair_metadata=bool(args.pair_loss_weight and split == "train"),
         )
 
     sample_weights: list[float] | None = None
@@ -667,6 +829,9 @@ def main() -> None:
         sample_weights, source_sampling_probability = source_sample_weights(
             rows["train"], args.source_balance_alpha
         )
+    pair_sampler: PairPreservingSampler | None = None
+    if args.pair_loss_weight:
+        pair_sampler = PairPreservingSampler(rows["train"], args.batch_size, args.seed)
 
     counts = Counter(str(row["label"]) for row in rows["train"])
     total = sum(counts.values())
@@ -698,7 +863,7 @@ def main() -> None:
         remove_unused_columns=False,
         train_sampling_strategy=(
             "random"
-            if args.evaluate_only or args.source_balance_alpha
+            if args.evaluate_only or args.source_balance_alpha or args.pair_loss_weight
             else "group_by_length"
         ),
         seed=args.seed,
@@ -731,6 +896,9 @@ def main() -> None:
         binary_positive_weight=binary_positive_weight,
         retention_weight=args.retention_weight,
         retention_temperature=args.retention_temperature,
+        pair_loss_weight=args.pair_loss_weight,
+        pair_margin=args.pair_margin,
+        pair_sampler=pair_sampler,
         sample_weights=sample_weights,
         sampler_seed=args.seed,
     )
@@ -809,6 +977,16 @@ def main() -> None:
             ),
             "retention_weight": args.retention_weight,
             "retention_temperature": args.retention_temperature,
+            "pairwise": (
+                "softplus(target_margin - (SCAM scam-margin - matched SAFE scam-margin))"
+            ),
+            "pair_loss_weight": args.pair_loss_weight,
+            "pair_margin": args.pair_margin,
+            "pair_sampler": (
+                "complete pairs kept inside even-sized batches"
+                if args.pair_loss_weight
+                else None
+            ),
             "teacher_logit_manifest": teacher_manifest,
             "teacher_anchor_rows": len(teacher_logits or {}),
             "source_balance_alpha": args.source_balance_alpha,
@@ -856,10 +1034,24 @@ def main() -> None:
         "ood_chichewa",
         "scam_dialogue_validation",
         "taskmaster_validation",
+        "call_pair_validation",
     ):
         if split not in rows:
             continue
         result[split] = report_slice(rows[split], predictions[split], temperature, threshold)
+    if "call_pair_validation" in rows:
+        result["call_pair_validation"]["paired_ranking"] = paired_validation_metrics(
+            rows["call_pair_validation"],
+            predictions["call_pair_validation"],
+            temperature,
+        )
+        pair_binary = result["call_pair_validation"]["binary_safety"]
+        pair_ranking = result["call_pair_validation"]["paired_ranking"]
+        result["call_pair_validation"]["gates"] = {
+            "recall": pair_binary["scam_recall"] >= 0.97,
+            "fpr": pair_binary["false_positive_rate"] <= args.max_fpr,
+            "perfect_pair_order": pair_ranking["pair_order_accuracy"] == 1.0,
+        }
     result["latency"] = latency(
         trainer.model,
         tokenizer,

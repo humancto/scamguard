@@ -1,0 +1,101 @@
+{
+  "experiment_id": "sg-modernbert-schema17-pair-retention-w05-m2",
+  "training_recipe_version": 17,
+  "predeclared_before_training": true,
+  "role": "minimal-pair call classifier with schema-13 regression retention",
+  "initialization": {
+    "checkpoint": "artifacts/checkpoints/sg-modernbert-schema13-dose16",
+    "model_sha256": "31b4d17cf752e6d79319506c62f0cc8e406ddb70d317fae0421672f7854f2d99"
+  },
+  "data": {
+    "directory": "data/experiments/schema17-call-minimal-pairs/processed",
+    "schema_version": 17,
+    "manifest_sha256": "b5184b9c08de3582e72935d10ea3dac429b5efdd04d13de7044a7c172a6e5f37",
+    "train_sha256": "256c0f653799b454c01eaaf7f6b749d8c0b5508e89cea4f92f8a41034d836c14",
+    "dev_sha256": "5b1bbf05c56d917d150a93147cf4e6913e6389f6a6e1a734b235cafc882c6b03",
+    "test_sha256": "c55b396197575d32936a44c5432e6adc85b21cdb6f442fb663c760cd026dc554",
+    "call_pair_validation_sha256": "9208cd3df9568b7ccbc97266bd2c726f7d57c7fbd4cc01ba3d92aed7fa885205",
+    "train_rows": 14799,
+    "call_pair_validation_rows": 192,
+    "new_supervised_rows": {
+      "youtube_scam_calls_cc0": 161,
+      "scamguard_synthetic_call_minimal_pairs_v1": 576
+    },
+    "pair_train_families": 288,
+    "pair_validation_families": 96,
+    "pair_train_labels": {
+      "SAFE": 288,
+      "SCAM": 288
+    },
+    "pair_validation_labels": {
+      "SAFE": 96,
+      "SCAM": 96
+    },
+    "holdout_scenarios": [
+      "financial_planning",
+      "health_scheduling",
+      "parcel_service",
+      "technology_service"
+    ]
+  },
+  "teacher": {
+    "ledger": "data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl",
+    "ledger_sha256": "5a718418debb2897f1078e43724d2ee9a072bb9725bb66aff53d3fa191b591a3",
+    "manifest": "data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json",
+    "manifest_sha256": "c8699f153567fd062c1fbd927dd9cdcf49013b0861448fefe467706e6dc5a36a",
+    "anchor_rows": 14062,
+    "unanchored_rows": 737,
+    "contains_text": false
+  },
+  "training": {
+    "epochs": 1.0,
+    "batch_size": 16,
+    "gradient_accumulation": 1,
+    "learning_rate": 0.000005,
+    "max_length": 256,
+    "dialogue_policy": "speaker-neutral-v1",
+    "binary_loss_weight": 1.0,
+    "retention_weight": 2.0,
+    "retention_temperature": 2.0,
+    "pair_loss_weight": 0.5,
+    "pair_margin": 2.0,
+    "pair_sampler": "every row once per epoch; each complete pair contained in one even-sized batch",
+    "source_balance_alpha": 0.0,
+    "seed": 20260820,
+    "checkpoint_selection": "development recall at the frozen 2-percent FPR cap"
+  },
+  "evaluation_policy": {
+    "threshold_source": "unchanged development SAFE/SCAM rows only",
+    "permitted_selection": [
+      "call_pair_validation",
+      "youtube_scam_validation",
+      "apptek_call_selection",
+      "scam_dialogue_validation",
+      "taskmaster_validation"
+    ],
+    "sealed_not_opened": [
+      "primary_test_v8",
+      "ood_scam_dialogue",
+      "youtube_scam_ood",
+      "apptek_call_ood",
+      "bothbosu_ood",
+      "moz_holdout"
+    ]
+  },
+  "acceptance": {
+    "development_recall_min": 0.97,
+    "development_fpr_max": 0.02,
+    "regression_recall_min": 0.97,
+    "regression_fpr_max": 0.02,
+    "call_pair_validation_recall_min": 0.97,
+    "call_pair_validation_fpr_max": 0.02,
+    "call_pair_validation_order_accuracy_min": 1.0,
+    "apptek_selection_fpr_must_beat": 0.08908045977011494,
+    "youtube_selection_recall_min": 0.97,
+    "bothbosu_selection_recall_min": 0.97,
+    "bothbosu_selection_fpr_max": 0.02,
+    "taskmaster_selection_fpr_max": 0.02,
+    "desktop_end_to_end_p95_ms_max": 20.0
+  },
+  "failure_policy": "reject without export or sealed evaluation if any acceptance gate fails"
+}

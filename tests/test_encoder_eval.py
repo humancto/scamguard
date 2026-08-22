@@ -9,8 +9,11 @@ import torch
 from scamguard.metrics import file_sha256
 from training.eval_encoder_external import metadata_slices
 from training.train_encoder import (
+    PairPreservingSampler,
     WeightedTrainer,
     load_teacher_logits,
+    paired_validation_metrics,
+    pairwise_scam_margin_loss,
     predict_in_dataset_order,
     retention_kl_loss,
     safety_selection_metrics,
@@ -30,6 +33,8 @@ def bare_weighted_trainer() -> WeightedTrainer:
     trainer.binary_positive_weight = 1.0
     trainer.retention_weight = 2.0
     trainer.retention_temperature = 2.0
+    trainer.pair_loss_weight = 0.0
+    trainer.pair_margin = 2.0
     return trainer
 
 
@@ -157,6 +162,72 @@ def test_retention_kl_uses_only_anchored_rows() -> None:
     assert anchored_both.item() > 0.1
 
 
+def test_pairwise_margin_rewards_matched_scam_ranking() -> None:
+    labels = torch.tensor([0, 2])
+    groups = torch.tensor([1, 1])
+    mask = torch.tensor([1.0, 1.0])
+
+    ordered = pairwise_scam_margin_loss(
+        torch.tensor([-2.0, 2.0]), labels, groups, mask, margin=2.0
+    )
+    reversed_pair = pairwise_scam_margin_loss(
+        torch.tensor([2.0, -2.0]), labels, groups, mask, margin=2.0
+    )
+
+    assert ordered.item() < 0.2
+    assert reversed_pair.item() > 5.0
+
+
+def test_pairwise_margin_rejects_incomplete_pair() -> None:
+    with pytest.raises(ValueError, match="incomplete pair"):
+        pairwise_scam_margin_loss(
+            torch.tensor([1.0]),
+            torch.tensor([2]),
+            torch.tensor([1]),
+            torch.tensor([1.0]),
+            margin=2.0,
+        )
+
+
+def test_pair_sampler_keeps_pairs_in_same_batch_and_covers_every_row() -> None:
+    rows = [{"label": "SAFE"} for _ in range(5)]
+    rows.extend(
+        [
+            {"label": "SAFE", "pair_id": "one"},
+            {"label": "SCAM", "pair_id": "one"},
+            {"label": "SAFE", "pair_id": "two"},
+            {"label": "SCAM", "pair_id": "two"},
+        ]
+    )
+    sampler = PairPreservingSampler(rows, batch_size=4, seed=7)
+
+    order = list(sampler)
+    batches = [order[index : index + 4] for index in range(0, len(order), 4)]
+
+    assert sorted(order) == list(range(len(rows)))
+    for pair_id in ("one", "two"):
+        pair_indices = {index for index, row in enumerate(rows) if row.get("pair_id") == pair_id}
+        assert any(pair_indices <= set(batch) for batch in batches)
+
+
+def test_paired_validation_reports_probability_order() -> None:
+    rows = [
+        {"label": "SAFE", "pair_id": "one"},
+        {"label": "SCAM", "pair_id": "one"},
+        {"label": "SAFE", "pair_id": "two"},
+        {"label": "SCAM", "pair_id": "two"},
+    ]
+    logits = np.array(
+        [[3.0, 0.0, -1.0], [0.0, 0.0, 3.0], [2.0, 0.0, 1.0], [3.0, 0.0, 0.0]]
+    )
+
+    metrics = paired_validation_metrics(rows, logits, temperature=1.0)
+
+    assert metrics["pairs"] == 2
+    assert metrics["correctly_ordered"] == 1
+    assert metrics["pair_order_accuracy"] == 0.5
+
+
 def test_weighted_trainer_skips_retention_for_teacher_free_evaluation() -> None:
     trainer = bare_weighted_trainer()
     model = StubClassifier()
@@ -179,6 +250,23 @@ def test_weighted_trainer_requires_teacher_fields_during_retention_training() ->
     model.train()
 
     with pytest.raises(ValueError, match="retention loss requires teacher logits"):
+        trainer.compute_loss(
+            model,
+            {
+                "input_ids": torch.tensor([[3.0, 0.0, -1.0]]),
+                "labels": torch.tensor([0]),
+            },
+        )
+
+
+def test_weighted_trainer_requires_pair_fields_during_pair_training() -> None:
+    trainer = bare_weighted_trainer()
+    trainer.retention_weight = 0.0
+    trainer.pair_loss_weight = 1.0
+    model = StubClassifier()
+    model.train()
+
+    with pytest.raises(ValueError, match="pair loss requires pair groups"):
         trainer.compute_loss(
             model,
             {
