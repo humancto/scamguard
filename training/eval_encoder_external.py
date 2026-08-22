@@ -31,6 +31,18 @@ except ModuleNotFoundError:  # Direct execution places training/ rather than the
 METADATA_SLICE_FIELDS = ("source_accent", "source_domain", "source_window")
 
 
+def action_target_names(model: Any) -> list[str]:
+    """Return auxiliary action heads in classifier-logit order."""
+    id2label = getattr(model.config, "id2label", {})
+    names: list[str] = []
+    for index in range(3, int(model.config.num_labels)):
+        label = str(id2label.get(index, id2label.get(str(index), "")))
+        if not label.startswith("ACTION_"):
+            raise ValueError(f"classifier logit {index} is not a named action target: {label!r}")
+        names.append(label.removeprefix("ACTION_"))
+    return names
+
+
 def metadata_slices(
     rows: list[dict[str, object]],
     predictions: np.ndarray,
@@ -196,8 +208,16 @@ def main() -> None:
     args.report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     if args.predictions:
         probabilities = softmax(predictions[:, :3], temperature)
+        action_names = action_target_names(model)
+        action_probabilities = (
+            torch.sigmoid(torch.from_numpy(predictions[:, 3:])).numpy()
+            if action_names
+            else np.empty((len(rows), 0), dtype=np.float32)
+        )
         ledger = []
-        for row, scores in zip(rows, probabilities, strict=True):
+        for row, scores, action_scores in zip(
+            rows, probabilities, action_probabilities, strict=True
+        ):
             ledger.append(
                 {
                     "id": row["id"],
@@ -208,6 +228,10 @@ def main() -> None:
                     "scam_at_frozen_threshold": bool(
                         scores[2] >= scam_threshold
                     ),
+                    "action_probabilities": {
+                        name: float(score)
+                        for name, score in zip(action_names, action_scores, strict=True)
+                    },
                 }
             )
         args.predictions.parent.mkdir(parents=True, exist_ok=True)

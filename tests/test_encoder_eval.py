@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from scamguard.metrics import file_sha256
-from training.eval_encoder_external import metadata_slices
+from training.eval_encoder_external import action_target_names, metadata_slices
 from training.train_encoder import (
     ACTION_TARGETS,
     PairPreservingSampler,
@@ -143,6 +143,26 @@ def test_external_metadata_slices_are_text_free() -> None:
     serialized = json.dumps(slices)
     assert "private fixture phrase" not in serialized
     assert "by_language" not in serialized
+
+
+def test_external_action_target_names_follow_classifier_order() -> None:
+    model = SimpleNamespace(
+        config=SimpleNamespace(
+            num_labels=5,
+            id2label={
+                0: "SAFE",
+                1: "UNCERTAIN",
+                2: "SCAM",
+                3: "ACTION_requested_disclosure_or_transfer",
+                4: "ACTION_independent_verification",
+            },
+        )
+    )
+
+    assert action_target_names(model) == [
+        "requested_disclosure_or_transfer",
+        "independent_verification",
+    ]
 
 
 def test_source_balance_uses_sqrt_source_mass_at_alpha_half() -> None:
