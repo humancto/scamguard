@@ -171,13 +171,22 @@ def pairwise_scam_margin_loss(
     for group in torch.unique(selected_groups):
         group_mask = selected_groups == group
         group_labels = selected_labels[group_mask]
-        if group.item() <= 0 or group_mask.sum().item() != 2:
+        group_size = group_mask.sum().item()
+        if group.item() <= 0 or group_size < 2 or group_size % 2:
             raise ValueError("pair-aware batch contains an incomplete pair family")
         safe = group_labels == LABEL_TO_ID["SAFE"]
         scam = group_labels == LABEL_TO_ID["SCAM"]
-        if safe.sum().item() != 1 or scam.sum().item() != 1:
-            raise ValueError("pair-aware family must contain one SAFE and one SCAM row")
-        difference = selected_margins[group_mask][scam][0] - selected_margins[group_mask][safe][0]
+        expected_per_label = group_size // 2
+        if (
+            safe.sum().item() != expected_per_label
+            or scam.sum().item() != expected_per_label
+        ):
+            raise ValueError("pair-aware family must contain equal SAFE and SCAM rows")
+        # Repeated-pair curricula can place two complete copies of the same family in one
+        # batch. Average their dropout-perturbed margins so this remains one family-level
+        # constraint, while still rejecting an actually split or label-imbalanced pair.
+        group_margins = selected_margins[group_mask]
+        difference = group_margins[scam].mean() - group_margins[safe].mean()
         losses.append(functional.softplus(scam_margins.new_tensor(margin) - difference))
     return torch.stack(losses).mean()
 

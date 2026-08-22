@@ -189,6 +189,18 @@ def test_pairwise_margin_rejects_incomplete_pair() -> None:
         )
 
 
+def test_pairwise_margin_accepts_multiple_complete_copies_of_family() -> None:
+    repeated = pairwise_scam_margin_loss(
+        torch.tensor([-2.0, 2.0, -1.8, 2.2]),
+        torch.tensor([0, 2, 0, 2]),
+        torch.tensor([1, 1, 1, 1]),
+        torch.tensor([1.0, 1.0, 1.0, 1.0]),
+        margin=2.0,
+    )
+
+    assert repeated.item() < 0.2
+
+
 def test_pair_sampler_keeps_pairs_in_same_batch_and_covers_every_row() -> None:
     rows = [{"label": "SAFE"} for _ in range(5)]
     rows.extend(
