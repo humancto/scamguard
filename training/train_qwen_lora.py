@@ -46,6 +46,111 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def line_count(path: Path) -> int:
+    with path.open(encoding="utf-8") as handle:
+        return sum(1 for line in handle if line.strip())
+
+
+def experiment_config_errors(args: argparse.Namespace, config: dict[str, Any]) -> list[str]:
+    """Bind command-line training parameters to a frozen experiment declaration."""
+
+    errors: list[str] = []
+    expected = {
+        "base_model": args.model,
+        "base_model_revision": args.revision,
+        "seed": args.seed,
+        "epochs": args.epochs,
+        "batch_size": args.batch_size,
+        "eval_batch_size": args.eval_batch_size,
+        "gradient_accumulation": args.gradient_accumulation,
+        "gradient_checkpointing": args.gradient_checkpointing,
+        "learning_rate": args.learning_rate,
+        "max_length": args.max_length,
+        "sampling": args.sampling_strategy,
+        "warmup_fraction": 0.05,
+        "weight_decay": 0.01,
+    }
+    for field, actual in expected.items():
+        if config.get(field) != actual:
+            errors.append(f"{field}: config {config.get(field)!r}, command {actual!r}")
+    if "trainer_eval" in config and bool(config["trainer_eval"]) == args.skip_eval:
+        errors.append(
+            f"trainer_eval: config {config['trainer_eval']!r}, command {not args.skip_eval!r}"
+        )
+    checkpoint_output = config.get("checkpoint_output")
+    if checkpoint_output is not None and Path(str(checkpoint_output)) != args.output:
+        errors.append(
+            f"checkpoint_output: config {checkpoint_output!r}, command {str(args.output)!r}"
+        )
+
+    lora = config.get("lora")
+    expected_lora = {
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "target_modules": LANGUAGE_LORA_TARGETS,
+        "scope": "language tower only; asserted at runtime",
+    }
+    if lora != expected_lora:
+        errors.append("lora declaration differs from the runtime adapter contract")
+
+    data = config.get("data")
+    if not isinstance(data, dict):
+        errors.append("data declaration is missing")
+        return errors
+    processed = args.data.parent
+    declared_directory = data.get("processed_directory")
+    if declared_directory is not None and Path(str(declared_directory)) != processed:
+        errors.append(
+            f"processed_directory: config {declared_directory!r}, command {str(processed)!r}"
+        )
+    identities = {
+        processed / "manifest.json": data.get("manifest_sha256"),
+        args.data / "train.jsonl": data.get("train_jsonl_sha256"),
+        args.data / "dev.jsonl": data.get("dev_jsonl_sha256"),
+    }
+    for path, expected_hash in identities.items():
+        if not path.is_file():
+            errors.append(f"missing frozen data artifact: {path}")
+        elif sha256(path) != expected_hash:
+            errors.append(f"data hash mismatch: {path}")
+    counts = {
+        "train_examples": args.data / "train.jsonl",
+        "dev_examples": args.data / "dev.jsonl",
+    }
+    for field, path in counts.items():
+        if path.is_file() and line_count(path) != data.get(field):
+            errors.append(
+                f"{field}: config {data.get(field)!r}, data {line_count(path)!r}"
+            )
+    if config.get("run_kind") == "full":
+        if data.get("schema_version") != 24:
+            errors.append("full run requires data.schema_version 24")
+        token_audit = data.get("token_length_audit")
+        if not isinstance(token_audit, dict):
+            errors.append("full run requires a token_length_audit declaration")
+        else:
+            report_path = Path(str(token_audit.get("report_path", "")))
+            report_sha256 = token_audit.get("report_sha256")
+            if not report_path.is_file():
+                errors.append(f"missing frozen token audit: {report_path}")
+            elif sha256(report_path) != report_sha256:
+                errors.append(f"token audit hash mismatch: {report_path}")
+            if token_audit.get("full_over_max_length") != 0:
+                errors.append("full run token audit reports truncated examples")
+            minimum_supervised = token_audit.get("minimum_supervised_tokens")
+            if (
+                not isinstance(minimum_supervised, int)
+                or isinstance(minimum_supervised, bool)
+                or minimum_supervised <= 0
+            ):
+                errors.append("full run token audit lacks positive supervised-token coverage")
+        evidence_audit = data.get("evidence_audit")
+        if not isinstance(evidence_audit, dict) or evidence_audit.get("coverage") != 1.0:
+            errors.append("full run requires complete verbatim-evidence coverage")
+    return errors
+
+
 def completion_token_start(
     prompt: str,
     complete: str,
@@ -131,6 +236,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
     parser.add_argument("--revision")
+    parser.add_argument(
+        "--experiment-config",
+        type=Path,
+        help="Verify model, hyperparameters, data identities, and output before loading weights.",
+    )
     parser.add_argument("--data", type=Path, default=Path("data/processed/qwen_sft"))
     parser.add_argument(
         "--output", type=Path, default=Path("artifacts/checkpoints/qwen35-08b-lora")
@@ -165,6 +275,12 @@ def main() -> None:
     parser.add_argument("--resume-from-checkpoint")
     parser.add_argument("--seed", type=int, default=20260820)
     args = parser.parse_args()
+    experiment_config: dict[str, Any] | None = None
+    if args.experiment_config is not None:
+        experiment_config = json.loads(args.experiment_config.read_text(encoding="utf-8"))
+        mismatches = experiment_config_errors(args, experiment_config)
+        if mismatches:
+            raise RuntimeError("experiment config preflight failed:\n" + "\n".join(mismatches))
     set_seed(args.seed)
 
     mps_available = torch.backends.mps.is_available()
@@ -257,6 +373,18 @@ def main() -> None:
             {
                 "base_model": args.model,
                 "base_model_revision": base_model_revision,
+                "experiment_id": (
+                    experiment_config.get("experiment_id") if experiment_config else None
+                ),
+                "experiment_config": (
+                    {
+                        "path": str(args.experiment_config),
+                        "sha256": sha256(args.experiment_config),
+                        "run_kind": experiment_config.get("run_kind"),
+                    }
+                    if experiment_config is not None and args.experiment_config is not None
+                    else None
+                ),
                 "seed": args.seed,
                 "epochs": args.epochs,
                 "batch_size": args.batch_size,

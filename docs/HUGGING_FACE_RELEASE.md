@@ -28,6 +28,20 @@ label audits are frozen.
 2. Create a new immutable 0.8B experiment config with the schema-v24 hashes. Run the full LoRA
    experiment against the pinned official checkpoint; do not overwrite the historical schema-v6
    config or smoke reports.
+
+   ```bash
+   make qwen-08b-full-data
+   make qwen-08b-full-token-audit
+   make qwen-08b-full-freeze
+   # Review and commit the generated immutable config, then start the measured run.
+   make qwen-08b-full
+   ```
+
+   The freeze step requires schema version 24, a completed independent human-label audit, non-empty
+   annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim
+   evidence, and zero examples over the 512-token limit. It refuses to overwrite an existing
+   config. The trainer independently rechecks the config, model revision, hyperparameters, LoRA
+   module allowlist, data/report hashes, counts, and output path before loading model weights.
 3. Freeze calibration, routing, and thresholds on development/selection data. Pass every internal
    and independent external-selection gate before opening any prediction-sealed test.
 4. Merge the adapter with `training/merge_qwen_adapter.py`. Its equivalence audit must show that

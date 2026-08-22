@@ -1,6 +1,10 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
 
 PYTHON_BIN ?= .venv/bin/python
+QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
+QWEN08_FULL_CONFIG ?= configs/qwen35-08b-schema24-lora.json
+QWEN08_FULL_OUTPUT ?= artifacts/checkpoints/qwen35-08b-schema24-lora
+QWEN08_FULL_TOKEN_AUDIT ?= reports/runs/qwen35-08b-schema24-token-audit.json
 
 install:
 	uv sync --extra train --extra dev
@@ -582,6 +586,7 @@ qwen-token-audit: qwen-data
 qwen-08b: qwen-data
 	uv run python scripts/verify_experiment_config.py --config configs/qwen35-08b-lora.json
 	uv run --extra train --extra qwen python training/train_qwen_lora.py \
+		--experiment-config configs/qwen35-08b-lora.json \
 		--model Qwen/Qwen3.5-0.8B \
 		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
 		--batch-size 16 --eval-batch-size 4 \
@@ -589,9 +594,42 @@ qwen-08b: qwen-data
 		--sampling-strategy group_by_length --require-mps \
 		--output artifacts/checkpoints/qwen35-08b-schema6-lora
 
+qwen-08b-full-data:
+	test -f "$(QWEN08_FULL_DATA)/manifest.json"
+	uv run --extra train python training/build_qwen_sft.py \
+		--data "$(QWEN08_FULL_DATA)" --output "$(QWEN08_FULL_DATA)/qwen_sft"
+
+qwen-08b-full-token-audit: qwen-08b-full-data
+	uv run --extra train --extra qwen python scripts/audit_qwen_tokens.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--data "$(QWEN08_FULL_DATA)/qwen_sft" --max-length 512 \
+		--output "$(QWEN08_FULL_TOKEN_AUDIT)"
+
+qwen-08b-full-freeze: qwen-08b-full-token-audit
+	uv run --extra train --extra qwen python scripts/freeze_qwen08_full_experiment.py \
+		--processed "$(QWEN08_FULL_DATA)" --token-audit "$(QWEN08_FULL_TOKEN_AUDIT)" \
+		--output "$(QWEN08_FULL_CONFIG)" --checkpoint-output "$(QWEN08_FULL_OUTPUT)" \
+		--experiment-id sg-qwen35-08b-schema24-full-v1
+
+qwen-08b-full:
+	test -f "$(QWEN08_FULL_CONFIG)"
+	uv run python scripts/verify_experiment_config.py \
+		--config "$(QWEN08_FULL_CONFIG)" --data "$(QWEN08_FULL_DATA)"
+	uv run --extra train --extra qwen python training/train_qwen_lora.py \
+		--experiment-config "$(QWEN08_FULL_CONFIG)" \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--data "$(QWEN08_FULL_DATA)/qwen_sft" \
+		--batch-size 16 --eval-batch-size 4 \
+		--gradient-accumulation 1 --gradient-checkpointing \
+		--sampling-strategy group_by_length --require-mps \
+		--output "$(QWEN08_FULL_OUTPUT)"
+
 qwen-2b: qwen-data
 	uv run python scripts/verify_experiment_config.py --config configs/qwen35-2b-lora.json
 	uv run --extra train --extra qwen python training/train_qwen_lora.py \
+		--experiment-config configs/qwen35-2b-lora.json \
 		--model Qwen/Qwen3.5-2B \
 		--revision 15852e8c16360a2fea060d615a32b45270f8a8fc \
 		--batch-size 16 --eval-batch-size 4 \
@@ -602,6 +640,7 @@ qwen-2b: qwen-data
 qwen-4b: qwen-data
 	uv run python scripts/verify_experiment_config.py --config configs/qwen35-4b-lora.json
 	uv run --extra train --extra qwen python training/train_qwen_lora.py \
+		--experiment-config configs/qwen35-4b-lora.json \
 		--model Qwen/Qwen3.5-4B \
 		--revision 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a \
 		--batch-size 8 --eval-batch-size 2 \
@@ -612,6 +651,7 @@ qwen-4b: qwen-data
 qwen-4b-schema9: qwen-data
 	uv run python scripts/verify_experiment_config.py --config configs/qwen35-4b-lora-schema9.json
 	uv run --extra train --extra qwen python training/train_qwen_lora.py \
+		--experiment-config configs/qwen35-4b-lora-schema9.json \
 		--model Qwen/Qwen3.5-4B \
 		--revision 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a \
 		--batch-size 8 --eval-batch-size 2 \
