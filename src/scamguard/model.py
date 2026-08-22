@@ -103,9 +103,26 @@ class TransformersBackend:
         self.scam_threshold = float(calibration["scam_threshold"])
         self.safe_threshold = float(calibration["safe_threshold"])
         self.model_id = str(calibration.get("model_id", model_path.name))
+        input_transform = calibration.get("input_transform", {})
+        self.dialogue_policy = str(input_transform.get("dialogue_policy", "none"))
+        if self.dialogue_policy not in DIALOGUE_POLICIES:
+            raise ValueError(f"unsupported Transformers dialogue policy: {self.dialogue_policy}")
+        self.max_length = int(input_transform.get("max_length", 256))
+        if self.max_length < 1:
+            raise ValueError("Transformers input max length must be positive")
+        truncation_side = str(input_transform.get("truncation_side", "right"))
+        if truncation_side not in {"left", "right"}:
+            raise ValueError("Transformers truncation side must be left or right")
+        self.tokenizer.truncation_side = truncation_side
 
     def predict(self, text: str) -> ModelScores:
-        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
+        prepared = prepare_model_text(text, self.dialogue_policy)
+        inputs = self.tokenizer(
+            prepared,
+            return_tensors="pt",
+            truncation=True,
+            max_length=self.max_length,
+        )
         inputs = {key: value.to(self.device) for key, value in inputs.items()}
         with self.torch.inference_mode():
             logits = self.model(**inputs).logits[0, :3] / self.temperature

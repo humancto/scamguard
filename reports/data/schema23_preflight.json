@@ -1,0 +1,27 @@
+{
+  "config": "configs/encoder-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right.json",
+  "config_sha256": "835cb138eafd15db68a15bd4ff942f5bfaef27cf5bcdee699e15f470f162dc30",
+  "counts": {
+    "action_calibration": 400,
+    "action_supervised": 7580,
+    "ftc_fit": 356,
+    "ftc_validation": 84,
+    "licensed": 9543,
+    "synthetic": 13127,
+    "train": 22670
+  },
+  "decisive_visibility_rows": 3944,
+  "failures": [],
+  "ftc_admitted_overlap_recheck": {
+    "candidate_rows_after_overlap_control": 440,
+    "candidate_rows_before_overlap_control": 440,
+    "exact_overlap_rows": 0,
+    "families_removed_for_any_near_overlap": 0,
+    "near_hamming_max": 6,
+    "near_overlap_rows_including_exact": 0,
+    "reference_rows": 38751,
+    "rows_removed_with_overlap_families": 0
+  },
+  "passed": true,
+  "teacher_rows": 21234
+}

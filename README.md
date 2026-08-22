@@ -28,6 +28,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v20 action states) | rejected multi-task teacher | 602.0 MB training artifact | dev/regression and controlled states passed, but BothBosu was 93.62% recall / 42.48% FPR; rejected |
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
+| ModernBERT-base, 149M (schema v23 evidence compaction) | frozen quality candidate | training pending | 22,670-row bounded dataset; preflight passes hashes, family isolation, overlap, teacher, and all 3,944 decisive-token visibility checks |
 | Qwen3.5-0.8B, 4-bit | compact schema/explanation specialist | about 0.6 GB | compression challenger |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
@@ -74,6 +75,9 @@ human-call ablation, bounded schema-v22 dataset, and rejected schema-v22 result 
 [reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md](reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md), with
 the measured result in
 [reports/ENCODER_SCHEMA22_SERVICE_EVIDENCE.md](reports/ENCODER_SCHEMA22_SERVICE_EVIDENCE.md).
+The frozen schema-v23 evidence-compaction dataset, FTC pattern boundary, licensed-real accounting,
+and preflight identities are in
+[reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md](reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md).
 
 ## Quick start
 
@@ -224,6 +228,10 @@ views plus 1,184 human-grounded state variants. Action states train on airline, 
 and media while insurance and software stay validation-only. The 24,208-row teacher recipe and all
 source, overlap, token-window, and gate identities are frozen in
 [`reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md`](reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
+Schema v23 returns to schema v20, adds only 216 licensed MultiDoGO action turns and 1,220 controlled
+state rows, and applies a participant-balanced evidence-plus-recent input contract before the
+256-token window. Its 22,670-row composition and pre-training gate are frozen in
+[`reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`](reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md).
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are

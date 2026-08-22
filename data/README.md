@@ -14,7 +14,7 @@ uses for the downloaded files.
 | [NCSU WSPR SMS Phishing](https://github.com/wspr-ncsu/sms-phishing/commit/ef7da01dfc145ce283a2af380e5dd8b817191ee7) | 68,029 reports | MIT | one example per near-template campaign cluster; 1,913 training rows and a 488-row no-SAFE holdout |
 | [IMC 2025 Public-Forum Smishing](https://github.com/reportsmishing/Smishing-Dataset-IMC25/tree/a6175560b57387199871e51fbef6bc523d2516b4) | 33,869 labeled reports | CC-BY-4.0 | 1,248 train, 1,125 selection-only validation, and 2,300 unseen-family OOD rows after filtering |
 | [Google Taskmaster-1 WOz dialogues](https://github.com/google-research-datasets/Taskmaster/tree/d92cb6af3005f1dc09c39e75e7daf4a04905e00b/TM-1-2019) | 5,507 two-person dialogues | CC-BY-4.0 | 600 privacy-normalized, human-authored weak SAFE training windows and 450 disjoint selection windows; not counted as naturally occurring communications |
-| [AWS MultiDoGO](https://github.com/awslabs/multi-domain-goal-oriented-dialogues-dataset/tree/baa30639c4b271f394b81443c842193407cdf26d) | 86,719 human-human service roleplays | CDLA-Permissive-1.0 | schema-v22 adds 1,790 weak-SAFE training views from 895 families and 1,184 controlled state derivatives; insurance/software states remain validation-only |
+| [AWS MultiDoGO](https://github.com/awslabs/multi-domain-goal-oriented-dialogues-dataset/tree/baa30639c4b271f394b81443c842193407cdf26d) | 86,719 human-human service roleplays | CDLA-Permissive-1.0 | schema-v23 uses 216 weak-weight human agent turns and 864 state derivatives for fitting, 80 family-disjoint action-calibration families, and held insurance/software states |
 | [YouTube Scam Phone Call Transcripts v2](https://www.kaggle.com/datasets/rivalcults/youtube-scam-phone-call-transcripts) | 243 partial transcripts / 222 source URLs | CC0-1.0 | 161 early windows in rejected schema-v14 ablation, 70 family-held selection windows, and 80 prediction-sealed OOD windows; counted only as real scam-call-derived language |
 | [AppTek Call-Center Dialogues](https://huggingface.co/datasets/apptek-com/apptek_callcenter_dialogues) | 873 spontaneous service-call roleplays | CC-BY-SA-4.0 | evaluation only: 348 open and 1,396 prediction-sealed SAFE windows split by shared-speaker/call components; no audio and zero fitting rows |
 | [AZ-SC Azerbaijani SMS Collection](https://doi.org/10.25045/jpit.v17.i1.04) | 4,538 | CC-BY-4.0 | new multilingual OOD diagnostic only; never fitting or selection |
@@ -22,6 +22,7 @@ uses for the downloaded files.
 | ScamGuard synthetic dialogue v2 | 1,536 generated; 1,495 admitted | Apache-2.0 | 12 balanced five-turn scam/legitimate scenarios, training only |
 | ScamGuard synthetic counterfactual v1 | 512 canonical; 128 in schema-v13 ablation | Apache-2.0 | eight balanced, paired error-driven families; training only |
 | ScamGuard synthetic legitimate-call openings v1 | 1,024 generated; 256 in schema-v15 dose-16 | Apache-2.0 | 16 service scenarios × four opening structures; original SAFE dialogue without explicit anti-scam cues; training only |
+| [FTC-pattern-grounded action states v1](https://consumer.ftc.gov/features/robocall-scam-examples) | 480 generated; 440 admitted after whole-family overlap removal | Apache-2.0 original project copy | ten FTC-described mechanisms, four action states; 356 fitting rows and 84 scenario-held rows; no FTC transcript text copied |
 
 ## Additional external diagnostic
 
@@ -97,6 +98,15 @@ customer records. Four-state derivatives remain synthetic; their action-state tr
 disjoint from held-out insurance and software. Whole families are removed if any view is near a
 schema-v20 artifact. See
 [`reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md`](../reports/DATASET_SCHEMA22_SERVICE_EVIDENCE.md).
+
+Schema v23 uses a smaller MultiDoGO dose and reshapes only the synthetic state derivative so every
+supervised action survives the frozen mobile input path. It keeps the full common prefix, the
+decisive action, and two shared delayed turns; the longer source-state SHA-256 remains on every row.
+The `speaker-neutral-evidence-recent-v2` runtime transform then preserves participant-balanced
+action evidence, explicit safe-navigation boundaries, and recent context within 1,400 characters
+before the 256-token right-truncated encoder input. Preflight found zero decisive omissions across
+3,944 checked state rows. See
+[`reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`](../reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md).
 
 ## Sealed evaluation-only source
 

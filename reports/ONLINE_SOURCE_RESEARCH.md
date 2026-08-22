@@ -223,6 +223,19 @@ structure-matched increment over bulk ingestion. Schema v17 therefore adds 576 b
 minimal-pair training rows and holds 192 paired rows out by complete service scenario; see
 [`DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md`](DATASET_SCHEMA17_CALL_MINIMAL_PAIRS.md).
 
+### 2026-08-22 pattern-rights refresh
+
+| Candidate | Current evidence | Decision |
+|---|---|---|
+| [FTC Robocall Scam Examples](https://consumer.ftc.gov/features/robocall-scam-examples) | FTC-authored pages describe current scam mechanisms and link to individual call examples. The [FTC Website Policy](https://www.ftc.gov/policy-notices/website-policy) says most FTC-authored material is public domain but warns that some site material may be third-party. | Use scenario descriptions as grounding only. Copy zero audio or transcript wording; generate original Apache-2.0 four-state contrasts and retain the FTC URL on each row. |
+| [TeleAntiFraud-28k](https://huggingface.co/datasets/JimmyMa99/TeleAntiFraud) | The Apache-2.0 repository remains gated and the pinned fetch returns 401 without an authorized account. | Keep the fail-closed fetch/audit path; zero downloaded, viewed, or fitted rows and no derivative-mirror bypass. |
+| [Sting9](https://sting9.org/license) | The governing license is ODC-BY-NC and excludes startup/product development and commercial model training despite a conflicting CC0 marketing statement. | Reject for ScamGuard's commercial-capable corpus. |
+| Raw Reddit and forum posts | Platform terms, privacy, deletion, provenance, and contamination cannot be resolved by treating public visibility as a training grant. | Copy zero raw posts. Continue using only the licensed, privacy-normalized IMC 2025 research artifact already admitted in the parent corpus. |
+
+The resulting schema-v23 increment is 1,436 rows rather than a bulk scrape: 216 licensed human
+MultiDoGO turns, 864 human-grounded MultiDoGO states, and 356 admitted original FTC-pattern states.
+It is frozen in `DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`.
+
 ## Audited but rejected or quarantined
 
 | Candidate | Finding | Decision |
@@ -254,16 +267,15 @@ More rows do not make inference slower; model architecture, sequence length, run
 determine the under-20-ms target. More low-quality or duplicated rows do make experiments worse by
 inflating metrics and teaching shortcuts. Current status and next actions are:
 
-1. Independently audit the current 240-row stratified label workbook and high-loss errors.
-2. Keep the completed AppTek benchmark evaluation-only and its 1,396-window OOD partition sealed.
-3. Obtain authorized access to TeleAntiFraud-28k, then audit per-row construction provenance,
+1. Train only the predeclared schema-v23 evidence-compaction recipe; do not tune it on BothBosu.
+2. Reject the candidate immediately if any internal gate fails, before export or external selection.
+3. Keep AppTek evaluation-only and its 1,396-window OOD partition sealed.
+4. Obtain authorized access to TeleAntiFraud-28k, then audit per-row construction provenance,
    privacy, family duplication, source/label shortcuts, and license files before admitting a row.
-4. Keep the publisher's TeleAntiFraud test split external and create a family-disjoint open
+5. Keep the publisher's TeleAntiFraud test split external and create a family-disjoint open
    selection slice before any new dialogue training run.
-5. Audit ES-Port as a possible authentic Spanish SAFE-call source, but do not admit it until privacy,
+6. Audit ES-Port as a possible authentic Spanish SAFE-call source, but do not admit it until privacy,
    weak-label, language-shortcut, and share-alike questions are resolved.
-6. Use schema v17's 576 family-split structure-matched rows with a pair-aware objective and
-   schema-v13 logit retention; do not repeat schema v16's generic source-balancing formulation.
 7. Measure the fast encoder and any Qwen fallback separately; do not represent 4B generation
    latency as a sub-20-ms mobile detector.
 

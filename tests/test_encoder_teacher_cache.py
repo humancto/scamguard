@@ -4,9 +4,10 @@ import json
 from pathlib import Path
 
 import pytest
+import torch
 
 from scamguard.metrics import file_sha256
-from training.cache_encoder_teacher_logits import existing_cache
+from training.cache_encoder_teacher_logits import existing_cache, verdict_logits
 
 
 def write_complete_cache(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
@@ -74,3 +75,13 @@ def test_partial_teacher_cache_fails_closed(tmp_path: Path) -> None:
             data,
             "speaker-neutral-v1",
         )
+
+
+def test_teacher_cache_strips_auxiliary_heads() -> None:
+    values = torch.arange(20).reshape(2, 10)
+    assert verdict_logits(values).tolist() == [[0, 1, 2], [10, 11, 12]]
+
+
+def test_teacher_cache_requires_all_verdict_logits() -> None:
+    with pytest.raises(ValueError, match="verdict logits"):
+        verdict_logits(torch.zeros((2, 2)))

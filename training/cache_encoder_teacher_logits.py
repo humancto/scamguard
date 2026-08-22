@@ -16,9 +16,14 @@ from scamguard.metrics import file_sha256
 from scamguard.preprocessing import DIALOGUE_POLICIES
 
 try:
-    from training.train_encoder import LABELS, EncodedDataset, read_jsonl
+    from training.train_encoder import ACTION_TARGETS, LABELS, EncodedDataset, read_jsonl
 except ModuleNotFoundError:  # Direct execution places training/ rather than repo on sys.path.
-    from train_encoder import LABELS, EncodedDataset, read_jsonl  # type: ignore[no-redef]
+    from train_encoder import (  # type: ignore[no-redef]
+        ACTION_TARGETS,
+        LABELS,
+        EncodedDataset,
+        read_jsonl,
+    )
 
 
 def checkpoint_model_file(checkpoint: Path) -> Path:
@@ -27,6 +32,14 @@ def checkpoint_model_file(checkpoint: Path) -> Path:
         if path.is_file():
             return path
     raise FileNotFoundError(f"missing model weights in {checkpoint}")
+
+
+def verdict_logits(logits: torch.Tensor) -> torch.Tensor:
+    """Strip auxiliary heads so the retention ledger preserves only the verdict contract."""
+
+    if logits.ndim != 2 or logits.shape[1] < len(LABELS):
+        raise ValueError("teacher output does not contain all verdict logits")
+    return logits[:, : len(LABELS)]
 
 
 def existing_cache(
@@ -94,6 +107,11 @@ def cache(
         tokenizer,
         max_length,
         dialogue_policy=dialogue_policy,
+        action_target_names=(
+            ACTION_TARGETS
+            if any(isinstance(row.get("action_targets"), dict) for row in rows)
+            else ()
+        ),
     )
     loader = DataLoader(
         dataset,
@@ -105,8 +123,16 @@ def cache(
     offset = 0
     with torch.inference_mode():
         for batch in loader:
-            batch.pop("labels")
-            logits = model(**{key: value.to(device) for key, value in batch.items()}).logits
+            for metadata_key in (
+                "labels",
+                "action_targets",
+                "action_mask",
+                "verdict_weight",
+            ):
+                batch.pop(metadata_key, None)
+            logits = verdict_logits(
+                model(**{key: value.to(device) for key, value in batch.items()}).logits
+            )
             values = logits.float().cpu().tolist()
             for identifier, row_logits in zip(
                 identifiers[offset : offset + len(values)],
@@ -132,6 +158,7 @@ def cache(
         "data_sha256": file_sha256(data),
         "rows": len(records),
         "labels": list(LABELS),
+        "logit_scope": "first three verdict logits only",
         "dialogue_policy": dialogue_policy,
         "max_length": max_length,
         "ledger": str(output),

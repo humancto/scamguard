@@ -747,6 +747,7 @@ def action_target_metrics(
     rows: list[dict[str, Any]],
     logits: np.ndarray,
     action_target_names: tuple[str, ...],
+    calibrated_thresholds: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     indices = [
         index
@@ -768,21 +769,64 @@ def action_target_metrics(
     probabilities = 1.0 / (
         1.0 + np.exp(-logits[indices, len(LABELS) :].astype(np.float64))
     )
-    predicted = probabilities >= 0.5
+    predicted_at_0_5 = probabilities >= 0.5
+    if calibrated_thresholds is not None:
+        if set(calibrated_thresholds) != set(action_target_names):
+            raise ValueError("calibrated action thresholds differ from target names")
+        threshold_values = np.array(
+            [calibrated_thresholds[name] for name in action_target_names], dtype=np.float64
+        )
+        if np.any((threshold_values < 0.0) | (threshold_values > 1.0)):
+            raise ValueError("calibrated action threshold is outside [0, 1]")
+        predicted_calibrated = probabilities >= threshold_values
+    else:
+        threshold_values = np.full(len(action_target_names), 0.5)
+        predicted_calibrated = predicted_at_0_5
     target_reports: dict[str, Any] = {}
-    f1_values: list[float] = []
+    f1_values_at_0_5: list[float] = []
+    f1_values_calibrated: list[float] = []
     roc_auc_values: list[float] = []
     for target_index, name in enumerate(action_target_names):
         target_truth = truth[:, target_index]
-        target_predicted = predicted[:, target_index]
-        tp = int(np.sum((target_truth == 1) & target_predicted))
-        fp = int(np.sum((target_truth == 0) & target_predicted))
-        fn = int(np.sum((target_truth == 1) & ~target_predicted))
-        tn = int(np.sum((target_truth == 0) & ~target_predicted))
-        precision = tp / (tp + fp) if tp + fp else 0.0
-        recall = tp / (tp + fn) if tp + fn else 0.0
-        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-        f1_values.append(f1)
+        reports: dict[str, float | int] = {}
+        for suffix, target_predicted in (
+            ("at_0_5", predicted_at_0_5[:, target_index]),
+            ("at_calibrated", predicted_calibrated[:, target_index]),
+        ):
+            tp = int(np.sum((target_truth == 1) & target_predicted))
+            fp = int(np.sum((target_truth == 0) & target_predicted))
+            fn = int(np.sum((target_truth == 1) & ~target_predicted))
+            tn = int(np.sum((target_truth == 0) & ~target_predicted))
+            precision = tp / (tp + fp) if tp + fp else 0.0
+            recall = tp / (tp + fn) if tp + fn else 0.0
+            f1 = (
+                2 * precision * recall / (precision + recall)
+                if precision + recall
+                else 0.0
+            )
+            if suffix == "at_0_5":
+                f1_values_at_0_5.append(f1)
+                reports.update(
+                    {
+                        "tp": tp,
+                        "fp": fp,
+                        "fn": fn,
+                        "tn": tn,
+                        "precision_at_0_5": precision,
+                        "recall_at_0_5": recall,
+                        "f1_at_0_5": f1,
+                    }
+                )
+            else:
+                f1_values_calibrated.append(f1)
+                reports.update(
+                    {
+                        "calibrated_threshold": float(threshold_values[target_index]),
+                        "precision_at_calibrated": precision,
+                        "recall_at_calibrated": recall,
+                        "f1_at_calibrated": f1,
+                    }
+                )
         roc_auc = (
             float(roc_auc_score(target_truth, probabilities[:, target_index]))
             if len(np.unique(target_truth)) == 2
@@ -793,22 +837,80 @@ def action_target_metrics(
         target_reports[name] = {
             "positives": int(target_truth.sum()),
             "negatives": int(len(target_truth) - target_truth.sum()),
-            "tp": tp,
-            "fp": fp,
-            "fn": fn,
-            "tn": tn,
-            "precision_at_0_5": precision,
-            "recall_at_0_5": recall,
-            "f1_at_0_5": f1,
             "roc_auc": roc_auc,
+            **reports,
         }
     return {
         "examples": len(indices),
-        "exact_match_at_0_5": float(np.mean(np.all(predicted == truth, axis=1))),
-        "macro_f1_at_0_5": float(np.mean(f1_values)),
+        "exact_match_at_0_5": float(np.mean(np.all(predicted_at_0_5 == truth, axis=1))),
+        "macro_f1_at_0_5": float(np.mean(f1_values_at_0_5)),
+        "exact_match_at_calibrated": float(
+            np.mean(np.all(predicted_calibrated == truth, axis=1))
+        ),
+        "macro_f1_at_calibrated": float(np.mean(f1_values_calibrated)),
         "macro_roc_auc": float(np.mean(roc_auc_values)) if roc_auc_values else None,
         "targets": target_reports,
     }
+
+
+def fit_action_thresholds(
+    rows: list[dict[str, Any]],
+    logits: np.ndarray,
+    action_target_names: tuple[str, ...],
+) -> dict[str, float]:
+    """Fit each auxiliary threshold for F1 on a dedicated family-disjoint split."""
+
+    indices = [
+        index for index, row in enumerate(rows) if isinstance(row.get("action_targets"), dict)
+    ]
+    if not indices or not action_target_names:
+        raise ValueError("action threshold fitting requires supervised rows and target names")
+    expected_outputs = len(LABELS) + len(action_target_names)
+    if logits.shape[1] != expected_outputs:
+        raise ValueError("action calibration logits differ from target contract")
+    truth = np.array(
+        [
+            [int(bool(rows[index]["action_targets"][name])) for name in action_target_names]
+            for index in indices
+        ],
+        dtype=np.int64,
+    )
+    probabilities = 1.0 / (
+        1.0 + np.exp(-logits[indices, len(LABELS) :].astype(np.float64))
+    )
+    thresholds: dict[str, float] = {}
+    for target_index, name in enumerate(action_target_names):
+        target_truth = truth[:, target_index]
+        if len(np.unique(target_truth)) != 2:
+            raise ValueError(f"action calibration target lacks both classes: {name}")
+        candidates = np.unique(
+            np.concatenate(
+                (
+                    np.array([0.0, 0.5, 1.0]),
+                    probabilities[:, target_index],
+                )
+            )
+        )
+        best: tuple[float, float, float] | None = None
+        best_threshold = 0.5
+        for candidate in candidates:
+            predicted = probabilities[:, target_index] >= candidate
+            tp = int(np.sum((target_truth == 1) & predicted))
+            fp = int(np.sum((target_truth == 0) & predicted))
+            fn = int(np.sum((target_truth == 1) & ~predicted))
+            precision = tp / (tp + fp) if tp + fp else 0.0
+            recall = tp / (tp + fn) if tp + fn else 0.0
+            f1 = (
+                2 * precision * recall / (precision + recall)
+                if precision + recall
+                else 0.0
+            )
+            objective = (f1, precision, float(candidate))
+            if best is None or objective > best:
+                best = objective
+                best_threshold = float(candidate)
+        thresholds[name] = best_threshold
+    return thresholds
 
 
 def action_state_verdict_metrics(
@@ -1105,6 +1207,8 @@ def main() -> None:
         "harper_state_validation",
         "multidogo_call_validation",
         "multidogo_state_validation",
+        "action_calibration",
+        "ftc_pattern_validation",
     ):
         path = args.data / f"{split}.jsonl"
         if path.exists():
@@ -1352,6 +1456,15 @@ def main() -> None:
     )
     dev_binary_truth, dev_scam_probabilities = binary_subset(rows["dev"], dev_probabilities)
     threshold = choose_threshold(dev_binary_truth, dev_scam_probabilities, args.max_fpr)
+    action_thresholds = (
+        fit_action_thresholds(
+            rows["action_calibration"],
+            predictions["action_calibration"],
+            action_target_names,
+        )
+        if "action_calibration" in rows and action_target_names
+        else None
+    )
 
     calibration = {
         "model_id": args.output.name,
@@ -1360,6 +1473,15 @@ def main() -> None:
         "safe_threshold": 0.20,
         "labels": list(LABELS),
         "threshold_source": "dev SAFE/SCAM only",
+        "action_thresholds": action_thresholds,
+        "action_threshold_source": (
+            "family-disjoint action_calibration rows only" if action_thresholds else None
+        ),
+        "input_transform": {
+            "dialogue_policy": args.dialogue_policy,
+            "truncation_side": tokenizer.truncation_side,
+            "max_length": args.max_length,
+        },
     }
     (args.output / "scamguard_calibration.json").write_text(
         json.dumps(calibration, indent=2) + "\n", encoding="utf-8"
@@ -1413,6 +1535,10 @@ def main() -> None:
                 else None
             ),
             "action_target_counts": action_target_counts,
+            "action_thresholds": action_thresholds,
+            "action_threshold_source": (
+                "family-disjoint action_calibration rows only" if action_thresholds else None
+            ),
             "primary_alert_score": (
                 "calibrated probability from the preserved first three verdict logits; "
                 "auxiliary logits are training and diagnostic signals only"
@@ -1468,6 +1594,8 @@ def main() -> None:
         "harper_state_validation",
         "multidogo_call_validation",
         "multidogo_state_validation",
+        "action_calibration",
+        "ftc_pattern_validation",
     ):
         if split not in rows:
             continue
@@ -1519,12 +1647,35 @@ def main() -> None:
                 rows["multidogo_state_validation"],
                 predictions["multidogo_state_validation"],
                 action_target_names,
+                action_thresholds,
             )
         )
         result["multidogo_state_validation"]["state_verdict_metrics"] = (
             action_state_verdict_metrics(
                 rows["multidogo_state_validation"],
                 predictions["multidogo_state_validation"],
+                temperature,
+                threshold,
+            )
+        )
+    if "action_calibration" in rows:
+        result["action_calibration"]["action_target_metrics"] = action_target_metrics(
+            rows["action_calibration"],
+            predictions["action_calibration"],
+            action_target_names,
+            action_thresholds,
+        )
+    if "ftc_pattern_validation" in rows:
+        result["ftc_pattern_validation"]["action_target_metrics"] = action_target_metrics(
+            rows["ftc_pattern_validation"],
+            predictions["ftc_pattern_validation"],
+            action_target_names,
+            action_thresholds,
+        )
+        result["ftc_pattern_validation"]["state_verdict_metrics"] = (
+            action_state_verdict_metrics(
+                rows["ftc_pattern_validation"],
+                predictions["ftc_pattern_validation"],
                 temperature,
                 threshold,
             )
