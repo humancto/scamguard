@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "publication_status": "blocked",
+  "repository": {
+    "model_id": "humancto/scamguard-qwen3.5-0.8b",
+    "gguf_id": "humancto/scamguard-qwen3.5-0.8b-GGUF",
+    "visibility": "public"
+  },
+  "model": {
+    "base_model": "Qwen/Qwen3.5-0.8B",
+    "base_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "base_license": "Apache-2.0",
+    "run_kind": "pending-full-run",
+    "deployment_role": "routed_specialist",
+    "experiment_id": "pending-schema24-experiment",
+    "training_examples": 0,
+    "evaluation_examples": 0
+  },
+  "quality": {
+    "internal_gates": {"passed": 0, "total": 36},
+    "external_selection_passed": false,
+    "human_label_audit_passed": false,
+    "multilingual_claims_reviewed": false,
+    "sealed_evaluation_passed": false
+  },
+  "quantization": {
+    "format": "GGUF",
+    "type": "pending",
+    "merge_equivalence_passed": false,
+    "post_quantization_evaluation_passed": false,
+    "frozen_calibration_reused": false
+  },
+  "runtime": {
+    "desktop": {
+      "measured": false,
+      "device": "",
+      "p50_ms": 0,
+      "p95_ms": 0,
+      "peak_memory_bytes": 0,
+      "samples": 0
+    },
+    "mobile": {
+      "measured": false,
+      "device": "",
+      "p50_ms": 0,
+      "p95_ms": 0,
+      "peak_memory_bytes": 0,
+      "samples": 0
+    },
+    "routed": {
+      "measured": false,
+      "escalation_rate": 0,
+      "p50_ms": 0,
+      "p95_ms": 0
+    }
+  },
+  "governance": {
+    "base_license_notice_included": false,
+    "data_redistribution_audit_passed": false,
+    "pii_scan_passed": false,
+    "secrets_scan_passed": false,
+    "release_contains_training_rows": false,
+    "direct_reddit_training_rows": false
+  },
+  "artifacts": [],
+  "reports": []
+}

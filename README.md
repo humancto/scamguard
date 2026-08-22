@@ -29,7 +29,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
-| Qwen3.5-0.8B, 4-bit | compact schema/explanation specialist | about 0.6 GB | compression challenger |
+| Qwen3.5-0.8B, 4-bit | pinned full challenger after schema-v24 audit | 563 MB upstream Q4_0 sizing reference | only five-row smoke runs exist; not a quality or release candidate yet |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
 | Qwen3.5-4B, Q4/Q5/Q6 GGUF | deployable escalation candidates | 2.71/3.07/3.46 GB measured | Q4 and Q5 rejected after regression loss; Q6 is frozen on dev only |
@@ -39,6 +39,10 @@ The final release can be a hybrid: the encoder supplies calibrated risk and the 
 invoked only for uncertain cases. A smaller artifact wins only if it meets the exact same gates.
 The 4B candidate is mandatory when 2B fails a gate; the 9B model is a desktop teacher, not the
 default product payload.
+
+The 0.8B train/merge/quantize path and fail-closed Hugging Face publication contract are in
+[docs/HUGGING_FACE_RELEASE.md](docs/HUGGING_FACE_RELEASE.md). Training uses the official
+Transformers safetensors checkpoint; GGUF is produced only after the selected adapter is merged.
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).
