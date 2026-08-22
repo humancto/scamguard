@@ -15,11 +15,13 @@ specialist and routed end-to-end latency are reported separately.
 
 ## Current evidence, not a release candidate
 
-The repository has a pinned 0.8B LoRA configuration and a native MPS training path. Its only
-recorded 0.8B evaluations are five-row smoke runs. They prove that model loading, adapter training,
-and scoring execute; they do not provide quality evidence and are explicitly rejected by the
-publication validator. The full 0.8B challenger starts only after schema v24 data and independent
-label audits are frozen.
+The repository has a pinned 0.8B LoRA configuration and a native MPS training path. The untouched
+base has now been scored on all 6,713 open core and publisher-held examples: it reaches only 29.98%
+core test scam recall and fails every core gate, although its publisher-test SAFE FPR is 0.08%.
+That control is documented in `reports/QWEN08_BASE_SCHEMA24_BASELINE.md`. Historical adapter runs
+remain five-row smoke tests; they prove that loading, adapter training, and scoring execute but are
+explicitly rejected by the publication validator. The full adapted 0.8B challenger starts only
+after schema v24 data and independent label audits are frozen.
 
 ## Release sequence
 
@@ -32,7 +34,8 @@ label audits are frozen.
    ```bash
    make schema24-annotated-hard-negatives
    make schema24-audit
-   # An independent reviewer completes data/audit/schema24-label-audit.csv.
+   # An independent reviewer uses the local blind-review UI. It edits only the ignored CSV.
+   make schema24-audit-review
    make schema24-audit-check
    make qwen-08b-full-data
    make qwen-08b-full-token-audit
@@ -42,6 +45,12 @@ label audits are frozen.
    make qwen-08b-full-eval
    make qwen-08b-full-gates
    ```
+
+   The review UI binds to `127.0.0.1`, loads no remote assets, hides project labels, source labels,
+   fraud categories, and model outputs, and derives agreement only after a reviewer saves their own
+   verdict. It checks the audit and dataset manifest binding before every write and atomically
+   persists progress, so the review can be stopped and resumed. Do not have a person who authored
+   the labels perform the independent review.
 
    The freeze step requires schema version 24, a completed independent human-label audit, non-empty
    annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim

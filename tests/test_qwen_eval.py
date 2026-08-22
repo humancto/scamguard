@@ -1,5 +1,6 @@
 """The batched Qwen scorer must match its simple reference implementation."""
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -11,6 +12,7 @@ from training.eval_qwen import (
     evaluate_slice,
     load_score_cache,
     predict_with_abstention,
+    runtime_artifact_description,
     save_score_cache,
     score_cache_identity,
     score_message_unbatched,
@@ -66,6 +68,13 @@ class FakeModel:
         if logits_to_keep:
             logits = logits[:, -logits_to_keep:, :]
         return SimpleNamespace(logits=logits)
+
+
+def test_runtime_artifact_description_distinguishes_base_and_adapter() -> None:
+    assert runtime_artifact_description(None) == "BF16 reference checkpoint"
+    assert runtime_artifact_description(Path("adapter")) == (
+        "BF16 reference checkpoint plus LoRA adapter"
+    )
 
 
 def test_batched_qwen_scores_match_unbatched_reference() -> None:

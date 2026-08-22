@@ -31,6 +31,10 @@ def artifact_size(path: Path) -> int:
     return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
 
 
+def runtime_artifact_description(adapter: Path | None) -> str:
+    return "BF16 reference checkpoint" + (" plus LoRA adapter" if adapter else "")
+
+
 def read_jsonl(path: Path, limit: int | None = None) -> list[dict[str, Any]]:
     with path.open(encoding="utf-8") as handle:
         rows = [json.loads(line) for line in handle if line.strip()]
@@ -584,8 +588,10 @@ def main() -> None:
         "memory_footprint_bytes": model.get_memory_footprint(),
         "memory": memory_telemetry
         | {
+            "peak_telemetry_available": bool(memory_telemetry),
             "measurement": (
-                "sampled after every scoring batch; a lower bound on instantaneous peak"
+                "sampled after every uncached scoring batch; a lower bound on instantaneous "
+                "peak; absent when all requested splits load from score cache"
             )
         },
         "adapter_bytes": artifact_size(args.adapter) if args.adapter else None,
@@ -611,7 +617,7 @@ def main() -> None:
             "product_batch_size": 1,
             "internal_candidate_batch_size": len(LABELS),
             "warmup": "all benchmark slices scored before timed loop",
-            "quantization": "BF16 reference checkpoint plus LoRA adapter",
+            "quantization": runtime_artifact_description(args.adapter),
             "input_tokens": {
                 "p50": int(np.percentile(latency_input_tokens, 50)),
                 "p95": int(np.percentile(latency_input_tokens, 95)),
