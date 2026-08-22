@@ -210,6 +210,24 @@ def test_pair_sampler_keeps_pairs_in_same_batch_and_covers_every_row() -> None:
         assert any(pair_indices <= set(batch) for batch in batches)
 
 
+def test_pair_sampler_can_repeat_only_complete_pair_rows() -> None:
+    rows = [
+        {"label": "SAFE"},
+        {"label": "SAFE", "pair_id": "one"},
+        {"label": "SCAM", "pair_id": "one"},
+    ]
+    sampler = PairPreservingSampler(rows, batch_size=4, seed=7, pair_repeats=3)
+
+    order = list(sampler)
+    batches = [order[index : index + 4] for index in range(0, len(order), 4)]
+
+    assert len(order) == 7
+    assert order.count(0) == 1
+    assert order.count(1) == 3
+    assert order.count(2) == 3
+    assert all(batch.count(1) == batch.count(2) for batch in batches)
+
+
 def test_paired_validation_reports_probability_order() -> None:
     rows = [
         {"label": "SAFE", "pair_id": "one"},

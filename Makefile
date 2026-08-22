@@ -1,4 +1,4 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 youtube-eval-schema16 youtube-eval-schema17 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval demo
 
 PYTHON_BIN ?= .venv/bin/python
 
@@ -145,6 +145,17 @@ schema17-call-minimal-pairs:
 		--expected-schema-version 17 --sealed-data data/processed \
 		--data data/experiments/schema17-call-minimal-pairs/processed
 
+schema18-call-evidence-pairs:
+	$(PYTHON_BIN) scripts/generate_call_evidence_pairs.py
+	@if [ -f data/experiments/schema18-call-evidence-pairs/processed/manifest.json ]; then \
+		echo "Reusing immutable schema-v18 experiment; validation will recheck it"; \
+	else \
+		$(PYTHON_BIN) scripts/build_schema18_call_evidence_pairs.py; \
+	fi
+	$(PYTHON_BIN) scripts/validate_dataset.py \
+		--expected-schema-version 18 --sealed-data data/processed \
+		--data data/experiments/schema18-call-evidence-pairs/processed
+
 encoder-schema16-cache:
 	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps
 
@@ -178,6 +189,22 @@ encoder-schema17-pair-retention: encoder-schema17-preflight
 		--pair-loss-weight 0.5 --pair-margin 2 \
 		--output artifacts/checkpoints/sg-modernbert-schema17-pair-retention-w05-m2 \
 		--report reports/runs/sg-modernbert-schema17-pair-retention-w05-m2.json
+
+encoder-schema18-preflight: schema18-call-evidence-pairs encoder-schema16-cache
+	$(PYTHON_BIN) scripts/verify_encoder_schema18_config.py
+
+encoder-schema18-action: encoder-schema18-preflight
+	$(PYTHON_BIN) training/train_encoder.py \
+		--data data/experiments/schema18-call-evidence-pairs/processed \
+		--init-checkpoint artifacts/checkpoints/sg-modernbert-schema13-dose16 \
+		--teacher-logits data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl \
+		--teacher-manifest data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json \
+		--epochs 1 --learning-rate 5e-6 --batch-size 16 \
+		--truncation-side left --dialogue-policy speaker-neutral-v1 \
+		--retention-weight 4 --retention-temperature 2 \
+		--pair-loss-weight 2 --pair-margin 3 --pair-repeats 2 \
+		--output artifacts/checkpoints/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left \
+		--report reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.json
 
 apptek-eval-schema13: apptek-callcenter
 	$(PYTHON_BIN) training/eval_encoder_external.py \
@@ -241,6 +268,36 @@ youtube-eval-schema17: youtube-scam-calls
 		--split youtube_scam_validation --dialogue-policy speaker-neutral-v1 \
 		--report reports/runs/sg-modernbert-schema17-pair-retention-w05-m2.youtube-scam-validation.json \
 		--predictions reports/runs/sg-modernbert-schema17-pair-retention-w05-m2.youtube-scam-validation.predictions.jsonl
+
+apptek-eval-schema18: apptek-callcenter
+	$(PYTHON_BIN) training/eval_encoder_external.py \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left \
+		--data data/external/apptek_callcenter/apptek_call_selection.jsonl \
+		--manifest data/external/apptek_callcenter/manifest.json \
+		--split apptek_call_selection --truncation-side left \
+		--dialogue-policy speaker-neutral-v1 \
+		--report reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.apptek-call-selection.json \
+		--predictions reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.apptek-call-selection.predictions.jsonl
+
+youtube-eval-schema18: youtube-scam-calls
+	$(PYTHON_BIN) training/eval_encoder_external.py \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left \
+		--data data/external/youtube_scam_calls/youtube_scam_validation.jsonl \
+		--manifest data/external/youtube_scam_calls/manifest.json \
+		--split youtube_scam_validation --truncation-side left \
+		--dialogue-policy speaker-neutral-v1 \
+		--report reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.youtube-scam-validation.json \
+		--predictions reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.youtube-scam-validation.predictions.jsonl
+
+bothbosu-eval-schema18: scam-dialogue-holdout
+	$(PYTHON_BIN) training/eval_encoder_external.py \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left \
+		--data data/external/scam_dialogue/scam_dialogue_validation.jsonl \
+		--manifest data/external/scam_dialogue/manifest.json \
+		--split scam_dialogue_validation_latest_window --truncation-side left \
+		--dialogue-policy speaker-neutral-v1 \
+		--report reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.bothbosu-validation-left.json \
+		--predictions reports/runs/sg-modernbert-schema18-action-pairx2-ret4-w2-m3-left.bothbosu-validation-left.predictions.jsonl
 
 encoder-onnx-export:
 	$(PYTHON_BIN) scripts/export_encoder_onnx.py \

@@ -185,9 +185,17 @@ def pairwise_scam_margin_loss(
 class PairPreservingSampler(Sampler[int]):
     """Shuffle examples while keeping complete minimal pairs inside the same even-sized batch."""
 
-    def __init__(self, rows: list[dict[str, Any]], batch_size: int, seed: int) -> None:
+    def __init__(
+        self,
+        rows: list[dict[str, Any]],
+        batch_size: int,
+        seed: int,
+        pair_repeats: int = 1,
+    ) -> None:
         if batch_size <= 0 or batch_size % 2:
             raise ValueError("pair-aware training requires a positive even batch size")
+        if pair_repeats < 1:
+            raise ValueError("pair-aware training requires at least one pair repeat")
         grouped: dict[str, list[int]] = {}
         ordinary: list[int] = []
         for index, row in enumerate(rows):
@@ -210,8 +218,10 @@ class PairPreservingSampler(Sampler[int]):
         self.pairs = pairs
         self.batch_size = batch_size
         self.seed = seed
+        self.pair_repeats = pair_repeats
         self.epoch = 0
-        self.row_count = len(rows)
+        self.dataset_size = len(rows)
+        self.row_count = len(ordinary) + 2 * len(pairs) * pair_repeats
 
     def __len__(self) -> int:
         return self.row_count
@@ -222,10 +232,11 @@ class PairPreservingSampler(Sampler[int]):
         self.epoch += 1
         ordinary_order = torch.randperm(len(self.ordinary), generator=generator).tolist()
         ordinary = [self.ordinary[index] for index in ordinary_order]
-        pair_order = torch.randperm(len(self.pairs), generator=generator).tolist()
+        pair_instances = self.pairs * self.pair_repeats
+        pair_order = torch.randperm(len(pair_instances), generator=generator).tolist()
         pairs: list[int] = []
         for pair_position in pair_order:
-            pair = self.pairs[pair_position]
+            pair = pair_instances[pair_position]
             if torch.randint(0, 2, (1,), generator=generator).item():
                 pair = (pair[1], pair[0])
             pairs.extend(pair)
@@ -266,7 +277,7 @@ class WeightedTrainer(Trainer):
     def _get_train_sampler(self, train_dataset: Dataset | None = None) -> Any:
         if self.pair_sampler is not None:
             dataset = train_dataset or self.train_dataset
-            if dataset is None or len(dataset) != len(self.pair_sampler):
+            if dataset is None or len(dataset) != self.pair_sampler.dataset_size:
                 raise ValueError("pair-aware sampler differs from training dataset")
             return self.pair_sampler
         if self.sample_weights is None:
@@ -675,6 +686,7 @@ def main() -> None:
     )
     parser.add_argument("--learning-rate", type=float, default=2e-5)
     parser.add_argument("--max-length", type=int, default=256)
+    parser.add_argument("--truncation-side", choices=("left", "right"), default="right")
     parser.add_argument("--dialogue-policy", choices=DIALOGUE_POLICIES, default="none")
     parser.add_argument("--max-fpr", type=float, default=0.02)
     parser.add_argument("--binary-loss-weight", type=float, default=1.0)
@@ -682,6 +694,7 @@ def main() -> None:
     parser.add_argument("--retention-temperature", type=float, default=2.0)
     parser.add_argument("--pair-loss-weight", type=float, default=0.0)
     parser.add_argument("--pair-margin", type=float, default=2.0)
+    parser.add_argument("--pair-repeats", type=int, default=1)
     parser.add_argument(
         "--source-balance-alpha",
         type=float,
@@ -716,6 +729,10 @@ def main() -> None:
         parser.error("retention weight must be nonnegative and temperature must be positive")
     if args.pair_loss_weight < 0 or args.pair_margin <= 0:
         parser.error("pair loss weight must be nonnegative and pair margin must be positive")
+    if args.pair_repeats < 1:
+        parser.error("pair repeats must be at least one")
+    if args.pair_repeats != 1 and not args.pair_loss_weight:
+        parser.error("pair repeats greater than one require pair-aware training")
     if args.pair_loss_weight and args.batch_size % 2:
         parser.error("pair-aware training requires an even --batch-size")
     if args.pair_loss_weight and args.source_balance_alpha:
@@ -791,6 +808,7 @@ def main() -> None:
         )
         if args.gradient_checkpointing:
             model.gradient_checkpointing_enable()
+    tokenizer.truncation_side = args.truncation_side
     teacher_logits: dict[str, tuple[float, float, float]] | None = None
     teacher_manifest: dict[str, object] | None = None
     if args.teacher_logits or args.teacher_manifest:
@@ -831,7 +849,9 @@ def main() -> None:
         )
     pair_sampler: PairPreservingSampler | None = None
     if args.pair_loss_weight:
-        pair_sampler = PairPreservingSampler(rows["train"], args.batch_size, args.seed)
+        pair_sampler = PairPreservingSampler(
+            rows["train"], args.batch_size, args.seed, args.pair_repeats
+        )
 
     counts = Counter(str(row["label"]) for row in rows["train"])
     total = sum(counts.values())
@@ -982,6 +1002,7 @@ def main() -> None:
             ),
             "pair_loss_weight": args.pair_loss_weight,
             "pair_margin": args.pair_margin,
+            "pair_repeats": args.pair_repeats,
             "pair_sampler": (
                 "complete pairs kept inside even-sized batches"
                 if args.pair_loss_weight
@@ -1003,6 +1024,7 @@ def main() -> None:
         "data_sha256": {split: file_sha256(row_paths[split]) for split in rows},
         "input_transform": {
             "dialogue_policy": args.dialogue_policy,
+            "truncation_side": tokenizer.truncation_side,
             "application": "before tokenization for fitting, evaluation, and latency",
         },
         "sequence_windows": {
