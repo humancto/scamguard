@@ -48,9 +48,11 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
     manifest = processed / "manifest.json"
     train = sft / "train.jsonl"
     dev = sft / "dev.jsonl"
+    sft_manifest = sft / "manifest.json"
     manifest.write_text(json.dumps({"schema_version": 24}), encoding="utf-8")
     train.write_text('{"id":"train-1"}\n', encoding="utf-8")
     dev.write_text('{"id":"dev-1"}\n', encoding="utf-8")
+    sft_manifest.write_text('{"artifact_schema_version":1}', encoding="utf-8")
     token_audit = tmp_path / "token-audit.json"
     token_audit.write_text('{"full_over_max_length":0}', encoding="utf-8")
     label_audit = tmp_path / "label-audit.json"
@@ -66,7 +68,7 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
         gradient_accumulation=1,
         gradient_checkpointing=True,
         learning_rate=0.0001,
-        max_length=512,
+        max_length=640,
         sampling_strategy="group_by_length",
         skip_eval=False,
         output=output,
@@ -100,10 +102,12 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
             "schema_version": 24,
             "processed_directory": str(processed),
             "manifest_sha256": file_sha256(manifest),
+            "sft_build_manifest_sha256": file_sha256(sft_manifest),
             "train_jsonl_sha256": file_sha256(train),
             "dev_jsonl_sha256": file_sha256(dev),
             "train_examples": 1,
             "dev_examples": 1,
+            "sft_exclusions": {"train": 0, "dev": 0},
             "token_length_audit": {
                 "report_path": str(token_audit),
                 "report_sha256": file_sha256(token_audit),

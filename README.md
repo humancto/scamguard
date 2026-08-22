@@ -29,7 +29,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
-| Qwen3.5-0.8B, 4-bit | pinned full challenger after schema-v24 audit | 563 MB upstream Q4_0 sizing reference | only five-row smoke runs exist; not a quality or release candidate yet |
+| Qwen3.5-0.8B, 4-bit | schema-v24 full challenger; human audit pending | 563 MB upstream Q4_0 sizing reference | 26,104-example SFT preflight has zero truncation at 640 tokens; independent audit is 0/635, so no full run or release claim |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
 | Qwen3.5-4B, Q4/Q5/Q6 GGUF | deployable escalation candidates | 2.71/3.07/3.46 GB measured | Q4 and Q5 rejected after regression loss; Q6 is frozen on dev only |
@@ -85,6 +85,9 @@ and preflight identities are in
 the rejected 18/36-gate result, controlled compactor diagnosis, and next data-semantics experiment
 are in
 [reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md](reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md).
+The audited publisher-annotation curriculum, schema-24 row accounting, held-slice baseline, and
+Qwen SFT preflight are in
+[reports/SCHEMA24_ANNOTATION_BASELINE.md](reports/SCHEMA24_ANNOTATION_BASELINE.md).
 
 ## Quick start
 
@@ -244,21 +247,22 @@ frozen dataset and measured rejection are documented in
 [`reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`](reports/DATASET_SCHEMA23_EVIDENCE_COMPACTION.md)
 and
 [`reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md`](reports/ENCODER_SCHEMA23_EVIDENCE_COMPACTION.md).
-The pending schema-v24 path begins with `make multidogo-annotation-curriculum`. It requires all 36
-pinned publisher intent/slot files and their text-free alignment audit, preserves both the existing
-ScamGuard family boundary and the publisher's train/dev/test boundary, and stratifies difficult
+The schema-v24 path begins with `make multidogo-annotation-curriculum`. All 36 pinned publisher
+intent/slot files are now materialized and covered by a text-free integrity audit. Their IDs do not
+join to the separately released unannotated collection, so the builder selects privacy-normalized
+turn-level customer rows directly, preserves the publisher's train/dev/test boundary, and stratifies difficult
 legitimate-service examples without misrepresenting intent labels as independently reviewed scam
 labels. `make schema24-annotated-hard-negatives` then removes parent/held collisions and whole
 families with exact or radius-six near overlap before admitting publisher-train rows. The separate
 `schema24-audit` workbook is bound to that exact manifest; after human review,
 `schema24-audit-check` rejects every incomplete decision, label disagreement, sensitive-data
-finding, workbook change, or dataset change. The first target currently fails closed because the
-annotation blobs have not been materialized.
+finding, workbook change, or dataset change. The schema-24 dataset validates, but the training
+freeze currently fails closed because the independent 635-row workbook is 0/635 complete.
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are
-`UNCERTAIN`, not SCAM. The current audit workbook has 240 stratified rows and still needs independent
-human labels.
+`UNCERTAIN`, not SCAM. The schema-24 audit workbook has 635 stratified rows and still needs
+independent human decisions.
 
 The previous schema-v6, schema-v9, and rejected schema-v10/v11 model reports remain historical regression
 evidence; they are not relabeled as schema-v12 results. Schema v8 adds a separate,

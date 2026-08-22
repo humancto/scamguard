@@ -127,14 +127,14 @@ def fixture(tmp_path: Path) -> tuple[Path, Path]:
     (curriculum / "manifest.json").write_text(
         json.dumps(
             {
-                "artifact_schema_version": 1,
+                "artifact_schema_version": 2,
                 "source": SOURCE,
                 "license": LICENSE,
                 "revision": REVISION,
                 "policy": {
                     "publisher_annotations_are_not_independent_scam_labels": True,
                     "paper_dev_test_rows_enter_fitting": False,
-                    "existing_source_train_validation_boundary_preserved": True,
+                    "publisher_paper_split_boundary_preserved": True,
                 },
                 "artifacts": artifacts,
             }

@@ -73,14 +73,41 @@ def schema24_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
             "annotation_curriculum_manifest_sha256": file_sha256(curriculum),
         },
     }
-    (processed / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    data_manifest_path = processed / "manifest.json"
+    data_manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    sft_manifest = {
+        "artifact_schema_version": 1,
+        "input_manifest_sha256": file_sha256(data_manifest_path),
+        "policy": {
+            "safe_rows_require_empty_risk_metadata": True,
+            "scam_rows_require_verbatim_runtime_evidence": True,
+            "unsupported_scam_rows_excluded_from_sft": True,
+            "unsupported_scam_rows_relabelled": False,
+            "all_non_scam_rows_retained": True,
+        },
+        "splits": {
+            "train": {
+                "input_rows": 1,
+                "output_rows": 1,
+                "excluded_unsupported_scam_rows": 0,
+                "output_sha256": file_sha256(sft / "train.jsonl"),
+            },
+            "dev": {
+                "input_rows": 1,
+                "output_rows": 1,
+                "excluded_unsupported_scam_rows": 0,
+                "output_sha256": file_sha256(sft / "dev.jsonl"),
+            },
+        },
+    }
+    (sft / "manifest.json").write_text(json.dumps(sft_manifest), encoding="utf-8")
     token_audit = tmp_path / "token-audit.json"
     token_audit.write_text(
         json.dumps(
             {
                 "model": "Qwen/Qwen3.5-0.8B",
                 "revision": "2fc06364715b967f1860aea9cf38778875588b17",
-                "max_length": 512,
+                "max_length": 640,
                 "examples": 2,
                 "split_counts": {"train": 1, "dev": 1},
                 "full_tokens": {"p95": 90, "p99": 95, "max": 100},
@@ -100,7 +127,7 @@ def schema24_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
                 "incorrect_label_rows": 0,
                 "sensitive_data_rows": 0,
                 "agreement": 1.0,
-                "data_manifest_sha256": file_sha256(processed / "manifest.json"),
+                "data_manifest_sha256": file_sha256(data_manifest_path),
                 "errors": [],
             }
         ),

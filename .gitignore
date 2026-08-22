@@ -16,6 +16,7 @@ data/processed/
 data/generated/
 data/audit/
 data/experiments/
+data/external/multidogo_annotated/
 data/learning_curve/
 artifacts/checkpoints/
 artifacts/merged/

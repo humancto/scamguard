@@ -71,7 +71,11 @@ def validate_curriculum_rows(rows: list[dict[str, object]], paper_split: str) ->
 def reference_rows(directory: Path) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for path in sorted(directory.glob("*.jsonl")):
-        rows.extend(read_jsonl(path))
+        rows.extend(
+            row
+            for row in read_jsonl(path)
+            if {"id", "family_id", "text"} <= row.keys()
+        )
     return rows
 
 
@@ -89,14 +93,14 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
     )
     policy = curriculum_manifest.get("policy")
     if (
-        curriculum_manifest.get("artifact_schema_version") != 1
+        curriculum_manifest.get("artifact_schema_version") != 2
         or curriculum_manifest.get("source") != MULTIDOGO_SOURCE
         or curriculum_manifest.get("license") != MULTIDOGO_LICENSE
         or curriculum_manifest.get("revision") != MULTIDOGO_REVISION
         or not isinstance(policy, dict)
         or policy.get("publisher_annotations_are_not_independent_scam_labels") is not True
         or policy.get("paper_dev_test_rows_enter_fitting") is not False
-        or policy.get("existing_source_train_validation_boundary_preserved") is not True
+        or policy.get("publisher_paper_split_boundary_preserved") is not True
     ):
         raise ValueError("annotation curriculum differs from the schema-v24 contract")
     source_train = curriculum_rows(curriculum, curriculum_manifest, "train")
@@ -108,6 +112,18 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
 
     parent_references = reference_rows(parent)
     parent_train = read_jsonl(parent / "train.jsonl")
+    annotation_test_source_rows = len(annotation_test)
+    annotation_test, test_overlap_stats = remove_reference_overlap_families(
+        annotation_test,
+        parent_references,
+    )
+    annotation_dev_source_rows = len(annotation_dev)
+    annotation_dev, dev_overlap_stats = remove_reference_overlap_families(
+        annotation_dev,
+        parent_references + annotation_test,
+    )
+    if not annotation_dev or not annotation_test:
+        raise ValueError("schema-v24 held annotation slices are empty after overlap control")
     parent_ids = {str(row["id"]) for row in parent_references}
     parent_families = {str(row["family_id"]) for row in parent_references}
     held_annotation_families = {
@@ -194,16 +210,22 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
                 "annotation_train_rows": len(admitted),
                 "annotation_train_families": len(admitted_families),
                 "annotation_dev_rows": len(annotation_dev),
+                "annotation_dev_source_rows": annotation_dev_source_rows,
                 "annotation_dev_families": len(
                     {str(row["family_id"]) for row in annotation_dev}
                 ),
                 "annotation_test_rows": len(annotation_test),
+                "annotation_test_source_rows": annotation_test_source_rows,
                 "annotation_test_families": len(
                     {str(row["family_id"]) for row in annotation_test}
                 ),
                 "collision_families_removed": len(collision_families),
                 "collision_rows_removed": len(source_train) - len(collision_controlled),
                 "near_overlap_control": overlap_stats,
+                "held_near_overlap_control": {
+                    "dev": dev_overlap_stats,
+                    "test": test_overlap_stats,
+                },
                 "near_overlap_reference_rows": len(
                     parent_references + annotation_dev + annotation_test
                 ),

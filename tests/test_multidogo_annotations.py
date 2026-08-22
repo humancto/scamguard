@@ -9,9 +9,9 @@ import scripts.audit_multidogo_annotations as audit_module
 from scripts.audit_multidogo_annotations import (
     SENTENCE_HEADER,
     TURN_HEADER,
-    alignment_failures,
+    cross_granularity_stats,
     read_annotation_file,
-    read_source_turn_index,
+    read_unannotated_conversation_ids,
     slot_type,
 )
 from scripts.fetch_multidogo import (
@@ -59,6 +59,49 @@ def test_turn_annotation_parser_preserves_intents_and_slots(tmp_path: Path) -> N
     assert rows[0]["sentence_number"] is None
 
 
+def test_turn_annotation_parser_accepts_lossless_decimal_index(tmp_path: Path) -> None:
+    source = tmp_path / "train.tsv"
+    write_annotation(
+        source,
+        TURN_HEADER,
+        {
+            "conversationId": "conversation-1",
+            "turnNumber": "2.0",
+            "utteranceId": "utterance-2",
+            "utterance": "Please review my card payment.",
+            "slot-labels": "O O O B-payment I-payment",
+            "intent": "review_payment",
+        },
+    )
+
+    rows = read_annotation_file(
+        source, "splits_annotated_at_turn_level", "finance", "train"
+    )
+
+    assert rows[0]["turn_number"] == 2
+
+
+def test_turn_annotation_parser_rejects_fractional_index(tmp_path: Path) -> None:
+    source = tmp_path / "train.tsv"
+    write_annotation(
+        source,
+        TURN_HEADER,
+        {
+            "conversationId": "conversation-1",
+            "turnNumber": "2.5",
+            "utteranceId": "utterance-2",
+            "utterance": "Please review my card payment.",
+            "slot-labels": "O O O B-payment I-payment",
+            "intent": "review_payment",
+        },
+    )
+
+    with pytest.raises(ValueError, match="non-integer"):
+        read_annotation_file(
+            source, "splits_annotated_at_turn_level", "finance", "train"
+        )
+
+
 def test_sentence_annotation_requires_sentence_index(tmp_path: Path) -> None:
     source = tmp_path / "dev.tsv"
     write_annotation(
@@ -81,35 +124,47 @@ def test_sentence_annotation_requires_sentence_index(tmp_path: Path) -> None:
         )
 
 
-def test_alignment_is_role_and_text_fail_closed() -> None:
-    rows = [
+def test_empty_publisher_utterance_is_retained_for_quarantine(tmp_path: Path) -> None:
+    source = tmp_path / "train.tsv"
+    write_annotation(
+        source,
+        SENTENCE_HEADER,
         {
-            "domain": "finance",
-            "conversation_id": "conversation-1",
-            "turn_number": 2,
-            "utterance": "Please review my card payment.",
-        }
-    ]
-    aligned = {
-        ("finance", "conversation-1", 2): {
-            "role": "customer",
-            "utterance": "Please review my card payment.",
-        }
-    }
-    wrong_role = {
-        ("finance", "conversation-1", 2): {
-            "role": "agent",
-            "utterance": "Please review my card payment.",
-        }
-    }
+            "conversationId": "conversation-empty",
+            "turnNumber": "4",
+            "sentenceNumber": "0",
+            "utteranceId": "utterance-empty",
+            "utterance": "",
+            "slot-labels": "O",
+            "intent": "contentonly",
+        },
+    )
 
-    assert not alignment_failures(rows, aligned, "splits_annotated_at_turn_level")
-    assert alignment_failures(rows, wrong_role, "splits_annotated_at_turn_level") == {
-        "annotated_non_customer_turn": 1
-    }
+    rows = read_annotation_file(
+        source, "splits_annotated_at_sentence_level", "software", "train"
+    )
+
+    assert rows[0]["empty_utterance"] is True
+    assert rows[0]["utterance"] == ""
 
 
-def test_source_turn_index_accepts_upstream_csv_suffix(
+def test_cross_granularity_stats_report_publisher_divergence() -> None:
+    key = ("finance", "conversation-1", 2)
+    turn_rows = {key: {"utterance": "Please review my card payment."}}
+    sentence_rows = {
+        key: [
+            {"utterance": "Please review my card payment.", "empty_utterance": False},
+            {"utterance": "Extra publisher text.", "empty_utterance": False},
+        ]
+    }
+
+    stats = cross_granularity_stats(turn_rows, sentence_rows)
+
+    assert stats["common_turn_keys"] == 1
+    assert stats["common_keys_with_publisher_text_divergence"] == 1
+
+
+def test_unannotated_id_reader_accepts_upstream_csv_suffix(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(audit_module, "DOMAINS", ("finance",))
@@ -138,9 +193,9 @@ def test_source_turn_index_accepts_upstream_csv_suffix(
             }
         )
 
-    index = read_source_turn_index(tmp_path)
+    identifiers = read_unannotated_conversation_ids(tmp_path)
 
-    assert index[("finance", "conversation-1", 2)]["role"] == "customer"
+    assert identifiers == {("finance", "conversation-1")}
 
 
 def test_slot_type_collapses_bio_prefixes() -> None:

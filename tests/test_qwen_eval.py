@@ -8,6 +8,7 @@ import torch
 from training.eval_qwen import (
     LABELS,
     choose_safe_threshold,
+    evaluate_slice,
     load_score_cache,
     predict_with_abstention,
     save_score_cache,
@@ -165,3 +166,25 @@ def test_safe_threshold_is_fit_after_scam_threshold_is_frozen() -> None:
 
     assert threshold == 0.75
     assert predicted.tolist() == truth.tolist()
+
+
+def test_qwen_evaluation_reports_source_domains() -> None:
+    rows = [
+        {
+            "label": "SAFE",
+            "category": "NONE",
+            "source": "multidogo",
+            "source_domain": "finance",
+        },
+        {
+            "label": "SAFE",
+            "category": "NONE",
+            "source": "multidogo",
+            "source_domain": "media",
+        },
+    ]
+    scores = np.array([[4.0, 0.0, -3.0], [4.0, 0.0, -3.0]])
+
+    report = evaluate_slice(rows, scores, temperature=1.0, threshold=0.5)
+
+    assert set(report["by_source_domain"]) == {"finance", "media"}

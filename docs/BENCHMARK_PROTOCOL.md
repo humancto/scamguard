@@ -37,6 +37,10 @@ pass/fail rule.
 - `taskmaster_validation`, `scam_dialogue_validation`, and `apptek_call_selection` may inform
   candidate selection only. They cannot fit calibration or thresholds. Their source-family or
   shared-speaker/call-component partitions are fixed before scoring.
+- `multidogo_annotation_dev` and `multidogo_annotation_test` are publisher-split, family-disjoint
+  SAFE diagnostics selected from audited turn-level intent/slot annotations. Neither fits weights,
+  calibration, thresholds, prompts, or routing. A schema-24 candidate must hold overall SAFE FPR to
+  at most 2% and every one of the six domains to at most 3% on both slices.
 - `ood_scam_dialogue` and `primary_test_v8` remain prediction-sealed until model, quantization, and
   routing decisions are frozen.
 - `apptek_call_ood` remains prediction-sealed until model, calibration, routing, and export choices

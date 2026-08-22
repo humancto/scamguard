@@ -24,6 +24,7 @@ def main() -> None:
     data = config["data"]
     expected = {
         args.data / "manifest.json": data["manifest_sha256"],
+        args.data / "qwen_sft/manifest.json": data["sft_build_manifest_sha256"],
         args.data / "qwen_sft/train.jsonl": data["train_jsonl_sha256"],
         args.data / "qwen_sft/dev.jsonl": data["dev_jsonl_sha256"],
     }

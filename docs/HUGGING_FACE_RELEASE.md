@@ -39,11 +39,15 @@ label audits are frozen.
    make qwen-08b-full-freeze
    # Review and commit the generated immutable config, then start the measured run.
    make qwen-08b-full
+   make qwen-08b-full-eval
+   make qwen-08b-full-gates
    ```
 
    The freeze step requires schema version 24, a completed independent human-label audit, non-empty
    annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim
-   evidence, and zero examples over the 512-token limit. It refuses to overwrite an existing
+   evidence, and zero examples over the frozen 640-token limit. The 640-token ceiling preserves
+   decisive long-dialogue actions; it is not the under-20-ms fast-path latency budget. The freeze
+   step refuses to overwrite an existing
    config. The trainer independently rechecks the config, model revision, hyperparameters, LoRA
    module allowlist, data/report hashes, counts, and output path before loading model weights.
 3. Freeze calibration, routing, and thresholds on development/selection data. Pass every internal

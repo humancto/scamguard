@@ -6,12 +6,19 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 from scamguard.metrics import file_sha256
-from training.build_qwen_sft import validate_target
-from training.train_qwen_lora import LANGUAGE_LORA_TARGETS
+
+try:
+    from training.build_qwen_sft import validate_target
+    from training.train_qwen_lora import LANGUAGE_LORA_TARGETS
+except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from training.build_qwen_sft import validate_target
+    from training.train_qwen_lora import LANGUAGE_LORA_TARGETS
 
 BASE_MODEL = "Qwen/Qwen3.5-0.8B"
 BASE_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
@@ -107,16 +114,55 @@ def validate_schema24_manifest(manifest: dict[str, Any], processed: Path) -> Non
             raise ValueError("schema-v24 annotation curriculum path escapes the repository")
 
 
+def validate_sft_build(
+    manifest: dict[str, Any],
+    processed: Path,
+    data_manifest_path: Path,
+    data_counts: dict[str, Any],
+    sft_audit: dict[str, object],
+) -> None:
+    policy = manifest.get("policy")
+    splits = manifest.get("splits")
+    if (
+        manifest.get("artifact_schema_version") != 1
+        or manifest.get("input_manifest_sha256") != file_sha256(data_manifest_path)
+        or not isinstance(policy, dict)
+        or policy.get("scam_rows_require_verbatim_runtime_evidence") is not True
+        or policy.get("unsupported_scam_rows_excluded_from_sft") is not True
+        or policy.get("unsupported_scam_rows_relabelled") is not False
+        or policy.get("all_non_scam_rows_retained") is not True
+        or not isinstance(splits, dict)
+    ):
+        raise ValueError("Qwen SFT build manifest differs from the evidence contract")
+    for split in ("train", "dev"):
+        metadata = splits.get(split)
+        path = processed / "qwen_sft" / f"{split}.jsonl"
+        if not isinstance(metadata, dict):
+            raise ValueError(f"Qwen SFT build manifest lacks {split}")
+        input_rows = metadata.get("input_rows")
+        output_rows = metadata.get("output_rows")
+        excluded = metadata.get("excluded_unsupported_scam_rows")
+        if (
+            input_rows != data_counts.get(split)
+            or output_rows != sft_audit[f"{split}_examples"]
+            or not isinstance(excluded, int)
+            or isinstance(excluded, bool)
+            or input_rows != output_rows + excluded
+            or metadata.get("output_sha256") != file_sha256(path)
+        ):
+            raise ValueError(f"Qwen SFT {split} build accounting differs")
+
+
 def validate_token_audit(
     report: dict[str, Any], report_path: Path, sft_audit: dict[str, object]
 ) -> None:
     if (
         report.get("model") != BASE_MODEL
         or report.get("revision") != BASE_REVISION
-        or report.get("max_length") != 512
+        or report.get("max_length") != 640
         or report.get("full_over_max_length") != 0
     ):
-        raise ValueError("Qwen 0.8B token audit did not pass the frozen 512-token contract")
+        raise ValueError("Qwen 0.8B token audit did not pass the frozen 640-token contract")
     split_counts = report.get("split_counts")
     if not isinstance(split_counts, dict) or split_counts != {
         "train": sft_audit["train_examples"],
@@ -159,11 +205,11 @@ def freeze(
     validate_schema24_manifest(manifest, processed)
     sft_audit = audit_sft(processed)
     counts = manifest.get("counts")
-    if not isinstance(counts, dict) or (
-        counts.get("train") != sft_audit["train_examples"]
-        or counts.get("dev") != sft_audit["dev_examples"]
-    ):
-        raise ValueError("schema-v24 manifest counts differ from Qwen SFT data")
+    if not isinstance(counts, dict):
+        raise ValueError("schema-v24 manifest lacks dataset counts")
+    sft_manifest_path = processed / "qwen_sft" / "manifest.json"
+    sft_manifest = json.loads(sft_manifest_path.read_text(encoding="utf-8"))
+    validate_sft_build(sft_manifest, processed, manifest_path, counts, sft_audit)
     token_audit = json.loads(token_audit_path.read_text(encoding="utf-8"))
     validate_token_audit(token_audit, token_audit_path, sft_audit)
     label_audit = json.loads(label_audit_path.read_text(encoding="utf-8"))
@@ -196,7 +242,7 @@ def freeze(
         "learning_rate": 0.0001,
         "warmup_fraction": 0.05,
         "weight_decay": 0.01,
-        "max_length": 512,
+        "max_length": 640,
         "sampling": "group_by_length",
         "lora": {
             "rank": 16,
@@ -215,6 +261,14 @@ def freeze(
             "dev_examples": sft_audit["dev_examples"],
             "train_families": sft_audit["train_families"],
             "dev_families": sft_audit["dev_families"],
+            "sft_build_manifest_path": str(sft_manifest_path),
+            "sft_build_manifest_sha256": file_sha256(sft_manifest_path),
+            "sft_exclusions": {
+                split: sft_manifest["splits"][split][
+                    "excluded_unsupported_scam_rows"
+                ]
+                for split in ("train", "dev")
+            },
             "evaluation": evaluation,
             "token_length_audit": {
                 "report_path": str(token_audit_path),

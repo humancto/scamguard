@@ -278,6 +278,10 @@ def main() -> None:
         split_names.append("action_calibration")
     if (args.data / "ftc_pattern_validation.jsonl").is_file():
         split_names.append("ftc_pattern_validation")
+    if (args.data / "multidogo_annotation_dev.jsonl").is_file():
+        split_names.append("multidogo_annotation_dev")
+    if (args.data / "multidogo_annotation_test.jsonl").is_file():
+        split_names.append("multidogo_annotation_test")
     rows_by_split = {split: read_rows(args.data / f"{split}.jsonl") for split in split_names}
     errors: list[str] = []
     manifest = json.loads((args.data / "manifest.json").read_text(encoding="utf-8"))
@@ -297,6 +301,7 @@ def main() -> None:
             if split.startswith("ood_")
             else "validation"
             if split.endswith("_validation")
+            or split in {"multidogo_annotation_dev", "multidogo_annotation_test"}
             else split
         )
         labels = Counter(str(row.get("label")) for row in rows)
@@ -305,6 +310,8 @@ def main() -> None:
             "call_window_validation",
             "harper_call_validation",
             "multidogo_call_validation",
+            "multidogo_annotation_dev",
+            "multidogo_annotation_test",
         } and not {"SAFE", "SCAM"}.issubset(labels):
             errors.append(f"{split} lacks SAFE or SCAM coverage: {dict(labels)}")
         if split in single_class_scam_splits and "SCAM" not in labels:
@@ -313,6 +320,8 @@ def main() -> None:
             "call_window_validation",
             "harper_call_validation",
             "multidogo_call_validation",
+            "multidogo_annotation_dev",
+            "multidogo_annotation_test",
         } and set(labels) != {"SAFE"}:
             errors.append(f"{split} is not the declared SAFE-only diagnostic: {dict(labels)}")
         for index, row in enumerate(rows, start=1):
@@ -381,10 +390,22 @@ def main() -> None:
                         "dev",
                         "test",
                         "forum_validation",
+                        "multidogo_annotation_dev",
+                        "multidogo_annotation_test",
                     }
                     ood_holdout_pair = any(
                         candidate.startswith("ood_") for candidate in (split, other_split)
-                    ) and bool({split, other_split} & {"train", "dev", "test", "forum_validation"})
+                    ) and bool(
+                        {split, other_split}
+                        & {
+                            "train",
+                            "dev",
+                            "test",
+                            "forum_validation",
+                            "multidogo_annotation_dev",
+                            "multidogo_annotation_test",
+                        }
+                    )
                     if (
                         (development_pair or ood_holdout_pair)
                         and split != other_split

@@ -4,7 +4,7 @@ import pytest
 
 from scamguard.prompts import SYSTEM_PROMPT
 from scamguard.taxonomy import Category, RecommendedAction, Signal, Verdict
-from training.build_qwen_sft import target_for, validate_target
+from training.build_qwen_sft import convert_supported_rows, target_for, validate_target
 
 
 def test_system_prompt_treats_message_content_as_untrusted_data() -> None:
@@ -55,3 +55,19 @@ def test_scam_qwen_target_rejects_missing_evidence() -> None:
 
     with pytest.raises(ValueError, match="requires at least one"):
         validate_target(target, "opaque message")
+
+
+def test_sft_excludes_unsupported_scam_without_relabelling() -> None:
+    row = {
+        "id": "positive-only-call",
+        "family_id": "call-family",
+        "source": "publisher_positive_only",
+        "label": "SCAM",
+        "category": "UNKNOWN",
+        "text": "A conversation with no extractive runtime signal.",
+    }
+
+    converted, excluded = convert_supported_rows([row])
+
+    assert converted == []
+    assert excluded == [row]

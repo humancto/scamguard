@@ -106,6 +106,7 @@ def experiment_config_errors(args: argparse.Namespace, config: dict[str, Any]) -
         )
     identities = {
         processed / "manifest.json": data.get("manifest_sha256"),
+        args.data / "manifest.json": data.get("sft_build_manifest_sha256"),
         args.data / "train.jsonl": data.get("train_jsonl_sha256"),
         args.data / "dev.jsonl": data.get("dev_jsonl_sha256"),
     }
@@ -126,6 +127,14 @@ def experiment_config_errors(args: argparse.Namespace, config: dict[str, Any]) -
     if config.get("run_kind") == "full":
         if data.get("schema_version") != 24:
             errors.append("full run requires data.schema_version 24")
+        sft_exclusions = data.get("sft_exclusions")
+        if not isinstance(sft_exclusions, dict) or any(
+            not isinstance(sft_exclusions.get(split), int)
+            or isinstance(sft_exclusions.get(split), bool)
+            or sft_exclusions[split] < 0
+            for split in ("train", "dev")
+        ):
+            errors.append("full run requires non-negative SFT exclusion accounting")
         token_audit = data.get("token_length_audit")
         if not isinstance(token_audit, dict):
             errors.append("full run requires a token_length_audit declaration")

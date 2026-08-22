@@ -240,12 +240,13 @@ It is frozen in `DATASET_SCHEMA23_EVIDENCE_COMPACTION.md`. The trained candidate
 v22, nor v23 training mixture learns the joint sensitivity-specificity boundary.
 
 The same pinned MultiDoGO revision contains 36 CDLA-Permissive turn- and sentence-level customer
-intent/slot files that were omitted from the original sparse checkout. Schema-v24 preparation adds
-a pinned-tree fetch contract and text-free source audit for those files. Materialization is pending
-because the current Codex network approval is usage-limited; no mirror, revision change, or download
-bypass was attempted, and zero annotation-derived rows are admitted. Once available, intent/slot
-metadata may ground participant-aware matched contrast families; it will not be counted as new
-human dialogue beyond the underlying conversations.
+intent/slot files that were omitted from the original sparse checkout. They are now materialized at
+the pinned tree object and covered by a text-free integrity audit. The paper-split conversation IDs
+have zero overlap with the separately released unannotated collection, so no synthetic join is
+claimed. Schema 24 selects privacy-normalized turn-level customer rows directly, keeps sentence
+annotations audit-only, excludes publisher PII-slot rows, and preserves publisher train/dev/test
+families. After parent and held-set SimHash controls, it admits 1,095 train, 506 dev, and 1,199 test
+families. These remain weak SAFE service-domain labels pending the 635-row independent audit.
 
 ## Audited but rejected or quarantined
 
@@ -279,9 +280,10 @@ determine the under-20-ms target. More low-quality or duplicated rows do make ex
 inflating metrics and teaching shortcuts. Current status and next actions are:
 
 1. Keep schema v23 rejected; do not export, externally select, or tune it on BothBosu.
-2. Materialize and audit the pinned MultiDoGO intent/slot tree before defining schema-v24 rows.
-3. Require source-aligned, participant-aware action labels and complete matched contrast families;
-   do not spend another neural run if a family-disjoint label audit cannot reach 90% exact match.
+2. Complete the 635-row hash-bound schema-24 label/privacy audit; do not start the full 0.8B run
+   unless every sampled weak SAFE label agrees and no sensitive value survives.
+3. Run the frozen 0.8B Qwen challenger, then require at most 2% overall and 3% per-domain SAFE FPR
+   on both publisher-held annotation slices without regressing the existing recall/dialogue gates.
 4. Keep AppTek evaluation-only and its 1,396-window OOD partition sealed.
 5. Obtain authorized access to TeleAntiFraud-28k, then audit per-row construction provenance,
    privacy, family duplication, source/label shortcuts, and license files before admitting a row.

@@ -375,6 +375,23 @@ def evaluate_slice(
                     safe_threshold=safe_threshold,
                     include_sources=False,
                 )
+        if any(row.get("source_domain") for row in rows):
+            domains = sorted({str(row.get("source_domain") or "UNSPECIFIED") for row in rows})
+            result["by_source_domain"] = {}
+            for domain in domains:
+                indices = [
+                    index
+                    for index, row in enumerate(rows)
+                    if str(row.get("source_domain") or "UNSPECIFIED") == domain
+                ]
+                result["by_source_domain"][domain] = evaluate_slice(
+                    [rows[index] for index in indices],
+                    scores[indices],
+                    temperature,
+                    threshold,
+                    safe_threshold=safe_threshold,
+                    include_sources=False,
+                )
     return result
 
 
@@ -456,6 +473,17 @@ def main() -> None:
         split_paths["adversarial"] = args.data / "adversarial.jsonl"
     if (args.data / "ood_azsc.jsonl").exists():
         split_paths["ood_azsc"] = args.data / "ood_azsc.jsonl"
+    for split in (
+        "call_state_validation",
+        "call_window_validation",
+        "multidogo_call_validation",
+        "multidogo_state_validation",
+        "ftc_pattern_validation",
+        "multidogo_annotation_dev",
+        "multidogo_annotation_test",
+    ):
+        if (args.data / f"{split}.jsonl").exists():
+            split_paths[split] = args.data / f"{split}.jsonl"
     chichewa_path = args.external_data / "chichewa" / "ood_chichewa.jsonl"
     if chichewa_path.exists():
         split_paths["ood_chichewa"] = chichewa_path
