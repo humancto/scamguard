@@ -9,9 +9,14 @@ import torch
 from scamguard.metrics import file_sha256
 from training.eval_encoder_external import metadata_slices
 from training.train_encoder import (
+    ACTION_TARGETS,
     PairPreservingSampler,
     WeightedTrainer,
+    action_state_verdict_metrics,
+    action_target_metrics,
+    expand_classifier_for_action_targets,
     load_teacher_logits,
+    masked_action_bce_loss,
     paired_validation_metrics,
     pairwise_scam_margin_loss,
     predict_in_dataset_order,
@@ -35,6 +40,9 @@ def bare_weighted_trainer() -> WeightedTrainer:
     trainer.retention_temperature = 2.0
     trainer.pair_loss_weight = 0.0
     trainer.pair_margin = 2.0
+    trainer.action_target_names = ()
+    trainer.action_loss_weight = 0.0
+    trainer.action_positive_weights = None
     return trainer
 
 
@@ -88,6 +96,18 @@ def test_safety_selection_metrics_optimizes_recall_under_fpr_cap() -> None:
 def test_safety_selection_metrics_requires_both_binary_classes() -> None:
     with pytest.raises(ValueError, match="both SAFE and SCAM"):
         safety_selection_metrics(np.zeros((2, 3)), np.array([0, 0]), max_fpr=0.02)
+
+
+def test_safety_selection_ignores_auxiliary_action_logits() -> None:
+    verdict = np.array(
+        [[4.0, 0.0, 0.0], [3.0, 0.0, 1.0], [0.0, 0.0, 3.0], [0.0, 0.0, 2.5]]
+    )
+    labels = np.array([0, 0, 2, 2])
+    expanded = np.concatenate([verdict, np.full((4, len(ACTION_TARGETS)), 100.0)], axis=1)
+
+    assert safety_selection_metrics(expanded, labels, max_fpr=0.5) == pytest.approx(
+        safety_selection_metrics(verdict, labels, max_fpr=0.5)
+    )
 
 
 def test_external_metadata_slices_are_text_free() -> None:
@@ -160,6 +180,75 @@ def test_retention_kl_uses_only_anchored_rows() -> None:
 
     assert anchored_first.item() == pytest.approx(0.0, abs=1e-6)
     assert anchored_both.item() > 0.1
+
+
+def test_action_classifier_expansion_preserves_verdict_rows_exactly() -> None:
+    model = SimpleNamespace(
+        classifier=torch.nn.Linear(5, 3),
+        config=SimpleNamespace(),
+        num_labels=3,
+    )
+    original_weight = model.classifier.weight.detach().clone()
+    original_bias = model.classifier.bias.detach().clone()
+
+    expand_classifier_for_action_targets(model, ACTION_TARGETS, seed=17)
+
+    assert model.classifier.out_features == 3 + len(ACTION_TARGETS)
+    assert torch.equal(model.classifier.weight[:3], original_weight)
+    assert torch.equal(model.classifier.bias[:3], original_bias)
+    assert tuple(model.config.scamguard_action_targets) == ACTION_TARGETS
+
+
+def test_masked_action_loss_uses_only_densely_labeled_rows() -> None:
+    aligned = masked_action_bce_loss(
+        torch.tensor([[8.0, -8.0], [-8.0, 8.0]]),
+        torch.tensor([[1.0, 0.0], [1.0, 0.0]]),
+        torch.tensor([1.0, 0.0]),
+        torch.ones(2),
+    )
+    reversed_targets = masked_action_bce_loss(
+        torch.tensor([[-8.0, 8.0], [8.0, -8.0]]),
+        torch.tensor([[1.0, 0.0], [1.0, 0.0]]),
+        torch.tensor([1.0, 0.0]),
+        torch.ones(2),
+    )
+
+    assert aligned.item() < 0.01
+    assert reversed_targets.item() > 7.0
+
+
+def test_action_target_metrics_report_each_dense_head() -> None:
+    rows = []
+    logits = []
+    for value in (False, True):
+        targets = {name: value for name in ACTION_TARGETS}
+        rows.append({"action_targets": targets})
+        action_logits = [8.0] * len(ACTION_TARGETS) if value else [-8.0] * len(ACTION_TARGETS)
+        logits.append([0.0, 0.0, 0.0] + action_logits)
+
+    metrics = action_target_metrics(rows, np.array(logits), ACTION_TARGETS)
+
+    assert metrics["examples"] == 2
+    assert metrics["exact_match_at_0_5"] == 1.0
+    assert metrics["macro_f1_at_0_5"] == 1.0
+    assert all(report["roc_auc"] == 1.0 for report in metrics["targets"].values())
+
+
+def test_action_state_metrics_require_ordered_complete_contrasts() -> None:
+    states = ("routine_safe", "verified_safe", "unresolved", "harmful_scam")
+    rows = [
+        {"contrast_id": "one", "contrast_state": state}
+        for state in states
+    ]
+    scam_logits = (-4.0, -2.0, 1.0, 5.0)
+    logits = np.array([[0.0, 0.0, value] for value in scam_logits])
+
+    metrics = action_state_verdict_metrics(rows, logits, 1.0, 0.5)
+
+    assert metrics["contrasts"] == 1
+    assert metrics["ordered_contrast_rate"] == 1.0
+    assert metrics["by_state"]["harmful_scam"]["threshold_scam_rate"] == 1.0
+    assert metrics["by_state"]["routine_safe"]["threshold_scam_rate"] == 0.0
 
 
 def test_pairwise_margin_rewards_matched_scam_ranking() -> None:
@@ -304,6 +393,34 @@ def test_weighted_trainer_requires_pair_fields_during_pair_training() -> None:
                 "labels": torch.tensor([0]),
             },
         )
+
+
+def test_weighted_trainer_accepts_expanded_action_head_outputs() -> None:
+    trainer = bare_weighted_trainer()
+    trainer.retention_weight = 0.0
+    trainer.action_target_names = ACTION_TARGETS
+    trainer.action_loss_weight = 0.5
+    trainer.action_positive_weights = torch.ones(len(ACTION_TARGETS))
+    model = StubClassifier()
+    model.train()
+    action_truth = torch.tensor(
+        [[1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]]
+    )
+
+    loss = trainer.compute_loss(
+        model,
+        {
+            "input_ids": torch.tensor(
+                [[3.0, 0.0, -1.0, 4.0, -4.0, 4.0, -4.0, -4.0, -4.0, 4.0]]
+            ),
+            "labels": torch.tensor([0]),
+            "action_targets": action_truth,
+            "action_mask": torch.tensor([1.0]),
+            "verdict_weight": torch.tensor([0.25]),
+        },
+    )
+
+    assert torch.isfinite(loss)
 
 
 def test_teacher_logit_ledger_is_hash_and_schema_pinned(tmp_path: Path) -> None:

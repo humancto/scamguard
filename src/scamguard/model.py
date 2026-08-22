@@ -108,7 +108,7 @@ class TransformersBackend:
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
         inputs = {key: value.to(self.device) for key, value in inputs.items()}
         with self.torch.inference_mode():
-            logits = self.model(**inputs).logits[0] / self.temperature
+            logits = self.model(**inputs).logits[0, :3] / self.temperature
             values = self.torch.softmax(logits, dim=-1).detach().cpu().tolist()
         probabilities = dict(zip(self.labels, (float(value) for value in values), strict=True))
         return ModelScores(

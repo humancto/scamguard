@@ -110,3 +110,10 @@ advance to AppTek/YouTube external selection, export, and physical-device latenc
 Under 20 ms remains a deployment gate, not a data-size gate. The 149M teacher is used to establish
 the boundary; after it passes, its dense labels and logits can supervise a smaller student. A tiny
 student that misses the 97% recall or 2% FPR requirements is not a win, regardless of latency.
+
+The first multi-task teacher recipe was subsequently frozen before fitting at configuration
+SHA-256 `c2ca3df6335bf81962aed54281aab904c3074d468cb7cca676f40a0c2d8d9886`. It copies
+schema 13's three verdict rows exactly, appends seven deterministic auxiliary logits, weights the
+auxiliary loss at 0.5, and limits each dense action-state row to 0.25 weight on the main verdict
+loss. The primary alert remains the calibrated three-way verdict for this controlled experiment;
+auxiliary logits are diagnostic until a separate combination rule passes independent calibration.

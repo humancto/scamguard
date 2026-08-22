@@ -195,7 +195,7 @@ def main() -> None:
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     if args.predictions:
-        probabilities = softmax(predictions, temperature)
+        probabilities = softmax(predictions[:, :3], temperature)
         ledger = []
         for row, scores in zip(rows, probabilities, strict=True):
             ledger.append(

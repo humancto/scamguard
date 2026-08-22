@@ -1,0 +1,161 @@
+{
+  "experiment_id": "sg-modernbert-schema20-actionheads-ret4-aw05-vw025-left",
+  "training_recipe_version": 20,
+  "predeclared_before_training": true,
+  "role": "multi-task call classifier with separate action-state supervision and schema-13 retention",
+  "initialization": {
+    "checkpoint": "artifacts/checkpoints/sg-modernbert-schema13-dose16",
+    "model_sha256": "31b4d17cf752e6d79319506c62f0cc8e406ddb70d317fae0421672f7854f2d99",
+    "verdict_head_policy": "copy all three schema-13 classifier rows byte-for-byte before training",
+    "action_head_policy": "append seven deterministic seed-initialized linear logits over the shared pooled representation"
+  },
+  "outputs": {
+    "checkpoint": "artifacts/checkpoints/sg-modernbert-schema20-actionheads-ret4-aw05-vw025-left",
+    "report": "reports/runs/sg-modernbert-schema20-actionheads-ret4-aw05-vw025-left.json"
+  },
+  "data": {
+    "directory": "data/experiments/schema20-action-states/processed",
+    "schema_version": 20,
+    "manifest_sha256": "1bba8a07fc0efc236d34d6edacc9bdb2a338765ab88b6633246a176c515f8e4e",
+    "train_sha256": "6fbecab488b743c7d8ffca4326f9a8a9e70497df3ce9147b08616627b4b75dcb",
+    "dev_sha256": "5b1bbf05c56d917d150a93147cf4e6913e6389f6a6e1a734b235cafc882c6b03",
+    "test_sha256": "c55b396197575d32936a44c5432e6adc85b21cdb6f442fb663c760cd026dc554",
+    "call_state_validation_sha256": "c6d9aa782739990f7dcd0fd5956d90274bfffcf89e868da394d0a458087918fe",
+    "call_window_validation_sha256": "c96a64bb3c6e5e88419997031b09c72188a41f66be170172726d0afbc1bc317c",
+    "state_source_data": "data/generated/call_action_states_v1.jsonl",
+    "state_source_data_sha256": "4bb9599e7ca0e01b1db07561ca919948f8cea37018e8bc37edf14760b158a1b1",
+    "state_source_manifest": "data/generated/call_action_states_v1_manifest.json",
+    "state_source_manifest_sha256": "f5e4890796bb07ca4ebadfbb92645cb981d0c3de3d2db2755c240dbcb51ff532",
+    "train_rows": 21234,
+    "call_state_validation_rows": 2048,
+    "call_window_validation_rows": 447,
+    "licensed_source_train_rows": 9327,
+    "synthetic_train_rows": 11907,
+    "state_train_rows": 6144,
+    "state_train_families": 1536,
+    "state_validation_rows": 2048,
+    "state_validation_families": 512,
+    "state_train_labels": {
+      "SAFE": 3072,
+      "UNCERTAIN": 1536,
+      "SCAM": 1536
+    },
+    "state_validation_labels": {
+      "SAFE": 1024,
+      "UNCERTAIN": 512,
+      "SCAM": 512
+    },
+    "state_train_token_min": 326,
+    "state_train_token_p50": 343,
+    "state_train_token_p95": 351,
+    "state_train_token_max": 359,
+    "state_validation_token_min": 326,
+    "state_validation_token_p50": 345,
+    "state_validation_token_p95": 354,
+    "state_validation_token_max": 361,
+    "call_window_validation_token_p50": 239,
+    "holdout_scenarios": [
+      "financial_planning",
+      "health_scheduling",
+      "parcel_service",
+      "technology_service"
+    ]
+  },
+  "teacher": {
+    "ledger": "data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl",
+    "ledger_sha256": "5a718418debb2897f1078e43724d2ee9a072bb9725bb66aff53d3fa191b591a3",
+    "manifest": "data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json",
+    "manifest_sha256": "c8699f153567fd062c1fbd927dd9cdcf49013b0861448fefe467706e6dc5a36a",
+    "anchor_rows": 14062,
+    "unanchored_rows": 7172,
+    "contains_text": false
+  },
+  "training": {
+    "epochs": 1.0,
+    "batch_size": 16,
+    "gradient_accumulation": 1,
+    "optimizer_steps": 1328,
+    "learning_rate": 0.000005,
+    "max_length": 256,
+    "truncation_side": "left",
+    "dialogue_policy": "speaker-neutral-v1",
+    "binary_loss_weight": 1.0,
+    "retention_weight": 4.0,
+    "retention_temperature": 2.0,
+    "action_loss_weight": 0.5,
+    "action_verdict_weight": 0.25,
+    "action_target_names": [
+      "sensitive_action_language",
+      "requested_disclosure_or_transfer",
+      "caller_controls_target",
+      "official_self_navigation",
+      "independent_verification",
+      "pressure_or_secrecy",
+      "irreversible_action"
+    ],
+    "action_target_positive_counts": {
+      "sensitive_action_language": 4608,
+      "requested_disclosure_or_transfer": 1152,
+      "caller_controls_target": 1536,
+      "official_self_navigation": 1536,
+      "independent_verification": 1536,
+      "pressure_or_secrecy": 192,
+      "irreversible_action": 768
+    },
+    "action_positive_weight_policy": "square root of negative count divided by positive count",
+    "pair_loss_weight": 0.0,
+    "source_balance_alpha": 0.0,
+    "seed": 20260820,
+    "checkpoint_selection": "development recall at the frozen 2-percent FPR cap",
+    "primary_alert_score": "calibrated probability from the preserved three verdict logits; action logits remain auxiliary diagnostics in this experiment"
+  },
+  "evaluation_policy": {
+    "threshold_source": "unchanged development SAFE/SCAM rows only",
+    "streaming_window": "latest 256 tokens after speaker normalization",
+    "internal_sequence": [
+      "development",
+      "unchanged_regression",
+      "call_state_validation",
+      "call_window_validation",
+      "taskmaster_validation",
+      "scam_dialogue_validation_latest_window"
+    ],
+    "external_after_internal_pass": [
+      "youtube_scam_validation",
+      "apptek_call_selection"
+    ],
+    "sealed_not_opened": [
+      "primary_test_v8",
+      "ood_scam_dialogue",
+      "youtube_scam_ood",
+      "apptek_call_ood",
+      "bothbosu_ood",
+      "moz_holdout"
+    ]
+  },
+  "quality_acceptance": {
+    "development_recall_min": 0.97,
+    "development_fpr_max": 0.02,
+    "regression_recall_min": 0.97,
+    "regression_fpr_max": 0.02,
+    "state_harmful_scam_recall_min": 0.97,
+    "state_routine_safe_fpr_max": 0.02,
+    "state_verified_safe_fpr_max": 0.02,
+    "state_unresolved_scam_rate_max": 0.1,
+    "state_ordered_contrast_rate_min": 0.95,
+    "action_target_macro_auc_min": 0.97,
+    "action_target_exact_match_min": 0.9,
+    "call_window_validation_fpr_max": 0.02,
+    "bothbosu_latest_window_recall_min": 0.97,
+    "bothbosu_latest_window_fpr_max": 0.02,
+    "taskmaster_selection_fpr_max": 0.02,
+    "apptek_selection_fpr_must_beat": 0.08908045977011494,
+    "youtube_selection_recall_min": 0.97
+  },
+  "runtime_acceptance_after_quality_pass": {
+    "coreml_desktop_end_to_end_p95_ms_max": 20.0,
+    "physical_mobile_measurement_required": true,
+    "pytorch_latency_is_diagnostic_only": true
+  },
+  "failure_policy": "reject before later external selection, export, or sealed evaluation if any earlier gate fails"
+}

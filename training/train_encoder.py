@@ -8,7 +8,7 @@ import json
 import math
 import platform
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -17,7 +17,7 @@ import numpy as np
 import torch
 import torch.nn.functional as functional
 from scipy.optimize import minimize_scalar
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, roc_auc_score
 from torch.utils.data import Dataset, Sampler, WeightedRandomSampler
 from transformers import (
     AutoModelForSequenceClassification,
@@ -33,6 +33,15 @@ from scamguard.preprocessing import DIALOGUE_POLICIES, prepare_model_text
 
 LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 LABEL_TO_ID = {label: index for index, label in enumerate(LABELS)}
+ACTION_TARGETS = (
+    "sensitive_action_language",
+    "requested_disclosure_or_transfer",
+    "caller_controls_target",
+    "official_self_navigation",
+    "independent_verification",
+    "pressure_or_secrecy",
+    "irreversible_action",
+)
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -49,6 +58,8 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
         dialogue_policy: str = "none",
         teacher_logits: dict[str, tuple[float, float, float]] | None = None,
         include_pair_metadata: bool = False,
+        action_target_names: tuple[str, ...] = (),
+        action_verdict_weight: float = 1.0,
     ) -> None:
         self.rows = rows
         self.teacher_logits = teacher_logits
@@ -57,6 +68,18 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
         )
         self.pair_groups = {pair_id: index + 1 for index, pair_id in enumerate(pair_ids)}
         self.include_pair_metadata = include_pair_metadata
+        self.action_target_names = action_target_names
+        self.action_verdict_weight = action_verdict_weight
+        if not 0.0 < action_verdict_weight <= 1.0:
+            raise ValueError("action verdict weight must be in (0, 1]")
+        for row in rows:
+            targets = row.get("action_targets")
+            if targets is not None and (
+                not isinstance(targets, dict)
+                or tuple(targets) != action_target_names
+                or not all(isinstance(value, bool) for value in targets.values())
+            ):
+                raise ValueError(f"invalid action targets for row {row.get('id')!r}")
         self.encodings = tokenizer(
             [prepare_model_text(str(row["text"]), dialogue_policy) for row in rows],
             max_length=max_length,
@@ -78,6 +101,18 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
             pair_id = str(self.rows[index].get("pair_id", ""))
             item["pair_group"] = torch.tensor(self.pair_groups.get(pair_id, 0))
             item["pair_mask"] = torch.tensor(float(bool(pair_id)))
+        if self.action_target_names:
+            targets = self.rows[index].get("action_targets")
+            has_targets = isinstance(targets, dict)
+            item["action_targets"] = torch.tensor(
+                [float(targets[name]) for name in self.action_target_names]
+                if has_targets
+                else [0.0] * len(self.action_target_names)
+            )
+            item["action_mask"] = torch.tensor(float(has_targets))
+            item["verdict_weight"] = torch.tensor(
+                self.action_verdict_weight if has_targets else 1.0
+            )
         return item
 
 
@@ -107,6 +142,75 @@ def load_teacher_logits(
     if manifest.get("rows") != len(logits_by_id):
         raise ValueError("teacher-logit manifest row count differs from ledger")
     return logits_by_id, manifest
+
+
+def expand_classifier_for_action_targets(
+    model: torch.nn.Module,
+    action_target_names: tuple[str, ...],
+    seed: int,
+) -> None:
+    """Add independent auxiliary logits while preserving the frozen verdict head exactly."""
+    if not action_target_names:
+        return
+    if tuple(action_target_names) != ACTION_TARGETS:
+        raise ValueError("action targets differ from the frozen ScamGuard target order")
+    classifier = getattr(model, "classifier", None)
+    if not isinstance(classifier, torch.nn.Linear):
+        raise TypeError("action-target expansion requires a linear sequence classifier")
+    expected_outputs = len(LABELS) + len(action_target_names)
+    if classifier.out_features == expected_outputs:
+        saved_targets = tuple(getattr(model.config, "scamguard_action_targets", ()))
+        if saved_targets != action_target_names:
+            raise ValueError("expanded classifier action-target metadata differs")
+        return
+    if classifier.out_features != len(LABELS):
+        raise ValueError(
+            f"cannot expand classifier with {classifier.out_features} existing outputs"
+        )
+
+    with torch.random.fork_rng(devices=[]):
+        torch.manual_seed(seed)
+        expanded = torch.nn.Linear(
+            classifier.in_features,
+            expected_outputs,
+            bias=classifier.bias is not None,
+        )
+        torch.nn.init.normal_(expanded.weight, mean=0.0, std=0.02)
+        if expanded.bias is not None:
+            torch.nn.init.zeros_(expanded.bias)
+    expanded = expanded.to(device=classifier.weight.device, dtype=classifier.weight.dtype)
+    with torch.no_grad():
+        expanded.weight[: len(LABELS)].copy_(classifier.weight)
+        if classifier.bias is not None and expanded.bias is not None:
+            expanded.bias[: len(LABELS)].copy_(classifier.bias)
+    model.classifier = expanded
+    model.num_labels = expected_outputs
+    model.config.num_labels = expected_outputs
+    model.config.id2label = {
+        index: label
+        for index, label in enumerate(
+            LABELS + tuple(f"ACTION_{name}" for name in action_target_names)
+        )
+    }
+    model.config.label2id = {label: index for index, label in model.config.id2label.items()}
+    model.config.scamguard_verdict_labels = list(LABELS)
+    model.config.scamguard_action_targets = list(action_target_names)
+
+
+def masked_action_bce_loss(
+    action_logits: torch.Tensor,
+    action_targets: torch.Tensor,
+    action_mask: torch.Tensor,
+    positive_weights: torch.Tensor,
+) -> torch.Tensor:
+    selected = action_mask.to(action_logits.device).bool()
+    if not selected.any():
+        return action_logits.sum() * 0.0
+    return functional.binary_cross_entropy_with_logits(
+        action_logits[selected],
+        action_targets.to(action_logits.device)[selected],
+        pos_weight=positive_weights.to(action_logits.device),
+    )
 
 
 def source_sample_weights(
@@ -269,6 +373,9 @@ class WeightedTrainer(Trainer):
         pair_sampler: Sampler[int] | None = None,
         sample_weights: list[float] | None = None,
         sampler_seed: int = 0,
+        action_target_names: tuple[str, ...] = (),
+        action_loss_weight: float = 0.0,
+        action_positive_weights: torch.Tensor | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -282,6 +389,9 @@ class WeightedTrainer(Trainer):
         self.pair_sampler = pair_sampler
         self.sample_weights = sample_weights
         self.sampler_seed = sampler_seed
+        self.action_target_names = action_target_names
+        self.action_loss_weight = action_loss_weight
+        self.action_positive_weights = action_positive_weights
 
     def _get_train_sampler(self, train_dataset: Dataset | None = None) -> Any:
         if self.pair_sampler is not None:
@@ -315,20 +425,33 @@ class WeightedTrainer(Trainer):
         retention_mask = inputs.pop("retention_mask", None)
         pair_groups = inputs.pop("pair_group", None)
         pair_mask = inputs.pop("pair_mask", None)
+        action_targets = inputs.pop("action_targets", None)
+        action_mask = inputs.pop("action_mask", None)
+        verdict_weight = inputs.pop("verdict_weight", None)
         outputs = model(**inputs)
-        multiclass_loss = functional.cross_entropy(
-            outputs.logits,
+        if outputs.logits.shape[1] < len(LABELS):
+            raise ValueError("classifier exposes fewer than three verdict logits")
+        verdict_logits = outputs.logits[:, : len(LABELS)]
+        row_weights = (
+            verdict_weight.to(verdict_logits.device)
+            if verdict_weight is not None
+            else torch.ones_like(labels, dtype=verdict_logits.dtype)
+        )
+        multiclass_rows = functional.cross_entropy(
+            verdict_logits,
             labels,
             weight=self.class_weights.to(outputs.logits.device),
+            reduction="none",
         )
+        multiclass_loss = (multiclass_rows * row_weights).sum() / row_weights.sum()
         # Product safety is a binary boundary layered over the three-way response contract. The
         # auxiliary margin trains SCAM against SAFE-or-UNCERTAIN directly, matching calibration and
         # the release gate instead of asking generic three-class cross entropy to discover it.
-        scam_margin = outputs.logits[:, LABEL_TO_ID["SCAM"]] - torch.logsumexp(
-            outputs.logits[:, : LABEL_TO_ID["SCAM"]], dim=1
+        scam_margin = verdict_logits[:, LABEL_TO_ID["SCAM"]] - torch.logsumexp(
+            verdict_logits[:, : LABEL_TO_ID["SCAM"]], dim=1
         )
         binary_labels = (labels == LABEL_TO_ID["SCAM"]).to(outputs.logits.dtype)
-        binary_loss = functional.binary_cross_entropy_with_logits(
+        binary_rows = functional.binary_cross_entropy_with_logits(
             scam_margin,
             binary_labels,
             pos_weight=torch.tensor(
@@ -336,7 +459,9 @@ class WeightedTrainer(Trainer):
                 dtype=outputs.logits.dtype,
                 device=outputs.logits.device,
             ),
+            reduction="none",
         )
+        binary_loss = (binary_rows * row_weights).sum() / row_weights.sum()
         loss = multiclass_loss + self.binary_loss_weight * binary_loss
         # Retention is a training-only objective. Evaluation datasets intentionally contain no
         # teacher fields so their metrics remain the ordinary supervised product contract.
@@ -344,7 +469,7 @@ class WeightedTrainer(Trainer):
             if teacher_logits is None or retention_mask is None:
                 raise ValueError("retention loss requires teacher logits and a retention mask")
             retention_loss = retention_kl_loss(
-                outputs.logits,
+                verdict_logits,
                 teacher_logits,
                 retention_mask,
                 self.retention_temperature,
@@ -361,6 +486,23 @@ class WeightedTrainer(Trainer):
                 self.pair_margin,
             )
             loss = loss + self.pair_loss_weight * pair_loss
+        if self.action_loss_weight and model.training:
+            if (
+                action_targets is None
+                or action_mask is None
+                or self.action_positive_weights is None
+            ):
+                raise ValueError("action loss requires targets, mask, and positive weights")
+            expected_outputs = len(LABELS) + len(self.action_target_names)
+            if outputs.logits.shape[1] != expected_outputs:
+                raise ValueError("classifier output count differs from action-target contract")
+            action_loss = masked_action_bce_loss(
+                outputs.logits[:, len(LABELS) :],
+                action_targets,
+                action_mask,
+                self.action_positive_weights,
+            )
+            loss = loss + self.action_loss_weight * action_loss
         return (loss, outputs) if return_outputs else loss
 
 
@@ -372,8 +514,10 @@ def softmax(logits: np.ndarray, temperature: float = 1.0) -> np.ndarray:
 
 
 def fit_temperature(logits: np.ndarray, truth: np.ndarray) -> float:
+    verdict = logits[:, : len(LABELS)]
+
     def negative_log_likelihood(log_temperature: float) -> float:
-        probabilities = softmax(logits, math.exp(log_temperature))
+        probabilities = softmax(verdict, math.exp(log_temperature))
         selected = probabilities[np.arange(len(truth)), truth]
         return float(-np.log(np.clip(selected, 1e-9, 1.0)).mean())
 
@@ -390,7 +534,7 @@ def safety_selection_metrics(
 ) -> dict[str, float]:
     """Compute the development-only checkpoint objective at the product FPR cap."""
 
-    probabilities = softmax(logits)
+    probabilities = softmax(logits[:, : len(LABELS)])
     mask = np.isin(labels, [LABEL_TO_ID["SAFE"], LABEL_TO_ID["SCAM"]])
     binary_truth = (labels[mask] == LABEL_TO_ID["SCAM"]).astype(int)
     scam_probabilities = probabilities[mask, LABEL_TO_ID["SCAM"]]
@@ -457,7 +601,7 @@ def report_slice(
     *,
     include_sources: bool = True,
 ) -> dict[str, Any]:
-    probabilities = softmax(logits, temperature)
+    probabilities = softmax(logits[:, : len(LABELS)], temperature)
     truth = np.array([LABEL_TO_ID[str(row["label"])] for row in rows])
     predicted = probabilities.argmax(axis=1)
     binary_truth, scam_probabilities = binary_subset(rows, probabilities)
@@ -541,7 +685,9 @@ def report_slice(
 def paired_validation_metrics(
     rows: list[dict[str, Any]], logits: np.ndarray, temperature: float
 ) -> dict[str, float | int]:
-    probabilities = softmax(logits, temperature)[:, LABEL_TO_ID["SCAM"]]
+    probabilities = softmax(logits[:, : len(LABELS)], temperature)[
+        :, LABEL_TO_ID["SCAM"]
+    ]
     grouped: dict[str, list[int]] = {}
     for index, row in enumerate(rows):
         pair_id = str(row.get("pair_id", "")).strip()
@@ -568,6 +714,128 @@ def paired_validation_metrics(
         "scam_probability_gap_mean": float(np.mean(gaps)),
         "scam_probability_gap_p05": float(np.percentile(gaps, 5)),
         "scam_probability_gap_min": float(np.min(gaps)),
+    }
+
+
+def action_target_metrics(
+    rows: list[dict[str, Any]],
+    logits: np.ndarray,
+    action_target_names: tuple[str, ...],
+) -> dict[str, Any]:
+    indices = [
+        index
+        for index, row in enumerate(rows)
+        if isinstance(row.get("action_targets"), dict)
+    ]
+    if not indices:
+        return {"examples": 0, "targets": {}}
+    expected_outputs = len(LABELS) + len(action_target_names)
+    if logits.shape[1] != expected_outputs:
+        raise ValueError("action metric logits differ from the target contract")
+    truth = np.array(
+        [
+            [int(bool(rows[index]["action_targets"][name])) for name in action_target_names]
+            for index in indices
+        ],
+        dtype=np.int64,
+    )
+    probabilities = 1.0 / (
+        1.0 + np.exp(-logits[indices, len(LABELS) :].astype(np.float64))
+    )
+    predicted = probabilities >= 0.5
+    target_reports: dict[str, Any] = {}
+    f1_values: list[float] = []
+    for target_index, name in enumerate(action_target_names):
+        target_truth = truth[:, target_index]
+        target_predicted = predicted[:, target_index]
+        tp = int(np.sum((target_truth == 1) & target_predicted))
+        fp = int(np.sum((target_truth == 0) & target_predicted))
+        fn = int(np.sum((target_truth == 1) & ~target_predicted))
+        tn = int(np.sum((target_truth == 0) & ~target_predicted))
+        precision = tp / (tp + fp) if tp + fp else 0.0
+        recall = tp / (tp + fn) if tp + fn else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        f1_values.append(f1)
+        target_reports[name] = {
+            "positives": int(target_truth.sum()),
+            "negatives": int(len(target_truth) - target_truth.sum()),
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+            "tn": tn,
+            "precision_at_0_5": precision,
+            "recall_at_0_5": recall,
+            "f1_at_0_5": f1,
+            "roc_auc": (
+                float(roc_auc_score(target_truth, probabilities[:, target_index]))
+                if len(np.unique(target_truth)) == 2
+                else None
+            ),
+        }
+    return {
+        "examples": len(indices),
+        "exact_match_at_0_5": float(np.mean(np.all(predicted == truth, axis=1))),
+        "macro_f1_at_0_5": float(np.mean(f1_values)),
+        "targets": target_reports,
+    }
+
+
+def action_state_verdict_metrics(
+    rows: list[dict[str, Any]],
+    logits: np.ndarray,
+    temperature: float,
+    scam_threshold: float,
+) -> dict[str, Any]:
+    probabilities = softmax(logits[:, : len(LABELS)], temperature)
+    scam_probabilities = probabilities[:, LABEL_TO_ID["SCAM"]]
+    states = sorted({str(row.get("contrast_state", "")) for row in rows})
+    by_state: dict[str, Any] = {}
+    for state in states:
+        indices = [
+            index for index, row in enumerate(rows) if str(row.get("contrast_state")) == state
+        ]
+        values = scam_probabilities[indices]
+        argmax_labels = [LABELS[index] for index in probabilities[indices].argmax(axis=1)]
+        by_state[state] = {
+            "examples": len(indices),
+            "threshold_scam": int(np.sum(values >= scam_threshold)),
+            "threshold_scam_rate": float(np.mean(values >= scam_threshold)),
+            "mean_scam_probability": float(np.mean(values)),
+            "argmax_labels": dict(Counter(argmax_labels)),
+        }
+
+    grouped: defaultdict[str, dict[str, float]] = defaultdict(dict)
+    for index, row in enumerate(rows):
+        contrast_id = str(row.get("contrast_id", "")).strip()
+        state = str(row.get("contrast_state", "")).strip()
+        if not contrast_id or not state:
+            raise ValueError("action-state validation row lacks contrast metadata")
+        if state in grouped[contrast_id]:
+            raise ValueError(f"duplicate action state in contrast: {contrast_id}")
+        grouped[contrast_id][state] = float(scam_probabilities[index])
+    correctly_ordered = 0
+    harmful_gaps: list[float] = []
+    for contrast_id, scores in grouped.items():
+        if set(scores) != {"routine_safe", "verified_safe", "unresolved", "harmful_scam"}:
+            raise ValueError(f"incomplete action-state validation contrast: {contrast_id}")
+        ordered = (
+            scores["harmful_scam"] > scores["unresolved"]
+            and scores["unresolved"] > scores["verified_safe"]
+            and scores["harmful_scam"] > scores["routine_safe"]
+        )
+        correctly_ordered += int(ordered)
+        harmful_gaps.append(
+            scores["harmful_scam"]
+            - max(scores["routine_safe"], scores["verified_safe"])
+        )
+    return {
+        "by_state": by_state,
+        "contrasts": len(grouped),
+        "ordered_contrasts": correctly_ordered,
+        "ordered_contrast_rate": correctly_ordered / len(grouped),
+        "harmful_vs_safe_gap_mean": float(np.mean(harmful_gaps)),
+        "harmful_vs_safe_gap_p05": float(np.percentile(harmful_gaps, 5)),
+        "harmful_vs_safe_gap_min": float(np.min(harmful_gaps)),
     }
 
 
@@ -603,7 +871,7 @@ def latency(
             inputs = {key: value.to(device) for key, value in encoded.items()}
             forward_started = time.perf_counter_ns()
             output = model(**inputs)
-            torch.softmax(output.logits, dim=-1)
+            torch.softmax(output.logits[:, : len(LABELS)], dim=-1)
             synchronize()
             finished = time.perf_counter_ns()
             forward_durations.append((finished - forward_started) / 1_000_000)
@@ -705,6 +973,18 @@ def main() -> None:
     parser.add_argument("--pair-margin", type=float, default=2.0)
     parser.add_argument("--pair-repeats", type=int, default=1)
     parser.add_argument(
+        "--action-targets",
+        default="",
+        help="Comma-separated frozen auxiliary target order; schema 20 uses all seven targets.",
+    )
+    parser.add_argument("--action-loss-weight", type=float, default=0.0)
+    parser.add_argument(
+        "--action-verdict-weight",
+        type=float,
+        default=1.0,
+        help="Main verdict-loss multiplier for rows carrying dense action targets.",
+    )
+    parser.add_argument(
         "--source-balance-alpha",
         type=float,
         default=0.0,
@@ -746,6 +1026,19 @@ def main() -> None:
         parser.error("pair-aware training requires an even --batch-size")
     if args.pair_loss_weight and args.source_balance_alpha:
         parser.error("pair-aware sampling and source-balanced replacement sampling are exclusive")
+    if args.action_loss_weight < 0:
+        parser.error("action loss weight must be nonnegative")
+    if not 0.0 < args.action_verdict_weight <= 1.0:
+        parser.error("action verdict weight must be in (0, 1]")
+    requested_action_targets = tuple(
+        value.strip() for value in args.action_targets.split(",") if value.strip()
+    )
+    if requested_action_targets and requested_action_targets != ACTION_TARGETS:
+        parser.error("--action-targets differs from the frozen ScamGuard action-target order")
+    if args.action_loss_weight and not requested_action_targets and not args.evaluate_only:
+        parser.error("action loss requires --action-targets")
+    if requested_action_targets and not args.action_loss_weight and not args.evaluate_only:
+        parser.error("action targets require a positive --action-loss-weight")
     if not 0.0 <= args.source_balance_alpha <= 1.0:
         parser.error("--source-balance-alpha must be between zero and one")
     if args.retention_weight and not (
@@ -773,6 +1066,9 @@ def main() -> None:
     call_window_validation_path = args.data / "call_window_validation.jsonl"
     if call_window_validation_path.exists():
         row_paths["call_window_validation"] = call_window_validation_path
+    call_state_validation_path = args.data / "call_state_validation.jsonl"
+    if call_state_validation_path.exists():
+        row_paths["call_state_validation"] = call_state_validation_path
     adversarial_path = args.data / "adversarial.jsonl"
     if adversarial_path.exists():
         row_paths["adversarial"] = adversarial_path
@@ -820,6 +1116,17 @@ def main() -> None:
         )
         if args.gradient_checkpointing:
             model.gradient_checkpointing_enable()
+    saved_action_targets = tuple(getattr(model.config, "scamguard_action_targets", ()))
+    if requested_action_targets and saved_action_targets not in {
+        (),
+        requested_action_targets,
+    }:
+        parser.error("requested action targets differ from checkpoint metadata")
+    action_target_names = requested_action_targets or saved_action_targets
+    if action_target_names:
+        expand_classifier_for_action_targets(model, action_target_names, args.seed)
+    if args.evaluate_only and args.action_loss_weight and not action_target_names:
+        parser.error("evaluate-only action loss requested for a verdict-only checkpoint")
     tokenizer.truncation_side = args.truncation_side
     teacher_logits: dict[str, tuple[float, float, float]] | None = None
     teacher_manifest: dict[str, object] | None = None
@@ -851,6 +1158,8 @@ def main() -> None:
             dialogue_policy=args.dialogue_policy,
             teacher_logits=teacher_logits if split == "train" else None,
             include_pair_metadata=bool(args.pair_loss_weight and split == "train"),
+            action_target_names=action_target_names,
+            action_verdict_weight=args.action_verdict_weight,
         )
 
     sample_weights: list[float] | None = None
@@ -875,6 +1184,31 @@ def main() -> None:
     binary_positive_weight = args.binary_positive_weight or (
         (counts["SAFE"] + counts["UNCERTAIN"]) / counts["SCAM"]
     )
+    action_positive_weights: torch.Tensor | None = None
+    action_target_counts: dict[str, dict[str, int]] | None = None
+    if action_target_names:
+        action_rows = [
+            row for row in rows["train"] if isinstance(row.get("action_targets"), dict)
+        ]
+        if not action_rows:
+            raise ValueError("action-target training requested but no labeled rows were found")
+        positives = [
+            sum(int(bool(row["action_targets"][name])) for row in action_rows)
+            for name in action_target_names
+        ]
+        if any(value <= 0 or value >= len(action_rows) for value in positives):
+            raise ValueError("each action target requires both positive and negative training rows")
+        action_positive_weights = torch.tensor(
+            [math.sqrt((len(action_rows) - value) / value) for value in positives],
+            dtype=torch.float32,
+        )
+        action_target_counts = {
+            name: {
+                "positive": positives[index],
+                "negative": len(action_rows) - positives[index],
+            }
+            for index, name in enumerate(action_target_names)
+        }
     training_args = TrainingArguments(
         output_dir=str(args.output.parent / (args.output.name + "-trainer")),
         learning_rate=args.learning_rate,
@@ -903,7 +1237,8 @@ def main() -> None:
     )
 
     def compute_metrics(prediction: Any) -> dict[str, float]:
-        predicted = prediction.predictions.argmax(axis=1)
+        verdict_predictions = prediction.predictions[:, : len(LABELS)]
+        predicted = verdict_predictions.argmax(axis=1)
         metrics = {
             "macro_f1": float(
                 f1_score(prediction.label_ids, predicted, average="macro", zero_division=0)
@@ -911,7 +1246,7 @@ def main() -> None:
             "accuracy": float(accuracy_score(prediction.label_ids, predicted)),
         }
         metrics.update(
-            safety_selection_metrics(prediction.predictions, prediction.label_ids, args.max_fpr)
+            safety_selection_metrics(verdict_predictions, prediction.label_ids, args.max_fpr)
         )
         return metrics
 
@@ -933,6 +1268,9 @@ def main() -> None:
         pair_sampler=pair_sampler,
         sample_weights=sample_weights,
         sampler_seed=args.seed,
+        action_target_names=action_target_names,
+        action_loss_weight=args.action_loss_weight,
+        action_positive_weights=action_positive_weights,
     )
     if args.evaluate_only:
         previous = json.loads(args.report.read_text()) if args.report.exists() else {}
@@ -969,7 +1307,9 @@ def main() -> None:
     }
     dev_truth = np.array([LABEL_TO_ID[str(row["label"])] for row in rows["dev"]])
     temperature = fit_temperature(predictions["dev"], dev_truth)
-    dev_probabilities = softmax(predictions["dev"], temperature)
+    dev_probabilities = softmax(
+        predictions["dev"][:, : len(LABELS)], temperature
+    )
     dev_binary_truth, dev_scam_probabilities = binary_subset(rows["dev"], dev_probabilities)
     threshold = choose_threshold(dev_binary_truth, dev_scam_probabilities, args.max_fpr)
 
@@ -1024,6 +1364,19 @@ def main() -> None:
             "teacher_anchor_rows": len(teacher_logits or {}),
             "source_balance_alpha": args.source_balance_alpha,
             "source_sampling_probability": source_sampling_probability,
+            "action_target_names": list(action_target_names),
+            "action_loss_weight": args.action_loss_weight,
+            "action_verdict_weight": args.action_verdict_weight,
+            "action_positive_weights": (
+                action_positive_weights.tolist()
+                if action_positive_weights is not None
+                else None
+            ),
+            "action_target_counts": action_target_counts,
+            "primary_alert_score": (
+                "calibrated probability from the preserved first three verdict logits; "
+                "auxiliary logits are training and diagnostic signals only"
+            ),
             "checkpoint_selection": "development recall at the configured maximum FPR",
             "gradient_accumulation": args.gradient_accumulation,
             "gradient_checkpointing": args.gradient_checkpointing,
@@ -1070,6 +1423,7 @@ def main() -> None:
         "taskmaster_validation",
         "call_pair_validation",
         "call_window_validation",
+        "call_state_validation",
     ):
         if split not in rows:
             continue
@@ -1087,6 +1441,20 @@ def main() -> None:
             "fpr": pair_binary["false_positive_rate"] <= args.max_fpr,
             "perfect_pair_order": pair_ranking["pair_order_accuracy"] == 1.0,
         }
+    if "call_state_validation" in rows:
+        result["call_state_validation"]["action_target_metrics"] = action_target_metrics(
+            rows["call_state_validation"],
+            predictions["call_state_validation"],
+            action_target_names,
+        )
+        result["call_state_validation"]["state_verdict_metrics"] = (
+            action_state_verdict_metrics(
+                rows["call_state_validation"],
+                predictions["call_state_validation"],
+                temperature,
+                threshold,
+            )
+        )
     result["latency"] = latency(
         trainer.model,
         tokenizer,
