@@ -257,6 +257,8 @@ def main() -> None:
         split_names.append("ood_azsc")
     if (args.data / "call_pair_validation.jsonl").is_file():
         split_names.append("call_pair_validation")
+    if (args.data / "call_window_validation.jsonl").is_file():
+        split_names.append("call_window_validation")
     rows_by_split = {split: read_rows(args.data / f"{split}.jsonl") for split in split_names}
     errors: list[str] = []
     manifest = json.loads((args.data / "manifest.json").read_text(encoding="utf-8"))
@@ -279,13 +281,16 @@ def main() -> None:
             else split
         )
         labels = Counter(str(row.get("label")) for row in rows)
-        if split not in {"ood_wspr", "forum_validation", "ood_forum"} and not {
+        single_class_scam_splits = {"ood_wspr", "forum_validation", "ood_forum"}
+        if split not in single_class_scam_splits | {"call_window_validation"} and not {
             "SAFE",
             "SCAM",
         }.issubset(labels):
             errors.append(f"{split} lacks SAFE or SCAM coverage: {dict(labels)}")
-        if split in {"ood_wspr", "forum_validation", "ood_forum"} and "SCAM" not in labels:
+        if split in single_class_scam_splits and "SCAM" not in labels:
             errors.append(f"{split} lacks SCAM coverage: {dict(labels)}")
+        if split == "call_window_validation" and set(labels) != {"SAFE"}:
+            errors.append(f"{split} is not the declared SAFE-only diagnostic: {dict(labels)}")
         for index, row in enumerate(rows, start=1):
             missing = REQUIRED - row.keys()
             if missing:

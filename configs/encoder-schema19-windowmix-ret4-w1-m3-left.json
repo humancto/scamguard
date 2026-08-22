@@ -1,0 +1,126 @@
+{
+  "experiment_id": "sg-modernbert-schema19-windowmix-ret4-w1-m3-left",
+  "training_recipe_version": 19,
+  "predeclared_before_training": true,
+  "role": "long recent-window call classifier with action pairs and schema-13 retention",
+  "initialization": {
+    "checkpoint": "artifacts/checkpoints/sg-modernbert-schema13-dose16",
+    "model_sha256": "31b4d17cf752e6d79319506c62f0cc8e406ddb70d317fae0421672f7854f2d99"
+  },
+  "data": {
+    "directory": "data/experiments/schema19-call-windows/processed",
+    "schema_version": 19,
+    "manifest_sha256": "a87c1cfdf6e13c7e070499c9fbe8f2fe8d29f3ee0ccf4535c1ffbbd987b3147a",
+    "train_sha256": "e120ed458f01c049799c440acffb9869749007a5ba83bf5217b4859ce965a383",
+    "dev_sha256": "5b1bbf05c56d917d150a93147cf4e6913e6389f6a6e1a734b235cafc882c6b03",
+    "test_sha256": "c55b396197575d32936a44c5432e6adc85b21cdb6f442fb663c760cd026dc554",
+    "call_pair_validation_sha256": "b34231aeba6e27a2dd50146ea97c2c395d8f3fcd4e9359556bb595f70469b3e4",
+    "call_window_validation_sha256": "c96a64bb3c6e5e88419997031b09c72188a41f66be170172726d0afbc1bc317c",
+    "pair_source_data": "data/generated/call_evidence_pairs_v2.jsonl",
+    "pair_source_data_sha256": "414a6c461c0ca794fbda6e51ca8e927023266ce6082337c678bd4b600ebc7dbf",
+    "pair_source_manifest": "data/generated/call_evidence_pairs_v2_manifest.json",
+    "pair_source_manifest_sha256": "0c01817dce9ec6952ac1d777df5a47fe3ed7383cc6a6ae9e47ffdbe3292e3c5c",
+    "train_rows": 18162,
+    "call_pair_validation_rows": 1024,
+    "call_window_validation_rows": 447,
+    "supervised_source_totals": {
+      "youtube_scam_calls_cc0": 435,
+      "taskmaster1_woz_dialogues": 1193,
+      "scamguard_synthetic_call_window_pairs_v1": 3072
+    },
+    "schema19_increment_rows": {
+      "youtube_recent": 137,
+      "youtube_recent_long": 137,
+      "taskmaster_recent_long": 593,
+      "long_action_pairs": 3072
+    },
+    "pair_train_families": 1536,
+    "pair_validation_families": 512,
+    "pair_train_labels": {
+      "SAFE": 1536,
+      "SCAM": 1536
+    },
+    "pair_validation_labels": {
+      "SAFE": 512,
+      "SCAM": 512
+    },
+    "pair_train_token_min": 325,
+    "pair_validation_token_min": 326,
+    "call_window_validation_token_p50": 239,
+    "holdout_scenarios": [
+      "financial_planning",
+      "health_scheduling",
+      "parcel_service",
+      "technology_service"
+    ]
+  },
+  "teacher": {
+    "ledger": "data/experiments/schema16-retention-alpha05-w2/teacher/schema13-train-logits.jsonl",
+    "ledger_sha256": "5a718418debb2897f1078e43724d2ee9a072bb9725bb66aff53d3fa191b591a3",
+    "manifest": "data/experiments/schema16-retention-alpha05-w2/teacher/manifest.json",
+    "manifest_sha256": "c8699f153567fd062c1fbd927dd9cdcf49013b0861448fefe467706e6dc5a36a",
+    "anchor_rows": 14062,
+    "unanchored_rows": 4100,
+    "contains_text": false
+  },
+  "training": {
+    "epochs": 1.0,
+    "batch_size": 16,
+    "gradient_accumulation": 1,
+    "learning_rate": 0.000005,
+    "max_length": 256,
+    "truncation_side": "left",
+    "dialogue_policy": "speaker-neutral-v1",
+    "binary_loss_weight": 1.0,
+    "retention_weight": 4.0,
+    "retention_temperature": 2.0,
+    "pair_loss_weight": 1.0,
+    "pair_margin": 3.0,
+    "pair_repeats": 1,
+    "pair_sampler": "every row once; every complete pair contained in one even-sized batch",
+    "source_balance_alpha": 0.0,
+    "seed": 20260820,
+    "checkpoint_selection": "development recall at the frozen 2-percent FPR cap"
+  },
+  "evaluation_policy": {
+    "threshold_source": "unchanged development SAFE/SCAM rows only",
+    "streaming_window": "latest 256 tokens after speaker normalization",
+    "permitted_selection": [
+      "call_pair_validation",
+      "call_window_validation",
+      "youtube_scam_validation",
+      "apptek_call_selection",
+      "scam_dialogue_validation_latest_window",
+      "taskmaster_validation"
+    ],
+    "sealed_not_opened": [
+      "primary_test_v8",
+      "ood_scam_dialogue",
+      "youtube_scam_ood",
+      "apptek_call_ood",
+      "bothbosu_ood",
+      "moz_holdout"
+    ]
+  },
+  "quality_acceptance": {
+    "development_recall_min": 0.97,
+    "development_fpr_max": 0.02,
+    "regression_recall_min": 0.97,
+    "regression_fpr_max": 0.02,
+    "call_pair_validation_recall_min": 0.97,
+    "call_pair_validation_fpr_max": 0.02,
+    "call_pair_validation_order_accuracy_min": 1.0,
+    "call_window_validation_fpr_max": 0.02,
+    "apptek_selection_fpr_must_beat": 0.08908045977011494,
+    "youtube_selection_recall_min": 0.97,
+    "bothbosu_latest_window_recall_min": 0.97,
+    "bothbosu_latest_window_fpr_max": 0.02,
+    "taskmaster_selection_fpr_max": 0.02
+  },
+  "runtime_acceptance_after_quality_pass": {
+    "coreml_desktop_end_to_end_p95_ms_max": 20.0,
+    "physical_mobile_measurement_required": true,
+    "pytorch_latency_is_diagnostic_only": true
+  },
+  "failure_policy": "reject before external selection, export, or sealed evaluation if any internal quality gate fails"
+}

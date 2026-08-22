@@ -770,6 +770,9 @@ def main() -> None:
     call_pair_validation_path = args.data / "call_pair_validation.jsonl"
     if call_pair_validation_path.exists():
         row_paths["call_pair_validation"] = call_pair_validation_path
+    call_window_validation_path = args.data / "call_window_validation.jsonl"
+    if call_window_validation_path.exists():
+        row_paths["call_window_validation"] = call_window_validation_path
     adversarial_path = args.data / "adversarial.jsonl"
     if adversarial_path.exists():
         row_paths["adversarial"] = adversarial_path
@@ -1066,6 +1069,7 @@ def main() -> None:
         "scam_dialogue_validation",
         "taskmaster_validation",
         "call_pair_validation",
+        "call_window_validation",
     ):
         if split not in rows:
             continue
