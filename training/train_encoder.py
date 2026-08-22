@@ -80,6 +80,13 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
                 or not all(isinstance(value, bool) for value in targets.values())
             ):
                 raise ValueError(f"invalid action targets for row {row.get('id')!r}")
+            row_verdict_weight = row.get("action_verdict_weight")
+            if row_verdict_weight is not None and (
+                not isinstance(row_verdict_weight, (int, float))
+                or isinstance(row_verdict_weight, bool)
+                or not 0.0 < float(row_verdict_weight) <= 1.0
+            ):
+                raise ValueError(f"invalid action verdict weight for row {row.get('id')!r}")
         self.encodings = tokenizer(
             [prepare_model_text(str(row["text"]), dialogue_policy) for row in rows],
             max_length=max_length,
@@ -110,8 +117,11 @@ class EncodedDataset(Dataset[dict[str, torch.Tensor]]):
                 else [0.0] * len(self.action_target_names)
             )
             item["action_mask"] = torch.tensor(float(has_targets))
+            row_verdict_weight = self.rows[index].get("action_verdict_weight")
             item["verdict_weight"] = torch.tensor(
-                self.action_verdict_weight if has_targets else 1.0
+                float(row_verdict_weight)
+                if row_verdict_weight is not None
+                else (self.action_verdict_weight if has_targets else 1.0)
             )
         return item
 
@@ -1069,6 +1079,10 @@ def main() -> None:
     call_state_validation_path = args.data / "call_state_validation.jsonl"
     if call_state_validation_path.exists():
         row_paths["call_state_validation"] = call_state_validation_path
+    for split in ("harper_call_validation", "harper_state_validation"):
+        path = args.data / f"{split}.jsonl"
+        if path.exists():
+            row_paths[split] = path
     adversarial_path = args.data / "adversarial.jsonl"
     if adversarial_path.exists():
         row_paths["adversarial"] = adversarial_path
@@ -1424,6 +1438,8 @@ def main() -> None:
         "call_pair_validation",
         "call_window_validation",
         "call_state_validation",
+        "harper_call_validation",
+        "harper_state_validation",
     ):
         if split not in rows:
             continue
@@ -1451,6 +1467,20 @@ def main() -> None:
             action_state_verdict_metrics(
                 rows["call_state_validation"],
                 predictions["call_state_validation"],
+                temperature,
+                threshold,
+            )
+        )
+    if "harper_state_validation" in rows:
+        result["harper_state_validation"]["action_target_metrics"] = action_target_metrics(
+            rows["harper_state_validation"],
+            predictions["harper_state_validation"],
+            action_target_names,
+        )
+        result["harper_state_validation"]["state_verdict_metrics"] = (
+            action_state_verdict_metrics(
+                rows["harper_state_validation"],
+                predictions["harper_state_validation"],
                 temperature,
                 threshold,
             )

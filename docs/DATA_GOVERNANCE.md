@@ -38,13 +38,19 @@ and rejected. Schema v6 replaces those values with typed placeholders before IDs
 deduplication, clustering, or splitting, then independently fails validation if a real-source row
 retains one of the prohibited patterns. This also reduces contact-value memorization as a shortcut.
 
-Schema v12 retains those controls and records an explicit generation method plus an authoritative
-pattern-reference URL on every synthetic row. The current core and named diagnostics contain
-13,127 naturally occurring licensed-source rows, 600 human-authored crowdsourced roleplays, and
-10,071 deterministic synthetic rows; the separate 4,327-row Azerbaijani diagnostic is reported
-independently. The Taskmaster roleplay tier has a weak legitimate-domain SAFE label and is never
-described as naturally occurring communication or independently scam-labelled. Its 450-row
-conversation-family-held selection slice is excluded from fitting and calibration.
+Schema v12 introduced explicit generation methods and authoritative pattern-reference URLs on
+synthetic rows. The active schema-v21 training experiment contains 8,134 naturally occurring
+licensed-source or real-scam-call-derived rows, 2,262 human-authored or human-spoken roleplays, and
+16,183 controlled synthetic rows. The roleplay tier is never described as naturally occurring
+communication or independently scam-labelled. Taskmaster and HarperValleyBank original calls have
+weak legitimate-domain SAFE labels; the matched Harper final-turn transformations remain synthetic
+in all accounting.
+
+HarperValleyBank is pinned by Git revision, license hash, complete transcript-tree hash, and
+complete metadata-tree hash. Only transcripts and metadata are acquired. Six entire banking tasks
+and 1,069 calls enter training; two other tasks and 377 calls remain validation-only. Original and
+transformed versions stay in the same call family. See
+`reports/DATASET_SCHEMA21_HUMAN_CALLS.md` for the frozen hashes, counts, and experiment gates.
 
 A newly sourced 1,820-row schema-v8 holdout remains prediction-sealed and excluded from training
 and public redistribution. The 677-row Chichewa and 1,343-row BothBosu multi-turn artifacts are

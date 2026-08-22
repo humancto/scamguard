@@ -10,6 +10,7 @@ from scamguard.metrics import file_sha256
 from training.eval_encoder_external import action_target_names, metadata_slices
 from training.train_encoder import (
     ACTION_TARGETS,
+    EncodedDataset,
     PairPreservingSampler,
     WeightedTrainer,
     action_state_verdict_metrics,
@@ -29,6 +30,44 @@ from training.train_encoder import (
 class StubClassifier(torch.nn.Module):
     def forward(self, input_ids: torch.Tensor) -> SimpleNamespace:
         return SimpleNamespace(logits=input_ids.to(torch.float32))
+
+
+class StubTokenizer:
+    def __call__(self, texts: list[str], **_: object) -> dict[str, list[list[int]]]:
+        return {
+            "input_ids": [[index + 1] for index, _text in enumerate(texts)],
+            "attention_mask": [[1] for _text in texts],
+        }
+
+
+def test_encoded_dataset_allows_real_action_rows_to_keep_full_verdict_weight() -> None:
+    targets = {name: False for name in ACTION_TARGETS}
+    rows = [
+        {
+            "id": "real-call",
+            "text": "ordinary human-authored banking call",
+            "label": "SAFE",
+            "action_targets": targets,
+            "action_verdict_weight": 1.0,
+        },
+        {
+            "id": "synthetic-state",
+            "text": "controlled action-state variant",
+            "label": "SAFE",
+            "action_targets": targets,
+        },
+    ]
+
+    dataset = EncodedDataset(
+        rows,
+        StubTokenizer(),
+        max_length=256,
+        action_target_names=ACTION_TARGETS,
+        action_verdict_weight=0.25,
+    )
+
+    assert dataset[0]["verdict_weight"].item() == pytest.approx(1.0)
+    assert dataset[1]["verdict_weight"].item() == pytest.approx(0.25)
 
 
 def bare_weighted_trainer() -> WeightedTrainer:

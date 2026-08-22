@@ -132,6 +132,26 @@ This refresh confirms that rights-clean authentic scam dialogue is the scarce re
 is worth requesting because it combines real-call-derived language with licensed release terms, but
 its mixed construction must be reported honestly; it is not 28,511 independently collected calls.
 
+### HarperValleyBank: admitted human-spoken call structure
+
+- Primary repository: <https://github.com/cricketclub/gridspace-stanford-harper-valley>
+- Paper: <https://arxiv.org/abs/2010.13929>
+- License: CC-BY-4.0
+- Pinned revision: `0bd721e877c4a85d8c13ff837e68661ea6200a98`
+- Provenance: 1,446 human-human simulated telephone-banking calls across 59 speakers and eight
+  transactional tasks. These are real human utterances in roleplay, not naturally occurring calls.
+- Acquisition: transcript and metadata trees only; no audio. Both trees and the publisher license
+  are independently SHA-256 pinned in addition to the Git revision.
+- Partition: six entire tasks and 1,069 call families enter training; branch-hours and card-replace
+  tasks form a 377-family validation split. No call or task crosses the split.
+- Decision: admit the original SAFE calls with weak action labels and full verdict weight. Add four
+  same-context final-turn states per call, but count all 5,784 transformed rows as controlled
+  synthetic derivatives. See `DATASET_SCHEMA21_HUMAN_CALLS.md` for exact counts and hashes.
+
+This is a bounded response to schema 20's external error ledger, not an invitation to ingest every
+available service dialogue. It adds authentic conversational rhythm and sensitive legitimate
+actions while preserving interpretable task-disjoint measurement.
+
 The repository now includes a pinned CC0 fetcher/builder for the YouTube-call source, plus the
 pinned gated TeleAntiFraud fetcher and text-free admission auditor. The YouTube builder rejects
 unsafe ZIP members, validates the exact publisher schema and character lengths, masks privacy-like
