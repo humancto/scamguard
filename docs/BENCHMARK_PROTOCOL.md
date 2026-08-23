@@ -148,6 +148,11 @@ report router-only, specialist-only, and routed metrics on the same untouched te
 component percentiles may support a conservative bound, but they cannot be algebraically converted
 into routed p95; record the frozen policy end to end per request.
 
+Every calibration artifact must state its SAFE-threshold semantics. Historical encoder artifacts
+store a maximum SAFE-path risk (`p_safe >= 1 - threshold` and `p_scam < threshold`); Qwen verdict
+calibration stores a direct minimum SAFE probability. Evaluation ledgers and production runtime
+must share the normalized decision function rather than interpreting the field name ad hoc.
+
 ## Required report
 
 Each run must publish the immutable configuration and data manifest plus:

@@ -183,6 +183,7 @@ def main() -> None:
         "threshold_fitted_on": "dev SAFE/SCAM only",
         "scam_threshold": threshold,
         "safe_threshold": 0.20,
+        "safe_threshold_semantics": "maximum_safe_risk",
         "targets": {
             "scam_recall_min": 0.97,
             "false_positive_rate_max": args.max_fpr,
@@ -250,6 +251,7 @@ def main() -> None:
         "model_id": results["model_id"],
         "scam_threshold": threshold,
         "safe_threshold": 0.20,
+        "safe_threshold_semantics": "maximum_safe_risk",
         "training_manifest": json.loads((args.data / "manifest.json").read_text()),
     }
     joblib.dump(payload, args.artifact, compress=3)

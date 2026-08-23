@@ -334,6 +334,7 @@ def main() -> None:
             "temperature": temperature,
             "scam_threshold": threshold,
             "safe_threshold": safe_threshold,
+            "safe_threshold_semantics": "minimum_safe_probability",
             "threshold_source": (
                 "ScamBench dev scored through Q4_K_M GGUF: SCAM threshold from SAFE/SCAM "
                 "subset under max FPR; SAFE threshold maximizes three-way macro-F1 after "
@@ -381,6 +382,7 @@ def main() -> None:
         "temperature": temperature,
         "scam_threshold": threshold,
         "safe_threshold": safe_threshold,
+        "safe_threshold_semantics": "minimum_safe_probability",
         "calibration": calibration_record,
         "examples": sum(len(rows) for rows in rows_by_split.values()),
         "limit_per_split": args.limit_per_split,

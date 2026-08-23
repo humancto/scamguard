@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .decision import calibrated_verdict
 from .model import ConservativeHeuristicBackend, ModelBackend, load_backend
 from .schema import ScanResult
 from .signals import choose_action, extract_signal_matches, infer_category
@@ -29,17 +30,20 @@ class Scanner:
         signal_matches = extract_signal_matches(text)
         signals = tuple(match.signal for match in signal_matches)
 
-        if scores.scam >= self.backend.scam_threshold:
-            verdict = Verdict.SCAM
+        verdict = Verdict(
+            calibrated_verdict(
+                safe_probability=scores.safe,
+                scam_probability=scores.scam,
+                scam_probability_threshold=self.backend.scam_threshold,
+                safe_probability_threshold=self.backend.safe_probability_threshold,
+                safe_max_scam_probability=self.backend.safe_max_scam_probability,
+            )
+        )
+        if verdict is Verdict.SCAM:
             is_scam: bool | None = True
-        elif (
-            scores.safe >= 1.0 - self.backend.safe_threshold
-            and scores.scam < self.backend.safe_threshold
-        ):
-            verdict = Verdict.SAFE
+        elif verdict is Verdict.SAFE:
             is_scam = False
         else:
-            verdict = Verdict.UNCERTAIN
             is_scam = None
 
         if verdict is Verdict.SAFE:

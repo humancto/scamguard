@@ -9,6 +9,8 @@ class StubBackend:
     model_id = "test-stub"
     scam_threshold = 0.80
     safe_threshold = 0.20
+    safe_probability_threshold = 0.80
+    safe_max_scam_probability = 0.20
 
     def __init__(self, scores: ModelScores) -> None:
         self.scores = scores
@@ -50,6 +52,27 @@ def test_safe_result_has_no_action_or_scam_category() -> None:
     assert result.category.value == "NONE"
     assert result.signals == ()
     assert result.evidence_spans == ()
+
+
+def test_backend_can_expose_qwen_direct_safe_probability_semantics() -> None:
+    backend = StubBackend(ModelScores(safe=0.65, uncertain=0.25, scam=0.10))
+    backend.safe_probability_threshold = 0.60
+    backend.safe_max_scam_probability = None
+
+    result = Scanner(backend=backend).scan("Routine account notice")
+
+    assert result.verdict is Verdict.SAFE
+
+
+def test_scam_threshold_has_precedence_over_safe_probability() -> None:
+    backend = StubBackend(ModelScores(safe=0.55, uncertain=0.05, scam=0.40))
+    backend.scam_threshold = 0.35
+    backend.safe_probability_threshold = 0.50
+    backend.safe_max_scam_probability = None
+
+    result = Scanner(backend=backend).scan("Please inspect this notice")
+
+    assert result.verdict is Verdict.SCAM
 
 
 def test_empty_message_fails_closed() -> None:

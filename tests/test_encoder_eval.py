@@ -142,19 +142,40 @@ def test_encoder_prediction_ledger_is_text_free_and_uses_calibrated_rule() -> No
                 "category": "FINANCIAL",
                 "source": "fixture",
             },
+            {
+                "id": "uncertain-1",
+                "text": "ambiguous private phrase",
+                "label": "UNCERTAIN",
+                "category": "OTHER",
+                "source": "fixture",
+            },
         ]
     }
-    logits = {"dev": np.array([[4.0, 0.0, -2.0], [0.0, 0.0, 0.4]])}
+    logits = {
+        "dev": np.log(
+            np.array(
+                [
+                    [0.90, 0.08, 0.02],
+                    [0.35, 0.20, 0.45],
+                    [0.70, 0.20, 0.10],
+                ]
+            )
+        )
+    }
 
     ledger = prediction_ledger_records(
         rows,
         logits,
         temperature=1.0,
         scam_threshold=0.4,
-        safe_threshold=0.8,
+        safe_threshold=0.2,
     )
 
-    assert [record["calibrated_verdict"] for record in ledger] == ["SAFE", "SCAM"]
+    assert [record["calibrated_verdict"] for record in ledger] == [
+        "SAFE",
+        "SCAM",
+        "UNCERTAIN",
+    ]
     assert all("text" not in record for record in ledger)
     assert "private phrase" not in json.dumps(ledger)
 

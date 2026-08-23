@@ -30,7 +30,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
 | Qwen3.5-0.8B, BF16 base / Q4 control | routed schema-v24 specialist; human audit pending | 537 MiB verified Q4_0 file; 1.81 GB exact-scorer RSS at ctx 256 | base is 29.98% recall / 2.12% FPR; Q4 exact scorer is 50.24 ms run-mean p95, so it cannot own the under-20-ms path; audit is 0/635 |
-| ModernBERT schema v23 + Qwen 0.8B base | rejected routed control | 0.758% test escalation | preserves 100% recall / 1.03% FPR but lowers calibrated router macro F1 from 0.8581 to 0.8140; base specialist rejected |
+| ModernBERT schema v23 + Qwen 0.8B base | rejected routed control | 4.68% test escalation | preserves 100% recall, raises FPR 1.03%→1.32%, and improves calibrated macro F1 0.7519→0.7869; still fails the 0.94 gate |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
 | Qwen3.5-4B, Q4/Q5/Q6 GGUF | deployable escalation candidates | 2.71/3.07/3.46 GB measured | Q4 and Q5 rejected after regression loss; Q6 is frozen on dev only |

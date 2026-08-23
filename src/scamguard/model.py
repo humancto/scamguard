@@ -34,6 +34,8 @@ class ModelBackend(Protocol):
     model_id: str
     scam_threshold: float
     safe_threshold: float
+    safe_probability_threshold: float
+    safe_max_scam_probability: float | None
 
     def predict(self, text: str) -> ModelScores: ...
 
@@ -56,9 +58,14 @@ class SklearnBackend:
         self.labels = tuple(payload["labels"])
         if set(self.labels) != {"SAFE", "UNCERTAIN", "SCAM"}:
             raise ValueError("model artifact has an incompatible label set")
+        semantics = payload.get("safe_threshold_semantics", "maximum_safe_risk")
+        if semantics != "maximum_safe_risk":
+            raise ValueError("model artifact has incompatible SAFE semantics")
         self.model_id = str(payload["model_id"])
         self.scam_threshold = float(payload["scam_threshold"])
         self.safe_threshold = float(payload["safe_threshold"])
+        self.safe_probability_threshold = 1.0 - self.safe_threshold
+        self.safe_max_scam_probability = self.safe_threshold
 
     def predict(self, text: str) -> ModelScores:
         raw = self.pipeline.predict_proba([text])[0]
@@ -88,6 +95,9 @@ class TransformersBackend:
             raise ValueError(f"invalid calibration; missing {sorted(missing)}")
         if set(calibration["labels"]) != {"SAFE", "UNCERTAIN", "SCAM"}:
             raise ValueError("model calibration has an incompatible label set")
+        semantics = calibration.get("safe_threshold_semantics", "maximum_safe_risk")
+        if semantics != "maximum_safe_risk":
+            raise ValueError("Transformers calibration has incompatible SAFE semantics")
 
         if device is None:
             device = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -102,6 +112,8 @@ class TransformersBackend:
         self.temperature = float(calibration["temperature"])
         self.scam_threshold = float(calibration["scam_threshold"])
         self.safe_threshold = float(calibration["safe_threshold"])
+        self.safe_probability_threshold = 1.0 - self.safe_threshold
+        self.safe_max_scam_probability = self.safe_threshold
         self.model_id = str(calibration.get("model_id", model_path.name))
         input_transform = calibration.get("input_transform", {})
         self.dialogue_policy = str(input_transform.get("dialogue_policy", "none"))
@@ -186,6 +198,9 @@ class ONNXBackend:
         calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
         if tuple(calibration.get("labels", ())) != ("SAFE", "UNCERTAIN", "SCAM"):
             raise ValueError("ONNX calibration has an incompatible ordered label set")
+        semantics = calibration.get("safe_threshold_semantics", "maximum_safe_risk")
+        if semantics != "maximum_safe_risk":
+            raise ValueError("ONNX calibration has incompatible SAFE semantics")
 
         dialogue_policy = str(manifest["input_transform"]["dialogue_policy"])
         if dialogue_policy not in DIALOGUE_POLICIES:
@@ -214,6 +229,8 @@ class ONNXBackend:
         self.temperature = float(calibration["temperature"])
         self.scam_threshold = float(calibration["scam_threshold"])
         self.safe_threshold = float(calibration["safe_threshold"])
+        self.safe_probability_threshold = 1.0 - self.safe_threshold
+        self.safe_max_scam_probability = self.safe_threshold
         self.model_id = f"{calibration.get('model_id', stem)}:{manifest_key}"
         self.sequence_length = sequence_length
         self.dynamic_sequence = dynamic_sequence
@@ -273,6 +290,9 @@ class QwenVerdictBackend:
         self.labels = tuple(str(label) for label in calibration["labels"])
         if self.labels != ("SAFE", "UNCERTAIN", "SCAM"):
             raise ValueError("Qwen calibration has an incompatible ordered label set")
+        semantics = calibration.get("safe_threshold_semantics", "minimum_safe_probability")
+        if semantics != "minimum_safe_probability":
+            raise ValueError("Qwen calibration has incompatible SAFE semantics")
 
         if device is None:
             device = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -294,6 +314,8 @@ class QwenVerdictBackend:
         self.temperature = float(calibration["temperature"])
         self.scam_threshold = float(calibration["scam_threshold"])
         self.safe_threshold = float(calibration["safe_threshold"])
+        self.safe_probability_threshold = self.safe_threshold
+        self.safe_max_scam_probability = None
         self.model_id = str(calibration.get("model_id", adapter_path.name))
 
     def predict(self, text: str) -> ModelScores:
@@ -364,6 +386,8 @@ class ConservativeHeuristicBackend:
     model_id = "heuristic-unbenchmarked-v0"
     scam_threshold = 0.80
     safe_threshold = 0.20
+    safe_probability_threshold = 0.80
+    safe_max_scam_probability = 0.20
 
     def predict(self, text: str) -> ModelScores:
         from .signals import extract_signal_matches

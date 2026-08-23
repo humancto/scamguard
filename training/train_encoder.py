@@ -28,6 +28,7 @@ from transformers import (
     set_seed,
 )
 
+from scamguard.decision import calibrated_verdict
 from scamguard.metrics import binary_safety_metrics, choose_threshold, file_sha256, wilson_interval
 from scamguard.preprocessing import DIALOGUE_POLICIES, prepare_model_text
 
@@ -734,12 +735,14 @@ def prediction_ledger_records(
             if key in seen:
                 raise ValueError(f"duplicate prediction ledger key: {key!r}")
             seen.add(key)
-            if values[LABEL_TO_ID["SCAM"]] >= scam_threshold:
-                calibrated = "SCAM"
-            elif values[LABEL_TO_ID["SAFE"]] >= safe_threshold:
-                calibrated = "SAFE"
-            else:
-                calibrated = "UNCERTAIN"
+            scam_probability = float(values[LABEL_TO_ID["SCAM"]])
+            calibrated = calibrated_verdict(
+                safe_probability=float(values[LABEL_TO_ID["SAFE"]]),
+                scam_probability=scam_probability,
+                scam_probability_threshold=scam_threshold,
+                safe_probability_threshold=1.0 - safe_threshold,
+                safe_max_scam_probability=safe_threshold,
+            )
             records.append(
                 {
                     "id": identifier,
@@ -1527,6 +1530,7 @@ def main() -> None:
         "temperature": temperature,
         "scam_threshold": threshold,
         "safe_threshold": 0.20,
+        "safe_threshold_semantics": "maximum_safe_risk",
         "labels": list(LABELS),
         "threshold_source": "dev SAFE/SCAM only",
         "action_thresholds": action_thresholds,
@@ -1556,6 +1560,8 @@ def main() -> None:
         "seed": args.seed,
         "temperature": temperature,
         "scam_threshold": threshold,
+        "safe_threshold": float(calibration["safe_threshold"]),
+        "safe_threshold_semantics": "maximum_safe_risk",
         "class_weights": weights.tolist(),
         "training_objective": {
             "multiclass": "class-weighted cross entropy",

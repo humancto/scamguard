@@ -585,6 +585,7 @@ def main() -> None:
         "temperature": temperature,
         "scam_threshold": threshold,
         "safe_threshold": safe_threshold,
+        "safe_threshold_semantics": "minimum_safe_probability",
         "memory_footprint_bytes": model.get_memory_footprint(),
         "memory": memory_telemetry
         | {
@@ -699,6 +700,7 @@ def main() -> None:
             "temperature": temperature,
             "scam_threshold": threshold,
             "safe_threshold": safe_threshold,
+            "safe_threshold_semantics": "minimum_safe_probability",
             "threshold_source": (
                 "ScamBench dev: SCAM threshold from SAFE/SCAM subset under max FPR; "
                 "SAFE threshold maximizes three-way macro F1 after freezing SCAM policy"
