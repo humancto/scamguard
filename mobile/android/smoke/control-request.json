@@ -1,0 +1,6 @@
+{
+  "model": "Qwen3.5-0.8B-Q4_0.gguf",
+  "packManifest": "scamguard_gguf_pack.json",
+  "calibration": "scamguard_calibration.json",
+  "message": "Your bank account is locked. Send the one-time code now to restore access."
+}

@@ -87,6 +87,38 @@ After committing the exact source revision, create the hash-bound runtime ZIP wi
 make mobile-android-package ANDROID_RUNTIME_BUILD=build/android-arm64-r27d
 ```
 
+### Physical Android correctness smoke
+
+Build the diagnostic APK around the already cross-compiled arm64 JNI library:
+
+```bash
+make mobile-android-smoke-apk \
+  ANDROID_SDK_DIR=/absolute/path/to/Android/sdk \
+  ANDROID_SMOKE_KEYSTORE=/absolute/path/to/debug.keystore \
+  ANDROID_SMOKE_JNI=build/android-arm64-r27d/libscamguard-jni.so
+```
+
+The builder compiles the production Kotlin wrapper and a minimal Activity, embeds only
+`arm64-v8a/libscamguard-jni.so`, aligns the APK, signs it with the selected stable local debug key,
+and verifies the signature and manifest. This APK is not a release artifact, and the GGUF is not
+bundled in it. Repeating the build with the same sources, JNI library, SDK tools, and debug key
+must produce the same APK hash.
+
+With an unlocked, authorized phone visible to `adb`, run and verify the hash-bound control:
+
+```bash
+make mobile-android-physical-smoke-run ANDROID_PHYSICAL_SERIAL=<adb-serial>
+make mobile-android-physical-smoke-verify
+```
+
+The runner rejects emulators and non-arm64 devices before installation, stages the real upstream
+control GGUF in the debuggable smoke app's private storage, and retrieves a text-free result. The
+verifier requires a physical-device declaration, checks the APK's embedded JNI bytes against the
+selected runtime, reruns the same request through the host CPU scorer, and requires raw-score,
+calibrated probability, verdict, prefix-cache, model-size, and protocol parity. This one-message
+smoke remains `diagnostic_only=true`; it cannot replace the 100-row repeated physical-device
+benchmark or authorize release.
+
 Both package builders refuse a dirty ScamGuard source tree, a different llama.cpp revision, or an
 existing output path. ZIP member timestamps, ordering, permissions, and compression are fixed, so
 the same inputs produce the same package hash.
