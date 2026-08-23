@@ -1,10 +1,13 @@
 import json
+from pathlib import Path
 
 import pytest
 
 from benchmarks.benchmark_routed_transformers_runtime import (
+    adapter_identity,
     latency_report,
     trace_requests,
+    verify_backend_calibration,
     verify_score_cache_identity,
 )
 from scamguard.model import ModelScores
@@ -146,3 +149,40 @@ def test_score_cache_identity_fails_closed_on_batch_contract() -> None:
 
     with pytest.raises(ValueError, match="batch_size"):
         verify_score_cache_identity({"model": "pinned", "batch_size": 0}, {"model": "pinned"})
+
+
+def test_adapter_identity_binds_report_path_and_weights(tmp_path: Path) -> None:
+    adapter = tmp_path / "adapter"
+    adapter.mkdir()
+    weights = adapter / "adapter_model.safetensors"
+    weights.write_bytes(b"pinned weights")
+
+    digest, record = adapter_identity({"adapter": str(adapter)}, adapter)
+
+    assert digest == record["adapter_sha256"]
+    assert record["kind"] == "lora_adapter"
+    with pytest.raises(ValueError, match="different LoRA adapter"):
+        adapter_identity({"adapter": str(tmp_path / "other")}, adapter)
+
+
+def test_runtime_backend_calibration_must_match_report() -> None:
+    backend = StubRuntime({})
+    backend.temperature = 1.5  # type: ignore[attr-defined]
+    backend.sequence_bucket_size = 64  # type: ignore[attr-defined]
+    report = {
+        "model": "Qwen/example",
+        "base_model_revision": "pinned",
+        "temperature": 1.5,
+        "scam_threshold": backend.scam_threshold,
+        "safe_threshold": backend.safe_probability_threshold,
+        "score_cache": {"sequence_bucket_size": 64},
+    }
+
+    verify_backend_calibration(
+        backend, report, model="Qwen/example", revision="pinned"
+    )
+    report["safe_threshold"] = 0.7
+    with pytest.raises(ValueError, match="safe_probability_threshold"):
+        verify_backend_calibration(
+            backend, report, model="Qwen/example", revision="pinned"
+        )

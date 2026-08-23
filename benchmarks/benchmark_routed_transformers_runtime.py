@@ -19,7 +19,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scamguard.decision import calibrated_verdict
 from scamguard.metrics import file_sha256
-from scamguard.model import ModelScores, QwenBaseVerdictBackend, TransformersBackend
+from scamguard.model import (
+    ModelScores,
+    QwenBaseVerdictBackend,
+    QwenVerdictBackend,
+    TransformersBackend,
+)
 from scamguard.prompts import SYSTEM_PROMPT
 from training.eval_routed import (
     confidence_margin,
@@ -268,12 +273,59 @@ def verify_score_cache_identity(
         raise ValueError("specialist score-cache metadata has invalid batch_size")
 
 
+def adapter_identity(
+    specialist_report: dict[str, Any], adapter: Path | None
+) -> tuple[str | None, dict[str, Any]]:
+    """Bind the runtime adapter path and immutable PEFT weights to the evaluation report."""
+
+    reported_adapter = specialist_report.get("adapter")
+    if adapter is None:
+        if reported_adapter is not None:
+            raise ValueError("specialist report requires a LoRA adapter")
+        return None, {"kind": "base_control", "adapter": None, "adapter_sha256": None}
+    resolved = adapter.expanduser().resolve()
+    weights = resolved / "adapter_model.safetensors"
+    if not resolved.is_dir() or not weights.is_file():
+        raise FileNotFoundError(f"missing LoRA adapter weights: {weights}")
+    if reported_adapter is None or Path(str(reported_adapter)).expanduser().resolve() != resolved:
+        raise ValueError("specialist report identifies a different LoRA adapter")
+    digest = file_sha256(weights)
+    return digest, {
+        "kind": "lora_adapter",
+        "adapter": str(adapter),
+        "adapter_weights": str(weights),
+        "adapter_sha256": digest,
+        "adapter_artifact_bytes": artifact_size(resolved),
+    }
+
+
+def verify_backend_calibration(
+    backend: RuntimeBackend,
+    report: dict[str, Any],
+    *,
+    model: str,
+    revision: str,
+) -> None:
+    if report.get("model") != model or report.get("base_model_revision") != revision:
+        raise ValueError("specialist report identifies a different pinned base model")
+    expected = {
+        "temperature": float(report["temperature"]),
+        "scam_threshold": float(report["scam_threshold"]),
+        "safe_probability_threshold": float(report["safe_threshold"]),
+        "sequence_bucket_size": int(report["score_cache"]["sequence_bucket_size"]),
+    }
+    for field, value in expected.items():
+        if getattr(backend, field) != value:
+            raise ValueError(f"runtime calibration differs from specialist report: {field}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--router-checkpoint", type=Path, required=True)
     parser.add_argument("--router-predictions", type=Path, required=True)
     parser.add_argument("--specialist-model", default="Qwen/Qwen3.5-0.8B")
     parser.add_argument("--specialist-revision", required=True)
+    parser.add_argument("--specialist-adapter", type=Path)
     parser.add_argument("--specialist-report", type=Path, required=True)
     parser.add_argument("--specialist-score-cache-metadata", type=Path, required=True)
     parser.add_argument("--specialist-predictions", type=Path, required=True)
@@ -307,6 +359,9 @@ def main() -> None:
     specialist_score_metadata = json.loads(
         args.specialist_score_cache_metadata.read_text(encoding="utf-8")
     )
+    adapter_sha256, adapter_record = adapter_identity(
+        specialist_report, args.specialist_adapter
+    )
     if routed_report["inputs"]["router_sha256"] != file_sha256(args.router_predictions):
         raise ValueError("router ledger differs from routed policy report")
     if routed_report["inputs"]["specialist_sha256"] != file_sha256(
@@ -318,7 +373,7 @@ def main() -> None:
         "scoring_version": specialist_report["score_cache"]["scoring_version"],
         "model": args.specialist_model,
         "revision": args.specialist_revision,
-        "adapter_sha256": None,
+        "adapter_sha256": adapter_sha256,
         "data_sha256": specialist_report["data_sha256"][args.split],
         "examples": specialist_report[args.split]["examples"],
         "labels": ["SAFE", "UNCERTAIN", "SCAM"],
@@ -355,11 +410,20 @@ def main() -> None:
                 raise ValueError(f"runtime data metadata mismatch for {row['id']}: {field}")
 
     router = TransformersBackend(args.router_checkpoint, device=device)
-    specialist = QwenBaseVerdictBackend(
-        args.specialist_model,
-        args.specialist_revision,
-        args.specialist_report,
-        device=device,
+    if args.specialist_adapter is None:
+        specialist = QwenBaseVerdictBackend(
+            args.specialist_model,
+            args.specialist_revision,
+            args.specialist_report,
+            device=device,
+        )
+    else:
+        specialist = QwenVerdictBackend(args.specialist_adapter, device=device)
+    verify_backend_calibration(
+        specialist,
+        specialist_report,
+        model=args.specialist_model,
+        revision=args.specialist_revision,
     )
     first_escalated = next(
         (record for record in expected_routed if record["escalated"]), None
@@ -411,6 +475,7 @@ def main() -> None:
             "calibration_report_sha256": file_sha256(args.specialist_report),
             "memory_footprint_bytes": specialist.model.get_memory_footprint(),
             "quantization": "BF16 reference checkpoint",
+            **adapter_record,
             "frozen_quality_scoring": {
                 "message_batch_size": specialist_score_metadata["batch_size"],
                 "candidate_batch_size": (
@@ -447,6 +512,7 @@ def main() -> None:
             "macro_f1": runtime_quality["macro_f1"] - frozen_quality["macro_f1"],
         },
         "latency": latency_report(traces),
+        "measurement_mode": "interleaved_persistent_per_request",
         "process_peak_rss_bytes": peak_rss_bytes(),
         "environment": {
             "platform": platform.platform(),

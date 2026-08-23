@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import struct
 import subprocess
@@ -26,6 +27,7 @@ try:
         choose_safe_threshold,
         evaluate_slice,
         fit_temperature,
+        predict_with_abstention,
         softmax,
     )
 except ModuleNotFoundError as error:
@@ -38,6 +40,7 @@ except ModuleNotFoundError as error:
         choose_safe_threshold,
         evaluate_slice,
         fit_temperature,
+        predict_with_abstention,
         softmax,
     )
 
@@ -50,6 +53,25 @@ SCORE_LINE = re.compile(
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     with path.open(encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
+
+
+def resolve_split_path(data: Path, external_data: Path, split: str) -> Path:
+    candidates = [data / f"{split}.jsonl"]
+    external_paths = {
+        "ood_chichewa": external_data / "chichewa" / "ood_chichewa.jsonl",
+        "scam_dialogue_validation": (
+            external_data / "scam_dialogue" / "scam_dialogue_validation.jsonl"
+        ),
+        "taskmaster_validation": (
+            external_data / "taskmaster" / "taskmaster_validation.jsonl"
+        ),
+    }
+    if split in external_paths:
+        candidates.append(external_paths[split])
+    for path in candidates:
+        if path.is_file():
+            return path
+    raise FileNotFoundError(f"no GGUF evaluation data found for split {split}")
 
 
 def cache_identity(
@@ -171,6 +193,103 @@ def parse_scores(output: str, expected: int) -> np.ndarray:
     return np.asarray([row[1:] for row in parsed], dtype=np.float64)
 
 
+def prediction_ledger_records(
+    rows_by_split: dict[str, list[dict[str, Any]]],
+    scores_by_split: dict[str, np.ndarray],
+    temperature: float,
+    scam_threshold: float,
+    safe_threshold: float,
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for split, rows in rows_by_split.items():
+        probabilities = softmax(scores_by_split[split], temperature)
+        calibrated = predict_with_abstention(
+            probabilities, scam_threshold, safe_threshold
+        )
+        for row, values, calibrated_index in zip(
+            rows, probabilities, calibrated, strict=True
+        ):
+            truth_index = LABELS.index(str(row["label"]))
+            records.append(
+                {
+                    "id": row["id"],
+                    "split": split,
+                    "source": row["source"],
+                    "source_language": row.get("source_language"),
+                    "category": row["category"],
+                    "truth": row["label"],
+                    "argmax": LABELS[int(values.argmax())],
+                    "calibrated_verdict": LABELS[int(calibrated_index)],
+                    "threshold_scam": bool(
+                        values[LABELS.index("SCAM")] >= scam_threshold
+                    ),
+                    "negative_log_likelihood": float(
+                        -math.log(max(float(values[truth_index]), 1e-9))
+                    ),
+                    "probabilities": {
+                        label: float(values[index])
+                        for index, label in enumerate(LABELS)
+                    },
+                }
+            )
+    return records
+
+
+def quantization_parity(
+    candidate: list[dict[str, Any]], reference: list[dict[str, Any]]
+) -> dict[str, Any]:
+    def indexed(
+        records: list[dict[str, Any]], name: str
+    ) -> dict[tuple[str, str], dict[str, Any]]:
+        result: dict[tuple[str, str], dict[str, Any]] = {}
+        for record in records:
+            key = (str(record["split"]), str(record["id"]))
+            if key in result:
+                raise ValueError(f"duplicate {name} prediction key: {key}")
+            result[key] = record
+        return result
+
+    candidate_by_key = indexed(candidate, "GGUF")
+    reference_by_key = indexed(reference, "reference")
+    if set(candidate_by_key) != set(reference_by_key):
+        raise ValueError("GGUF and reference prediction keys differ")
+    maximum_error = 0.0
+    decision_mismatches: list[str] = []
+    argmax_mismatches: list[str] = []
+    for key in sorted(candidate_by_key):
+        actual = candidate_by_key[key]
+        expected = reference_by_key[key]
+        for field in ("truth", "source", "source_language", "category"):
+            if actual.get(field) != expected.get(field):
+                raise ValueError(f"GGUF and reference metadata differ for {key}: {field}")
+        maximum_error = max(
+            maximum_error,
+            *(
+                abs(
+                    float(actual["probabilities"][label])
+                    - float(expected["probabilities"][label])
+                )
+                for label in LABELS
+            ),
+        )
+        rendered = f"{key[0]}:{key[1]}"
+        if actual["argmax"] != expected["argmax"]:
+            argmax_mismatches.append(rendered)
+        if actual["calibrated_verdict"] != expected["calibrated_verdict"]:
+            decision_mismatches.append(rendered)
+    return {
+        "examples": len(candidate),
+        "maximum_absolute_probability_error": maximum_error,
+        "argmax_mismatch_count": len(argmax_mismatches),
+        "calibrated_verdict_mismatch_count": len(decision_mismatches),
+        "argmax_mismatch_sample": argmax_mismatches[:20],
+        "calibrated_verdict_mismatch_sample": decision_mismatches[:20],
+        "exact_argmax_parity": not argmax_mismatches,
+        "exact_calibrated_verdict_parity": not decision_mismatches,
+        "release_gate_passed": not decision_mismatches,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=Path, required=True)
@@ -178,6 +297,7 @@ def main() -> None:
     parser.add_argument("--calibration", type=Path, required=True)
     parser.add_argument("--llama-perplexity", type=Path, required=True)
     parser.add_argument("--data", type=Path, default=Path("data/processed"))
+    parser.add_argument("--external-data", type=Path, default=Path("data/external"))
     parser.add_argument(
         "--splits",
         nargs="+",
@@ -194,6 +314,8 @@ def main() -> None:
         ],
     )
     parser.add_argument("--report", type=Path, default=Path("reports/runs/qwen35-2b-q4.json"))
+    parser.add_argument("--predictions", type=Path)
+    parser.add_argument("--reference-predictions", type=Path)
     parser.add_argument("--cache-dir", type=Path)
     parser.add_argument("--fit-calibration-on-dev", action="store_true")
     parser.add_argument("--calibration-output", type=Path)
@@ -205,6 +327,11 @@ def main() -> None:
     parser.add_argument("--n-gpu-layers", type=int, default=99)
     parser.add_argument("--max-fpr", type=float, default=0.02)
     args = parser.parse_args()
+    if args.fit_calibration_on_dev and args.reference_predictions:
+        parser.error(
+            "--reference-predictions requires frozen pre-quantization calibration; "
+            "do not combine it with --fit-calibration-on-dev"
+        )
 
     for required in (args.model, args.processor, args.calibration, args.llama_perplexity):
         if not required.exists():
@@ -213,9 +340,13 @@ def main() -> None:
     if tuple(calibration["labels"]) != LABELS:
         raise ValueError("calibration label order differs from GGUF evaluator")
     processor = AutoProcessor.from_pretrained(args.processor, local_files_only=True)
+    split_paths = {
+        split: resolve_split_path(args.data, args.external_data, split)
+        for split in args.splits
+    }
     rows_by_split = {}
     for split in args.splits:
-        split_rows = read_jsonl(args.data / f"{split}.jsonl")
+        split_rows = read_jsonl(split_paths[split])
         if args.limit_per_split is not None:
             split_rows = split_rows[: args.limit_per_split]
         rows_by_split[split] = split_rows
@@ -226,7 +357,7 @@ def main() -> None:
     scores_by_split: dict[str, np.ndarray] = {}
     split_scoring: dict[str, dict[str, Any]] = {}
     for split, split_rows in rows_by_split.items():
-        data_sha256 = file_sha256(args.data / f"{split}.jsonl")
+        data_sha256 = file_sha256(split_paths[split])
         identity = cache_identity(
             split=split,
             examples=len(split_rows),
@@ -349,7 +480,7 @@ def main() -> None:
                 "parallel": args.parallel,
                 "n_gpu_layers": args.n_gpu_layers,
             },
-            "dev_data_sha256": file_sha256(args.data / "dev.jsonl"),
+            "dev_data_sha256": file_sha256(split_paths["dev"]),
             "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
         }
         calibration_output = args.calibration_output or args.report.with_suffix(
@@ -395,7 +526,7 @@ def main() -> None:
         },
         "split_scoring": split_scoring,
         "cache_dir": str(cache_dir),
-        "data_sha256": {split: file_sha256(args.data / f"{split}.jsonl") for split in args.splits},
+        "data_sha256": {split: file_sha256(split_paths[split]) for split in args.splits},
     }
     for split in args.splits:
         split_rows = rows_by_split[split]
@@ -428,6 +559,39 @@ def main() -> None:
         result["test_gates"] = {
             "evaluated": False,
             "reason": "limit_per_split makes this a benchmark sample, not the frozen test",
+        }
+    prediction_path = args.predictions or args.report.with_suffix(".predictions.jsonl")
+    prediction_path.parent.mkdir(parents=True, exist_ok=True)
+    prediction_records = prediction_ledger_records(
+        rows_by_split,
+        scores_by_split,
+        temperature,
+        threshold,
+        safe_threshold,
+    )
+    prediction_path.write_text(
+        "".join(json.dumps(record, sort_keys=True) + "\n" for record in prediction_records),
+        encoding="utf-8",
+    )
+    result["prediction_ledger"] = {
+        "path": str(prediction_path),
+        "sha256": file_sha256(prediction_path),
+        "examples": len(prediction_records),
+        "contains_message_text": False,
+    }
+    if args.reference_predictions:
+        reference_records = read_jsonl(args.reference_predictions)
+        result["quantization_parity"] = quantization_parity(
+            prediction_records, reference_records
+        ) | {
+            "reference_predictions": str(args.reference_predictions),
+            "reference_sha256": file_sha256(args.reference_predictions),
+        }
+    else:
+        result["quantization_parity"] = {
+            "evaluated": False,
+            "release_gate_passed": False,
+            "reason": "--reference-predictions was not supplied",
         }
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

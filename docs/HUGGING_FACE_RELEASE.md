@@ -81,14 +81,15 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    product-shape route and verdict parity; aggregate metric similarity cannot waive a mismatch.
 4. Merge the adapter with `training/merge_qwen_adapter.py`. Its equivalence audit must show that
    adapter and merged verdict scores remain within the configured tolerance.
-5. Convert the merged directory with `scripts/export_gguf.sh`. Evaluate at least `Q4_K_M` and
-   `Q5_K_M`; the exporter currently emits `Q4_K_M`, so create the Q5 artifact with the same pinned
-   llama.cpp quantizer when Q4 loses a gate.
+5. Convert the merged directory with `scripts/export_gguf.sh`. The pinned exporter emits both
+   `Q4_K_M` and `Q5_K_M`; evaluate both and select the smallest artifact that preserves every
+   frozen decision and quality gate.
 6. Rerun the exact frozen quality protocol on the selected GGUF. Quantization is rejected if any
    safety decision or required gate regresses outside the published tolerance.
 7. Measure tokenizer-to-verdict p50/p95/p99/maximum, peak memory, and artifact bytes on the
    reference desktop and a physical phone. If Qwen is routed, also publish escalation rate, full
-   routed tail latency, and a text-free per-request trace. Require routed p95 at most 20 ms,
+   routed tail latency, and a text-free per-request trace. The authorization tool hashes that trace
+   and recomputes p50/p95/p99/maximum rather than trusting copied summaries. Require routed p95 at most 20 ms,
    escalated-path p95 under 50 ms, and exact parity with the frozen product-shaped quality ledger.
 8. Complete the label, multilingual-claim, redistribution, PII, and secrets audits. Build a model
    card that includes failures, dataset provenance tiers, frozen thresholds, hardware, runtime,
@@ -104,6 +105,11 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
     ```
 
     Upload only when it returns `"publication_authorized": true`.
+
+    The manifest must hash and size the merged model, selected GGUF, tokenizer, BF16 quality
+    report, 39-gate report, quantized quality report, routed runtime report, its text-free routed
+    trace, data manifest, physical-mobile benchmark, and model card. The checker cross-links these
+    artifacts and recomputes routed latency percentiles from the trace.
 
 ## Hugging Face package boundary
 

@@ -1,5 +1,5 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
-.PHONY: qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime routed-eval
+.PHONY: qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -9,6 +9,13 @@ QWEN08_FULL_TOKEN_AUDIT ?= reports/runs/qwen35-08b-schema24-token-audit.json
 QWEN08_FULL_LABEL_AUDIT ?= reports/data/schema24-label-audit-completion.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
+QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
+QWEN08_FULL_MERGED ?= artifacts/merged/qwen35-08b-schema24-scamguard
+QWEN08_FULL_GGUF_PREFIX ?= artifacts/gguf/scamguard-qwen35-08b-schema24
+QWEN08_FULL_Q4_GGUF ?= $(QWEN08_FULL_GGUF_PREFIX)-q4_k_m.gguf
+QWEN08_FULL_Q5_GGUF ?= $(QWEN08_FULL_GGUF_PREFIX)-q5_k_m.gguf
+QWEN08_FULL_Q4_REPORT ?= reports/runs/qwen35-08b-schema24-q4-k-m.json
+QWEN08_FULL_Q5_REPORT ?= reports/runs/qwen35-08b-schema24-q5-k-m.json
 QWEN08_BASE_GGUF ?= artifacts/gguf/Qwen3.5-0.8B-Q4_0.gguf
 LLAMA_CPP_DIR ?= ../llama.cpp
 LLAMA_BENCH ?= $(LLAMA_CPP_DIR)/build-scamguard-arm64/bin/llama-bench
@@ -19,6 +26,7 @@ ENCODER23_ROUTER_PREDICTIONS ?= reports/runs/sg-modernbert-schema23-router-sourc
 ROUTER_PREDICTIONS ?= $(ENCODER23_ROUTER_PREDICTIONS)
 SPECIALIST_PREDICTIONS ?= $(QWEN08_FULL_REPORT:.json=.predictions.jsonl)
 ROUTED_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-schema24-routed.json
+QWEN08_FULL_ROUTED_RUNTIME_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-schema24-routed-runtime.json
 QWEN08_BASE_REPORT ?= reports/runs/qwen35-08b-base-schema24-product-batch1.json
 QWEN08_BASE_ROUTED_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-product-batch1-routed.json
 QWEN08_BASE_ROUTED_RUNTIME_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-product-batch1-runtime.json
@@ -475,6 +483,26 @@ qwen-08b-base-routed-runtime: qwen-08b-base-routed-diagnostic
 		--data "$(QWEN08_FULL_DATA)" --repetitions "$(ROUTED_RUNTIME_REPETITIONS)" --require-mps \
 		--report "$(QWEN08_BASE_ROUTED_RUNTIME_REPORT)"
 
+qwen-08b-full-routed-diagnostic: qwen-08b-full-eval
+	$(MAKE) routed-eval \
+		SPECIALIST_PREDICTIONS="$(QWEN08_FULL_REPORT:.json=.predictions.jsonl)" \
+		ROUTED_REPORT="$(ROUTED_REPORT)"
+
+qwen-08b-full-routed-runtime: qwen-08b-full-routed-diagnostic
+	test -f "$(QWEN08_FULL_OUTPUT)/adapter_model.safetensors"
+	test -f "$(QWEN08_FULL_REPORT:.json=.scores/test.json)"
+	$(PYTHON_BIN) benchmarks/benchmark_routed_transformers_runtime.py \
+		--router-checkpoint "$(ENCODER23_OUTPUT)" \
+		--router-predictions "$(ENCODER23_ROUTER_PREDICTIONS)" \
+		--specialist-revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--specialist-adapter "$(QWEN08_FULL_OUTPUT)" \
+		--specialist-report "$(QWEN08_FULL_REPORT)" \
+		--specialist-score-cache-metadata "$(QWEN08_FULL_REPORT:.json=.scores/test.json)" \
+		--specialist-predictions "$(QWEN08_FULL_REPORT:.json=.predictions.jsonl)" \
+		--routed-report "$(ROUTED_REPORT)" \
+		--data "$(QWEN08_FULL_DATA)" --repetitions "$(ROUTED_RUNTIME_REPETITIONS)" \
+		--require-mps --report "$(QWEN08_FULL_ROUTED_RUNTIME_REPORT)"
+
 apptek-eval-schema13: apptek-callcenter
 	$(PYTHON_BIN) training/eval_encoder_external.py \
 		--checkpoint artifacts/checkpoints/sg-modernbert-schema13-dose16 \
@@ -719,33 +747,42 @@ qwen-08b-full-token-audit: qwen-08b-full-data
 		--output "$(QWEN08_FULL_TOKEN_AUDIT)"
 
 qwen-08b-full-freeze: qwen-08b-full-token-audit schema24-audit-check
-	uv run --extra train --extra qwen python scripts/freeze_qwen08_full_experiment.py \
-		--processed "$(QWEN08_FULL_DATA)" --token-audit "$(QWEN08_FULL_TOKEN_AUDIT)" \
-		--label-audit "$(QWEN08_FULL_LABEL_AUDIT)" \
-		--output "$(QWEN08_FULL_CONFIG)" --checkpoint-output "$(QWEN08_FULL_OUTPUT)" \
-		--experiment-id sg-qwen35-08b-schema24-full-v1
+	@if [ -f "$(QWEN08_FULL_CONFIG)" ]; then \
+		echo "Reusing immutable full-run config: $(QWEN08_FULL_CONFIG)"; \
+	else \
+		uv run --extra train --extra qwen python scripts/freeze_qwen08_full_experiment.py \
+			--processed "$(QWEN08_FULL_DATA)" --token-audit "$(QWEN08_FULL_TOKEN_AUDIT)" \
+			--label-audit "$(QWEN08_FULL_LABEL_AUDIT)" \
+			--output "$(QWEN08_FULL_CONFIG)" --checkpoint-output "$(QWEN08_FULL_OUTPUT)" \
+			--experiment-id sg-qwen35-08b-schema24-full-v1; \
+	fi
 
 qwen-08b-full:
 	test -f "$(QWEN08_FULL_CONFIG)"
 	uv run python scripts/verify_experiment_config.py \
 		--config "$(QWEN08_FULL_CONFIG)" --data "$(QWEN08_FULL_DATA)"
-	uv run --extra train --extra qwen python training/train_qwen_lora.py \
-		--experiment-config "$(QWEN08_FULL_CONFIG)" \
-		--model Qwen/Qwen3.5-0.8B \
-		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
-		--data "$(QWEN08_FULL_DATA)/qwen_sft" \
-		--batch-size 16 --eval-batch-size 4 \
-		--gradient-accumulation 1 --gradient-checkpointing \
-		--max-length 640 \
-		--sampling-strategy group_by_length --require-mps \
-		--output "$(QWEN08_FULL_OUTPUT)"
+	@if [ -f "$(QWEN08_FULL_OUTPUT)/adapter_model.safetensors" ]; then \
+		echo "Reusing immutable full-run adapter: $(QWEN08_FULL_OUTPUT)"; \
+	else \
+		uv run --extra train --extra qwen python training/train_qwen_lora.py \
+			--experiment-config "$(QWEN08_FULL_CONFIG)" \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--data "$(QWEN08_FULL_DATA)/qwen_sft" \
+			--batch-size 16 --eval-batch-size 4 \
+			--gradient-accumulation 1 --gradient-checkpointing \
+			--max-length 640 \
+			--sampling-strategy group_by_length --require-mps \
+			--output "$(QWEN08_FULL_OUTPUT)"; \
+	fi
 
 qwen-08b-full-eval: qwen-08b-full
 	uv run --extra train --extra qwen python training/eval_qwen.py \
 		--model Qwen/Qwen3.5-0.8B \
 		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
 		--adapter "$(QWEN08_FULL_OUTPUT)" --data "$(QWEN08_FULL_DATA)" \
-		--external-data data/external --batch-size 1 --sequence-bucket-size 64 --require-mps \
+		--external-data data/external --splits $(QWEN08_FULL_EVAL_SPLITS) \
+		--batch-size 1 --sequence-bucket-size 64 --require-mps \
 		--report "$(QWEN08_FULL_REPORT)"
 
 qwen-08b-base-product-eval:
@@ -760,6 +797,41 @@ qwen-08b-base-product-eval:
 qwen-08b-full-gates: qwen-08b-full-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_FULL_REPORT)" --output "$(QWEN08_FULL_GATE_REPORT)"
+
+qwen-08b-full-merge: qwen-08b-full-gates
+	uv run --extra train --extra qwen python training/merge_qwen_adapter.py \
+		--base Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--adapter "$(QWEN08_FULL_OUTPUT)" --device cpu --dtype float32 \
+		--output "$(QWEN08_FULL_MERGED)"
+
+qwen-08b-full-gguf:
+	test -f "$(QWEN08_FULL_MERGED)/scamguard_merge.json"
+	test -n "$(LLAMA_CPP_DIR)"
+	scripts/export_gguf.sh "$(LLAMA_CPP_DIR)" "$(QWEN08_FULL_MERGED)" \
+		"$(QWEN08_FULL_GGUF_PREFIX)" "$(PYTHON_BIN)"
+
+qwen-08b-full-gguf-eval-q4:
+	test -f "$(QWEN08_FULL_Q4_GGUF)"
+	uv run --extra train --extra qwen python training/eval_gguf.py \
+		--model "$(QWEN08_FULL_Q4_GGUF)" --processor "$(QWEN08_FULL_OUTPUT)" \
+		--calibration "$(QWEN08_FULL_OUTPUT)/scamguard_calibration.json" \
+		--llama-perplexity "$(LLAMA_PERPLEXITY)" --data "$(QWEN08_FULL_DATA)" \
+		--external-data data/external --splits $(QWEN08_FULL_EVAL_SPLITS) \
+		--ctx-size 640 --batch-size 640 --ubatch-size 128 --parallel 1 \
+		--reference-predictions "$(QWEN08_FULL_REPORT:.json=.predictions.jsonl)" \
+		--report "$(QWEN08_FULL_Q4_REPORT)"
+
+qwen-08b-full-gguf-eval-q5:
+	test -f "$(QWEN08_FULL_Q5_GGUF)"
+	uv run --extra train --extra qwen python training/eval_gguf.py \
+		--model "$(QWEN08_FULL_Q5_GGUF)" --processor "$(QWEN08_FULL_OUTPUT)" \
+		--calibration "$(QWEN08_FULL_OUTPUT)/scamguard_calibration.json" \
+		--llama-perplexity "$(LLAMA_PERPLEXITY)" --data "$(QWEN08_FULL_DATA)" \
+		--external-data data/external --splits $(QWEN08_FULL_EVAL_SPLITS) \
+		--ctx-size 640 --batch-size 640 --ubatch-size 128 --parallel 1 \
+		--reference-predictions "$(QWEN08_FULL_REPORT:.json=.predictions.jsonl)" \
+		--report "$(QWEN08_FULL_Q5_REPORT)"
 
 qwen-2b: qwen-data
 	uv run python scripts/verify_experiment_config.py --config configs/qwen35-2b-lora.json

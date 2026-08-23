@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 from scripts.verify_huggingface_release import validate_release_manifest
@@ -17,22 +18,154 @@ def evidence(path: Path, role: str, root: Path) -> dict[str, object]:
 
 def valid_manifest(tmp_path: Path) -> dict[str, object]:
     artifacts = []
+    artifact_paths: dict[str, Path] = {}
     for role in ("merged_model", "gguf_model", "tokenizer"):
         path = tmp_path / f"{role}.bin"
         path.write_bytes(f"artifact:{role}".encode())
+        artifact_paths[role] = path
         artifacts.append(evidence(path, role, tmp_path))
-    reports = []
-    for role in (
-        "data_manifest",
-        "mobile_benchmark",
-        "model_card",
-        "quality",
-        "quantized_quality",
-        "runtime",
-    ):
+
+    report_paths: dict[str, Path] = {}
+    for role in ("data_manifest", "mobile_benchmark", "model_card"):
         path = tmp_path / f"{role}.json"
         path.write_text(f'{{"report":"{role}"}}', encoding="utf-8")
-        reports.append(evidence(path, role, tmp_path))
+        report_paths[role] = path
+    routed_trace = tmp_path / "routed_runtime.traces.jsonl"
+    trace_records = []
+    for index in range(100):
+        escalated = index >= 95
+        if escalated:
+            router_ms, specialist_ms, overhead_ms = 8.0, 36.9, 0.1
+        elif index >= 90:
+            router_ms, specialist_ms, overhead_ms = 14.9, 0.0, 0.1
+        else:
+            router_ms, specialist_ms, overhead_ms = 7.9, 0.0, 0.1
+        trace_records.append(
+            {
+                "id": f"row-{index}",
+                "repetition": 0,
+                "escalated": escalated,
+                "router_ms": router_ms,
+                "specialist_ms": specialist_ms,
+                "routing_overhead_ms": overhead_ms,
+                "total_ms": router_ms + specialist_ms + overhead_ms,
+            }
+        )
+    routed_trace.write_text(
+        "".join(json.dumps(record) + "\n" for record in trace_records),
+        encoding="utf-8",
+    )
+    report_paths["routed_trace"] = routed_trace
+    frozen_ledger_sha256 = "a" * 64
+    bf16 = tmp_path / "bf16_quality.json"
+    bf16.write_text(
+        json.dumps(
+            {
+                "score_cache": {
+                    "message_batch_size": 1,
+                    "candidate_batch_size": 3,
+                    "sequence_bucket_size": 64,
+                },
+                "prediction_ledger": {"sha256": frozen_ledger_sha256},
+            }
+        ),
+        encoding="utf-8",
+    )
+    report_paths["bf16_quality"] = bf16
+    quality_gates = tmp_path / "quality_gates.json"
+    quality_gates.write_text(
+        json.dumps(
+            {
+                "quality_status": "passed",
+                "passed_gates": 39,
+                "total_gates": 39,
+                "failed_gates": [],
+                "quantization_authorized": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    report_paths["quality_gates"] = quality_gates
+    quantized = tmp_path / "quantized_quality.json"
+    quantized.write_text(
+        json.dumps(
+            {
+                "model_sha256": hashlib.sha256(
+                    artifact_paths["gguf_model"].read_bytes()
+                ).hexdigest(),
+                "test_gates": {
+                    "recall": True,
+                    "fpr": True,
+                    "core_category_recall": True,
+                    "macro_f1_stretch": True,
+                },
+                "quantization_parity": {
+                    "reference_sha256": frozen_ledger_sha256,
+                    "exact_calibrated_verdict_parity": True,
+                    "release_gate_passed": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    report_paths["quantized_quality"] = quantized
+    routed_runtime = tmp_path / "routed_runtime.json"
+    routed_runtime.write_text(
+        json.dumps(
+            {
+                "measurement_mode": "interleaved_persistent_per_request",
+                "specialist": {
+                    "quantization": "Q4_K_M",
+                    "calibration_report_sha256": hashlib.sha256(
+                        bf16.read_bytes()
+                    ).hexdigest(),
+                    "frozen_quality_scoring": {
+                        "message_batch_size": 1,
+                        "candidate_batch_size": 3,
+                        "sequence_bucket_size": 64,
+                    },
+                    "runtime_scoring": {
+                        "message_batch_size": 1,
+                        "candidate_batch_size": 3,
+                        "sequence_bucket_size": 64,
+                    },
+                },
+                "parity": {"release_gate_passed": True},
+                "latency": {
+                    "escalation_rate": 0.05,
+                    "overall": {
+                        "samples": 100,
+                        "p50_ms": 8.0,
+                        "p95_ms": 16.5,
+                        "p99_ms": 45.0,
+                        "maximum_ms": 45.0,
+                    },
+                    "escalated_path_total": {
+                        "samples": 5,
+                        "p50_ms": 45.0,
+                        "p95_ms": 45.0,
+                        "p99_ms": 45.0,
+                        "maximum_ms": 45.0,
+                    },
+                    "gates": {
+                        "overall_p95_under_20_ms": True,
+                        "escalated_path_p95_under_50_ms": True,
+                    },
+                },
+                "trace_ledger": {
+                    "path": str(routed_trace.relative_to(tmp_path)),
+                    "sha256": hashlib.sha256(routed_trace.read_bytes()).hexdigest(),
+                    "rows": len(trace_records),
+                    "contains_message_text": False,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    report_paths["routed_runtime"] = routed_runtime
+    reports = [
+        evidence(path, role, tmp_path) for role, path in report_paths.items()
+    ]
     return {
         "schema_version": 1,
         "publication_status": "approved",
@@ -95,10 +228,10 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
             },
             "routed": {
                 "measured": True,
-                "escalation_rate": 0.08,
+                "escalation_rate": 0.05,
                 "p50_ms": 8.0,
-                "p95_ms": 15.0,
-                "p99_ms": 40.0,
+                "p95_ms": 16.5,
+                "p99_ms": 45.0,
                 "maximum_ms": 45.0,
                 "escalated_p95_ms": 45.0,
             },
@@ -152,6 +285,35 @@ def test_tampered_artifact_is_rejected(tmp_path: Path) -> None:
 
     assert any("SHA-256 mismatch" in error for error in errors)
     assert any("size mismatch" in error for error in errors)
+
+
+def test_tampered_routed_trace_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    with (tmp_path / "routed_runtime.traces.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"id": "unevidenced"}) + "\n")
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert any("SHA-256 mismatch" in error for error in errors)
+    assert any("size mismatch" in error for error in errors)
+    assert any("trace SHA-256" in error for error in errors)
+    assert any("trace row count" in error for error in errors)
+
+
+def test_non_numeric_routed_summary_is_rejected_without_crashing(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    report_path = tmp_path / "routed_runtime.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["latency"]["overall"]["p95_ms"] = "not-a-number"
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    for entry in manifest["reports"]:  # type: ignore[union-attr]
+        if entry["role"] == "routed_runtime":
+            entry["sha256"] = hashlib.sha256(report_path.read_bytes()).hexdigest()
+            entry["size_bytes"] = report_path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "routed runtime overall p95_ms must be finite" in errors
 
 
 def test_training_row_or_direct_reddit_release_is_rejected(tmp_path: Path) -> None:

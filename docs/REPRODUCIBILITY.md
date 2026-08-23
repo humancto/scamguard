@@ -258,10 +258,24 @@ make qwen-gguf LLAMA_CPP_DIR=../llama.cpp PYTHON_BIN="$PWD/.venv/bin/python"
 make qwen-gguf-eval LLAMA_CPP_DIR=../llama.cpp
 ```
 
+For the audit-gated Qwen3.5-0.8B experiment, run the immutable full evaluation before export. The
+two quantized evaluations reuse the BF16 calibration and compare every calibrated verdict against
+the frozen prediction ledger:
+
+```bash
+make qwen-08b-full-gates
+make qwen-08b-full-merge
+make qwen-08b-full-gguf LLAMA_CPP_DIR=../llama.cpp PYTHON_BIN="$PWD/.venv/bin/python"
+make qwen-08b-full-gguf-eval-q4 LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-full-gguf-eval-q5 LLAMA_CPP_DIR=../llama.cpp
+```
+
 The custom scorer changes no model math. It removes the generic multiple-choice helper's inserted
 space so candidates exactly continue the ScamGuard JSON prefix, and prints the already-computed
 length-normalized answer log-probabilities. `training/eval_gguf.py` applies the same frozen
-temperature and threshold used by the reference checkpoint.
+temperature and threshold used by the reference checkpoint. This scorer's aggregate phase timing
+is diagnostic only; Hugging Face authorization separately requires a hash-bound, interleaved,
+persistent per-request routed trace.
 
 Build and rerun the pinned upstream 0.8B Q4 runtime controls independently of model training:
 
@@ -273,7 +287,7 @@ uv run --no-project --with cmake cmake \
   -DLLAMA_BUILD_APP=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TESTS=OFF
 uv run --no-project --with cmake cmake \
   --build ../llama.cpp/build-scamguard-arm64 --config Release --parallel 8 \
-  --target llama-bench llama-perplexity
+  --target llama-bench llama-perplexity llama-quantize
 
 make qwen-08b-base-gguf
 make qwen-08b-base-gguf-benchmark LLAMA_CPP_DIR=../llama.cpp
