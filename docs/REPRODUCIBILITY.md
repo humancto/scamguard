@@ -42,6 +42,21 @@ reference result is [`reports/QWEN08_TRAINING_PREFLIGHT.json`](../reports/QWEN08
 It is environment and training-plumbing evidence only—not a quality result, audit substitute, or
 authorization to start the frozen experiment.
 
+The separate worst-case geometry probe runs one completion-only backward pass at the proposed
+16-message, 640-token microbatch without an optimizer update:
+
+```bash
+make qwen-08b-batch-preflight
+```
+
+The measured batch fits only by driving MPS allocation beyond PyTorch's recommended maximum:
+132.08 seconds for one backward pass and 158,701,764,608 driver-allocated bytes versus a
+115,448,725,504-byte recommendation. The source-bound result is
+[`reports/QWEN08_BATCH16X640_PREFLIGHT.json`](../reports/QWEN08_BATCH16X640_PREFLIGHT.json).
+Therefore batch 16 with accumulation 1 is a rejected launch geometry even though the kernel
+completed; a lower-memory configuration must preserve effective batch 16 through measured
+gradient accumulation before the experiment is frozen.
+
 ## Schema-v12 encoder
 
 ```bash

@@ -1,0 +1,52 @@
+{
+  "artifact_schema_version": 1,
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "contains_training_or_audit_rows": false,
+  "environment": {
+    "machine": "arm64",
+    "mps_allocated_bytes": 1838927872,
+    "mps_available": true,
+    "mps_driver_allocated_bytes": 158701764608,
+    "mps_recommended_max_bytes": 115448725504,
+    "peft": "0.20.0",
+    "python": "3.11.15",
+    "torch": "2.13.0",
+    "transformers": "5.16.0.dev0"
+  },
+  "geometry": {
+    "effective_batch_size": 16,
+    "gradient_accumulation": 1,
+    "microbatch_size": 16,
+    "sequence_length": 640,
+    "supervised_tokens": 880,
+    "tokens_per_microbatch": 10240
+  },
+  "lora": {
+    "alpha": 32,
+    "dropout": 0.05,
+    "gradient_tensors": 372,
+    "rank": 16,
+    "trainable_parameters": 10822656,
+    "trainable_tensors": 372,
+    "visual_trainable_tensors": 0
+  },
+  "measurement_kind": "qwen08_no_update_mps_batch_geometry_preflight",
+  "parameter_update_performed": false,
+  "passed": true,
+  "probe": {
+    "complete_seconds": 133.07631070900243,
+    "forward_backward_seconds": 132.07652770800632,
+    "loss": 0.14617149531841278
+  },
+  "seed": 20260820,
+  "snapshot_manifest_sha256": "c4a2b9f20a7aa8cd3137ccf2726ba01840b310dbcf6da865506b9c83406f8b08",
+  "source_bindings": {
+    "base_preflight_sha256": "a554a294c1de366b5cc97fbf781356afc488d8f36a6f480c4ffdadfaa166873b",
+    "batch_preflight_sha256": "fda6543a358ceeaa63e33ea12487e5839c109bfecb9b3ac5636a5b7ea2db3710",
+    "experiment_freezer_sha256": "6d3545786f7136ac63a110b421be8145d798f8b9f2646e2f40269981461e17a4",
+    "training_launcher_sha256": "06e4a51ef7c682b4a35a0c5247e0360fe6f8147927cc7b737ab6c96347423663",
+    "uv_lock_sha256": "e6ec0814c4af6614ba98639d98421f2df523e58e3e2032aa068b7d1e910c4765"
+  },
+  "transformers_revision": "0c92811846095910816a87aca50050d10c545270"
+}
