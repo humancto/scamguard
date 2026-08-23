@@ -1,0 +1,17 @@
+{
+  "path": "data/audit/schema24-label-audit.csv",
+  "rows": 635,
+  "complete_rows": 0,
+  "incomplete_rows": 635,
+  "agreement": null,
+  "incorrect_label_rows": 0,
+  "sensitive_data_rows": 0,
+  "auditor_labels": {},
+  "release_gate_passed": false,
+  "audit_sha256": "778f132f9b09cbf95af4545b3d2b5a3363b8aab4005da24de1cc318a958a5285",
+  "audit_manifest_path": "data/audit/schema24-label-audit.manifest.json",
+  "audit_manifest_sha256": "0e3b8a929f83dc92c0418738f49a9f6e551c4913cde5ee91859d893e7f7e205e",
+  "data_manifest_path": "data/experiments/schema24-annotated-hard-negatives/processed/manifest.json",
+  "data_manifest_sha256": "484913b08f5103ac3f99843bef75f2417e190fecff797ac3e1cfd9a86578d0ab",
+  "errors": []
+}
