@@ -19,6 +19,44 @@ public struct ScamGuardRawScore: Sendable {
     public let prefixTokens: Int32
 }
 
+public enum ScamGuardVerdict: String, Sendable {
+    case safe = "SAFE"
+    case uncertain = "UNCERTAIN"
+    case scam = "SCAM"
+}
+
+public struct ScamGuardCalibration: Sendable {
+    public let promptSuffix: String
+    public let temperature: Double
+    public let scamThreshold: Double
+    public let safeThreshold: Double
+
+    public init(
+        promptSuffix: String,
+        temperature: Double,
+        scamThreshold: Double,
+        safeThreshold: Double
+    ) throws {
+        guard promptSuffix.hasPrefix("</message>"), temperature.isFinite, temperature > 0,
+              (0 ... 1).contains(scamThreshold), (0 ... 1).contains(safeThreshold) else {
+            throw ScamGuardRuntimeError.native("invalid ScamGuard calibration")
+        }
+        self.promptSuffix = promptSuffix
+        self.temperature = temperature
+        self.scamThreshold = scamThreshold
+        self.safeThreshold = safeThreshold
+    }
+}
+
+public struct ScamGuardDecision: Sendable {
+    public let verdict: ScamGuardVerdict
+    public let safeProbability: Double
+    public let uncertainProbability: Double
+    public let scamProbability: Double
+    public let completeElapsedNanoseconds: UInt64
+    public let rawScore: ScamGuardRawScore
+}
+
 public enum ScamGuardRuntimeError: Error, LocalizedError {
     case native(String)
     case closed
@@ -33,6 +71,7 @@ public enum ScamGuardRuntimeError: Error, LocalizedError {
 
 public final class ScamGuardRuntime: @unchecked Sendable {
     private let lock = NSLock()
+    private let promptPrefix: String
     private var runtime: OpaquePointer?
 
     public init(
@@ -71,6 +110,7 @@ public final class ScamGuardRuntime: @unchecked Sendable {
         guard status == SG_GGUF_OK, let created else {
             throw ScamGuardRuntimeError.native(String(cString: error))
         }
+        promptPrefix = prefix
         runtime = created
     }
 
@@ -131,6 +171,44 @@ public final class ScamGuardRuntime: @unchecked Sendable {
             maximumSequenceTokens: result.maximum_sequence_tokens,
             prefixReused: result.prefix_reused == 1,
             prefixTokens: result.prefix_tokens
+        )
+    }
+
+    public func classify(
+        message: String,
+        calibration: ScamGuardCalibration
+    ) throws -> ScamGuardDecision {
+        guard !message.isEmpty else {
+            throw ScamGuardRuntimeError.native("message must not be empty")
+        }
+        let started = DispatchTime.now().uptimeNanoseconds
+        let question = promptPrefix + "<message>" + message + calibration.promptSuffix
+        let raw = try score(question)
+        let scaled = [raw.safe, raw.uncertain, raw.scam].map { $0 / calibration.temperature }
+        guard scaled.allSatisfy(\.isFinite), let maximum = scaled.max() else {
+            throw ScamGuardRuntimeError.native("native scores must be finite")
+        }
+        let exponentials = scaled.map { exp($0 - maximum) }
+        let denominator = exponentials.reduce(0, +)
+        guard denominator.isFinite, denominator > 0 else {
+            throw ScamGuardRuntimeError.native("calibrated probabilities are invalid")
+        }
+        let probabilities = exponentials.map { $0 / denominator }
+        let verdict: ScamGuardVerdict
+        if probabilities[2] >= calibration.scamThreshold {
+            verdict = .scam
+        } else if probabilities[0] >= calibration.safeThreshold {
+            verdict = .safe
+        } else {
+            verdict = .uncertain
+        }
+        return ScamGuardDecision(
+            verdict: verdict,
+            safeProbability: probabilities[0],
+            uncertainProbability: probabilities[1],
+            scamProbability: probabilities[2],
+            completeElapsedNanoseconds: DispatchTime.now().uptimeNanoseconds - started,
+            rawScore: raw
         )
     }
 

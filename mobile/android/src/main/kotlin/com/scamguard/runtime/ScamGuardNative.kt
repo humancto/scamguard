@@ -2,12 +2,13 @@ package com.scamguard.runtime
 
 import android.os.SystemClock
 import java.io.Closeable
+import kotlin.math.exp
 
 data class ScamGuardRuntimeInfo(
     val protocolVersion: Long,
     val modelBytes: Long,
     val contextSize: Int,
-    val prefixTokens: Int,
+    val prefixTokens: Int
 )
 
 data class ScamGuardRawScore(
@@ -18,7 +19,36 @@ data class ScamGuardRawScore(
     val endToEndElapsedNanos: Long,
     val maximumSequenceTokens: Int,
     val prefixReused: Boolean,
-    val prefixTokens: Int,
+    val prefixTokens: Int
+)
+
+enum class ScamGuardVerdict {
+    SAFE,
+    UNCERTAIN,
+    SCAM
+}
+
+data class ScamGuardCalibration(
+    val promptSuffix: String,
+    val temperature: Double,
+    val scamThreshold: Double,
+    val safeThreshold: Double
+) {
+    init {
+        require(promptSuffix.startsWith("</message>")) { "prompt suffix must close the message" }
+        require(temperature.isFinite() && temperature > 0.0) { "temperature must be positive" }
+        require(scamThreshold in 0.0..1.0) { "scam threshold must be in [0, 1]" }
+        require(safeThreshold in 0.0..1.0) { "safe threshold must be in [0, 1]" }
+    }
+}
+
+data class ScamGuardDecision(
+    val verdict: ScamGuardVerdict,
+    val safeProbability: Double,
+    val uncertainProbability: Double,
+    val scamProbability: Double,
+    val completeElapsedNanos: Long,
+    val rawScore: ScamGuardRawScore
 )
 
 class ScamGuardNative(
@@ -28,8 +58,9 @@ class ScamGuardNative(
     batchSize: Int = 640,
     microBatchSize: Int = 128,
     threads: Int = 4,
-    gpuLayers: Int = 0,
+    gpuLayers: Int = 0
 ) : Closeable {
+    private val promptPrefix: String = prefix
     private var handle: Long = nativeCreate(
         modelPath.toByteArray(Charsets.UTF_8),
         prefix.toByteArray(Charsets.UTF_8),
@@ -37,7 +68,7 @@ class ScamGuardNative(
         batchSize,
         microBatchSize,
         threads,
-        gpuLayers,
+        gpuLayers
     )
 
     @Synchronized
@@ -60,7 +91,39 @@ class ScamGuardNative(
             endToEndElapsedNanos = elapsed,
             maximumSequenceTokens = values[4].toInt(),
             prefixReused = values[5] == 1.0,
-            prefixTokens = values[6].toInt(),
+            prefixTokens = values[6].toInt()
+        )
+    }
+
+    @Synchronized
+    fun classify(message: String, calibration: ScamGuardCalibration): ScamGuardDecision {
+        require(message.isNotEmpty()) { "message must not be empty" }
+        val started = SystemClock.elapsedRealtimeNanos()
+        val question = promptPrefix + "<message>" + message + calibration.promptSuffix
+        val raw = score(question)
+        val scaled = doubleArrayOf(raw.safe, raw.uncertain, raw.scam).map {
+            it / calibration.temperature
+        }
+        require(scaled.all { it.isFinite() }) { "native scores must be finite" }
+        val maximum = scaled.max()!!
+        val exponentials = scaled.map { exp(it - maximum) }
+        val denominator = exponentials.sum()
+        require(denominator.isFinite() && denominator > 0.0) {
+            "calibrated probabilities are invalid"
+        }
+        val probabilities = exponentials.map { it / denominator }
+        val verdict = when {
+            probabilities[2] >= calibration.scamThreshold -> ScamGuardVerdict.SCAM
+            probabilities[0] >= calibration.safeThreshold -> ScamGuardVerdict.SAFE
+            else -> ScamGuardVerdict.UNCERTAIN
+        }
+        return ScamGuardDecision(
+            verdict = verdict,
+            safeProbability = probabilities[0],
+            uncertainProbability = probabilities[1],
+            scamProbability = probabilities[2],
+            completeElapsedNanos = SystemClock.elapsedRealtimeNanos() - started,
+            rawScore = raw
         )
     }
 
@@ -84,7 +147,7 @@ class ScamGuardNative(
         batchSize: Int,
         microBatchSize: Int,
         threads: Int,
-        gpuLayers: Int,
+        gpuLayers: Int
     ): Long
 
     private external fun nativeInfo(handle: Long): LongArray

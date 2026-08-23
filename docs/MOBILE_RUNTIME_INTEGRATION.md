@@ -21,8 +21,10 @@ module map exposes `import ScamGuardGGUF`. Bundle or install the selected GGUF i
 location, pass its file URL and the frozen prompt prefix to `ScamGuardRuntime`, and keep one runtime
 alive across requests so the model and prefix cache stay resident.
 
-The Swift wrapper reports both native tokenization-to-score time and Swift-call end-to-end time.
-Use the latter for the physical-device raw trace.
+The Swift wrapper's `classify(message:calibration:)` applies the same stable softmax and
+SCAM-first/SAFE-second abstention policy as the Python evaluator. It reports native scoring time,
+FFI-call time, and complete prompt-rendering-to-calibrated-verdict time. Use
+`completeElapsedNanoseconds` for the physical-device raw trace.
 
 After committing the exact source revision, create the hash-bound runtime ZIP with:
 
@@ -44,8 +46,11 @@ app module. Copy the selected GGUF to app-private storage before constructing `S
 The wrapper defaults to CPU execution (`gpuLayers = 0`) until a device-specific accelerator path is
 separately validated.
 
-The Kotlin wrapper records `SystemClock.elapsedRealtimeNanos()` around the complete JNI call. Use
-that value for the physical-device raw trace; the native microseconds field is diagnostic only.
+The Kotlin wrapper's `classify(message, calibration)` applies the same stable softmax and
+SCAM-first/SAFE-second abstention policy as the Python evaluator. It records
+`SystemClock.elapsedRealtimeNanos()` around prompt rendering, JNI scoring, calibration, and verdict.
+Use `completeElapsedNanos` for the physical-device raw trace; the native and JNI-only timing fields
+are diagnostic.
 
 After committing the exact source revision, create the hash-bound runtime ZIP with:
 
