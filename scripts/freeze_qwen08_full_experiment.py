@@ -11,12 +11,15 @@ from pathlib import Path
 from typing import Any
 
 from scamguard.metrics import file_sha256
+from scamguard.privacy import CONTEXTUAL_PRIVACY_REVISION
 
 try:
+    from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
     from training.build_qwen_sft import validate_target
     from training.train_qwen_lora import LANGUAGE_LORA_TARGETS
 except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
     from training.build_qwen_sft import validate_target
     from training.train_qwen_lora import LANGUAGE_LORA_TARGETS
 
@@ -96,6 +99,14 @@ def validate_schema24_manifest(manifest: dict[str, Any], processed: Path) -> Non
         raise ValueError("schema-v24 manifest lacks its annotation increment")
     if increment.get("paper_dev_test_rows_used_for_fitting") is not False:
         raise ValueError("schema-v24 paper dev/test rows must remain outside fitting")
+    privacy = manifest.get("schema24_privacy")
+    if (
+        not isinstance(privacy, dict)
+        or privacy.get("revision") != CONTEXTUAL_PRIVACY_REVISION
+        or privacy.get("access_codes_are_never_training_features") is not True
+        or privacy.get("applied_before_overlap_control") is not True
+    ):
+        raise ValueError("schema-v24 contextual sensitive-value privacy contract is incomplete")
     for field in ("annotation_train_rows", "annotation_dev_rows", "annotation_test_rows"):
         value = increment.get(field)
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
@@ -178,10 +189,16 @@ def validate_label_audit(
 ) -> None:
     if (
         report.get("release_gate_passed") is not True
+        or report.get("rows") != 635
         or report.get("rows") != report.get("complete_rows")
+        or report.get("incomplete_rows") != 0
         or report.get("incorrect_label_rows") != 0
         or report.get("sensitive_data_rows") != 0
         or report.get("errors") != []
+        or report.get("audit_protocol_version") != AUDIT_PROTOCOL_VERSION
+        or report.get("audit_protocol_sha256") != audit_protocol_sha256()
+        or not SHA256_RE.fullmatch(str(report.get("audit_sha256", "")))
+        or not SHA256_RE.fullmatch(str(report.get("audit_manifest_sha256", "")))
     ):
         raise ValueError("schema-v24 independent human label audit has not passed")
     if report.get("data_manifest_sha256") != file_sha256(data_manifest_path):
@@ -285,6 +302,12 @@ def freeze(
                 "report_sha256": file_sha256(label_audit_path),
                 "rows": label_audit["rows"],
                 "agreement": label_audit["agreement"],
+                "agreement_wilson_95_lower": label_audit[
+                    "agreement_wilson_95_lower"
+                ],
+                "cohen_kappa": label_audit["cohen_kappa"],
+                "audit_protocol_version": label_audit["audit_protocol_version"],
+                "audit_protocol_sha256": label_audit["audit_protocol_sha256"],
                 "release_gate_passed": label_audit["release_gate_passed"],
                 "data_manifest_sha256": label_audit["data_manifest_sha256"],
             },

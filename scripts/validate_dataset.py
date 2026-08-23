@@ -15,6 +15,10 @@ try:
 except ModuleNotFoundError:  # Direct `python scripts/validate_dataset.py` execution.
     from build_dataset import family_skeleton, simhash64, simhash_bands
 
+from scamguard.privacy import (
+    CONTEXTUAL_PRIVACY_REVISION,
+    mask_contextual_sensitive_values,
+)
 from scamguard.signals import extract_signal_matches
 
 REQUIRED = {
@@ -290,6 +294,16 @@ def main() -> None:
             "processed manifest schema_version is not "
             f"{args.expected_schema_version}: {manifest.get('schema_version')}"
         )
+    contextual_privacy_required = args.expected_schema_version >= 24
+    if contextual_privacy_required:
+        privacy = manifest.get("schema24_privacy")
+        if (
+            not isinstance(privacy, dict)
+            or privacy.get("revision") != CONTEXTUAL_PRIVACY_REVISION
+            or privacy.get("access_codes_are_never_training_features") is not True
+            or privacy.get("applied_before_overlap_control") is not True
+        ):
+            errors.append("schema-v24 contextual sensitive-value privacy contract is incomplete")
     ids: set[str] = set()
     texts: dict[str, str] = {}
     family_splits: defaultdict[str, set[str]] = defaultdict(set)
@@ -354,6 +368,17 @@ def main() -> None:
                 errors.append(f"{split}:{index} unexpected license {row['license']!r}")
             if not isinstance(row["is_synthetic"], bool):
                 errors.append(f"{split}:{index} is_synthetic is not boolean")
+            if contextual_privacy_required:
+                if row.get("schema24_privacy_normalization") != CONTEXTUAL_PRIVACY_REVISION:
+                    errors.append(f"{split}:{index} lacks schema-v24 privacy normalization")
+                if not isinstance(row.get("schema24_privacy_values_replaced"), bool):
+                    errors.append(f"{split}:{index} lacks schema-v24 privacy replacement status")
+                if not isinstance(row.get("schema24_privacy_replacement_counts"), dict):
+                    errors.append(f"{split}:{index} lacks schema-v24 privacy replacement counts")
+                if mask_contextual_sensitive_values(str(row["text"])).changed:
+                    errors.append(
+                        f"{split}:{index} retains a contextual short sensitive value"
+                    )
             for field in ("id", "text", "source", "source_label", "license", "family_id"):
                 if not isinstance(row[field], str) or not str(row[field]).strip():
                     errors.append(f"{split}:{index} empty or non-string {field}")

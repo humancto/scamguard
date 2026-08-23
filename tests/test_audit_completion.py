@@ -38,6 +38,10 @@ def test_audit_summary_requires_every_independent_decision(tmp_path: Path) -> No
     assert not errors
     assert summary["complete_rows"] == 1
     assert summary["incomplete_rows"] == 1
+    assert summary["agreement"] == 1.0
+    assert 0.0 < summary["agreement_wilson_95_lower"] < 1.0
+    assert summary["cohen_kappa"] == 1.0
+    assert summary["confusion_matrix"]["SCAM"]["SCAM"] == 1
     assert not summary["release_gate_passed"]
 
 
@@ -79,6 +83,9 @@ def test_audit_summary_rejects_confirmed_label_error(tmp_path: Path) -> None:
 
     assert not errors
     assert summary["incorrect_label_rows"] == 1
+    assert summary["agreement"] == 0.0
+    assert summary["agreement_by_project_label"]["SCAM"]["agreement"] == 0.0
+    assert summary["disagreement_ids"] == ["row-2"]
     assert not summary["release_gate_passed"]
 
 

@@ -4,14 +4,39 @@
   "complete_rows": 0,
   "incomplete_rows": 635,
   "agreement": null,
+  "agreement_wilson_95_lower": null,
+  "cohen_kappa": null,
   "incorrect_label_rows": 0,
   "sensitive_data_rows": 0,
   "auditor_labels": {},
+  "project_labels": {},
+  "agreement_by_project_label": {},
+  "agreement_by_source": {},
+  "confusion_matrix": {
+    "SAFE": {
+      "SAFE": 0,
+      "UNCERTAIN": 0,
+      "SCAM": 0
+    },
+    "UNCERTAIN": {
+      "SAFE": 0,
+      "UNCERTAIN": 0,
+      "SCAM": 0
+    },
+    "SCAM": {
+      "SAFE": 0,
+      "UNCERTAIN": 0,
+      "SCAM": 0
+    }
+  },
+  "disagreement_ids": [],
   "release_gate_passed": false,
-  "audit_sha256": "778f132f9b09cbf95af4545b3d2b5a3363b8aab4005da24de1cc318a958a5285",
+  "audit_sha256": "0e57057807c1db8804f9960acec57a2738b4d842515989354b8281fdfe907000",
   "audit_manifest_path": "data/audit/schema24-label-audit.manifest.json",
-  "audit_manifest_sha256": "0e3b8a929f83dc92c0418738f49a9f6e551c4913cde5ee91859d893e7f7e205e",
+  "audit_manifest_sha256": "bcbd4db2d26917832cae99a018919fa861cb9db4ee9bb95b6afa075490fd4131",
+  "audit_protocol_version": 1,
+  "audit_protocol_sha256": "d9dcc931447ce5229ca5e07398b20944759dfe0f0224369c14c2729be10cbb59",
   "data_manifest_path": "data/experiments/schema24-annotated-hard-negatives/processed/manifest.json",
-  "data_manifest_sha256": "484913b08f5103ac3f99843bef75f2417e190fecff797ac3e1cfd9a86578d0ab",
+  "data_manifest_sha256": "c69c1606bde9db87539b6e3b6f690d09e769e06994a2c2d181e9e5f012f3eeda",
   "errors": []
 }

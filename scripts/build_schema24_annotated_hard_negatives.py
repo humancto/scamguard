@@ -5,20 +5,29 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from scamguard.metrics import file_sha256
+from scamguard.privacy import (
+    CONTEXTUAL_PRIVACY_REVISION,
+    mask_contextual_sensitive_values,
+)
 
 try:
+    from scripts.build_dataset import family_skeleton, simhash64, simhash_bands
     from scripts.build_multidogo_dialogues import LICENSE as MULTIDOGO_LICENSE
     from scripts.build_multidogo_dialogues import SOURCE as MULTIDOGO_SOURCE
     from scripts.build_schema19_call_windows import read_jsonl, write_jsonl
     from scripts.build_schema23_evidence_compaction import remove_reference_overlap_families
     from scripts.fetch_multidogo import REVISION as MULTIDOGO_REVISION
 except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
+    from build_dataset import (  # type: ignore[no-redef]
+        family_skeleton,
+        simhash64,
+        simhash_bands,
+    )
     from build_multidogo_dialogues import (  # type: ignore[no-redef]
         LICENSE as MULTIDOGO_LICENSE,
     )
@@ -35,6 +44,42 @@ except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo
     from fetch_multidogo import REVISION as MULTIDOGO_REVISION  # type: ignore[no-redef]
 
 SCHEMA_VERSION = 24
+
+
+def normalize_schema24_row(row: dict[str, object]) -> dict[str, object]:
+    if not isinstance(row.get("text"), str):
+        return dict(row)
+    result = mask_contextual_sensitive_values(str(row["text"]))
+    return row | {
+        "text": result.text,
+        "schema24_privacy_normalization": CONTEXTUAL_PRIVACY_REVISION,
+        "schema24_privacy_values_replaced": result.changed,
+        "schema24_privacy_replacement_counts": result.replacement_counts,
+    }
+
+
+def normalize_schema24_rows(
+    rows: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    return [normalize_schema24_row(row) for row in rows]
+
+
+def privacy_counts(rows: list[dict[str, object]]) -> tuple[int, Counter[str]]:
+    replacements: Counter[str] = Counter()
+    changed = 0
+    for row in rows:
+        if row.get("schema24_privacy_values_replaced") is True:
+            changed += 1
+        counts = row.get("schema24_privacy_replacement_counts")
+        if isinstance(counts, dict):
+            replacements.update(
+                {
+                    str(key): int(value)
+                    for key, value in counts.items()
+                    if isinstance(value, int) and not isinstance(value, bool)
+                }
+            )
+    return changed, replacements
 
 
 def curriculum_rows(
@@ -68,15 +113,118 @@ def validate_curriculum_rows(rows: list[dict[str, object]], paper_split: str) ->
             raise ValueError(f"invalid annotation curriculum row: {row.get('id')}")
 
 
-def reference_rows(directory: Path) -> list[dict[str, object]]:
+def reference_rows(
+    directory: Path,
+    *,
+    excluded_names: set[str] | None = None,
+    normalize_privacy: bool = True,
+) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for path in sorted(directory.glob("*.jsonl")):
-        rows.extend(
+        if excluded_names and path.name in excluded_names:
+            continue
+        candidates = [
             row
             for row in read_jsonl(path)
             if {"id", "family_id", "text"} <= row.keys()
-        )
+        ]
+        rows.extend(normalize_schema24_rows(candidates) if normalize_privacy else candidates)
     return rows
+
+
+def remove_new_privacy_overlap_families(
+    original_train: list[dict[str, object]],
+    normalized_train: list[dict[str, object]],
+    original_references: list[dict[str, object]],
+    normalized_references: list[dict[str, object]],
+) -> tuple[list[dict[str, object]], dict[str, int]]:
+    """Remove only train-family overlaps introduced by contextual value masking."""
+
+    original_train_by_id = {str(row["id"]): row for row in original_train}
+    original_reference_by_id = {str(row["id"]): row for row in original_references}
+    original_train_signatures = {
+        identifier: simhash64(family_skeleton(str(row["text"])))
+        for identifier, row in original_train_by_id.items()
+    }
+    original_reference_signatures = {
+        identifier: simhash64(family_skeleton(str(row["text"])))
+        for identifier, row in original_reference_by_id.items()
+    }
+    original_train_text = {
+        identifier: " ".join(str(row["text"]).casefold().split())
+        for identifier, row in original_train_by_id.items()
+    }
+    original_reference_text = {
+        identifier: " ".join(str(row["text"]).casefold().split())
+        for identifier, row in original_reference_by_id.items()
+    }
+    changed_train_ids = {
+        str(row["id"])
+        for row in normalized_train
+        if " ".join(str(row["text"]).casefold().split())
+        != original_train_text[str(row["id"])]
+    }
+    changed_reference_ids = {
+        str(row["id"])
+        for row in normalized_references
+        if " ".join(str(row["text"]).casefold().split())
+        != original_reference_text[str(row["id"])]
+    }
+    reference_buckets: dict[tuple[int, int], list[tuple[int, dict[str, object]]]] = {}
+    for row in normalized_references:
+        signature = simhash64(family_skeleton(str(row["text"])))
+        for band in simhash_bands(signature, max_hamming=6):
+            reference_buckets.setdefault(band, []).append((signature, row))
+
+    removed_families: set[str] = set()
+    exact_pairs = 0
+    near_pairs = 0
+    for row in normalized_train:
+        identifier = str(row["id"])
+        signature = simhash64(family_skeleton(str(row["text"])))
+        candidates: dict[str, tuple[int, dict[str, object]]] = {}
+        for band in simhash_bands(signature, max_hamming=6):
+            for reference_signature, reference in reference_buckets.get(band, []):
+                candidates[str(reference["id"])] = (reference_signature, reference)
+        for reference_id, (reference_signature, reference) in candidates.items():
+            if (signature ^ reference_signature).bit_count() > 6:
+                continue
+            if identifier not in changed_train_ids and reference_id not in changed_reference_ids:
+                continue
+            after_exact = " ".join(str(row["text"]).casefold().split()) == " ".join(
+                str(reference["text"]).casefold().split()
+            )
+            before_exact = original_train_text[identifier] == original_reference_text[
+                reference_id
+            ]
+            if (
+                not after_exact
+                and (
+                    original_train_signatures[identifier]
+                    ^ original_reference_signatures[reference_id]
+                ).bit_count()
+                <= 6
+            ) or (after_exact and before_exact):
+                continue
+            removed_families.add(str(row["family_id"]))
+            if after_exact:
+                exact_pairs += 1
+            else:
+                near_pairs += 1
+
+    retained = [
+        row for row in normalized_train if str(row["family_id"]) not in removed_families
+    ]
+    return retained, {
+        "candidate_rows_before_overlap_control": len(normalized_train),
+        "new_exact_collision_pairs": exact_pairs,
+        "new_near_collision_pairs": near_pairs,
+        "families_removed": len(removed_families),
+        "rows_removed_with_families": len(normalized_train) - len(retained),
+        "candidate_rows_after_overlap_control": len(retained),
+        "near_hamming_max": 6,
+        "reference_rows": len(normalized_references),
+    }
 
 
 def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
@@ -103,15 +251,34 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
         or policy.get("publisher_paper_split_boundary_preserved") is not True
     ):
         raise ValueError("annotation curriculum differs from the schema-v24 contract")
-    source_train = curriculum_rows(curriculum, curriculum_manifest, "train")
-    annotation_dev = curriculum_rows(curriculum, curriculum_manifest, "dev")
-    annotation_test = curriculum_rows(curriculum, curriculum_manifest, "test")
+    source_train = normalize_schema24_rows(
+        curriculum_rows(curriculum, curriculum_manifest, "train")
+    )
+    annotation_dev = normalize_schema24_rows(
+        curriculum_rows(curriculum, curriculum_manifest, "dev")
+    )
+    annotation_test = normalize_schema24_rows(
+        curriculum_rows(curriculum, curriculum_manifest, "test")
+    )
     validate_curriculum_rows(source_train, "train")
     validate_curriculum_rows(annotation_dev, "dev")
     validate_curriculum_rows(annotation_test, "test")
 
-    parent_references = reference_rows(parent)
-    parent_train = read_jsonl(parent / "train.jsonl")
+    original_parent_train = read_jsonl(parent / "train.jsonl")
+    parent_train = normalize_schema24_rows(original_parent_train)
+    original_parent_held_references = reference_rows(
+        parent,
+        excluded_names={"train.jsonl"},
+        normalize_privacy=False,
+    )
+    parent_held_references = normalize_schema24_rows(original_parent_held_references)
+    parent_train, parent_privacy_overlap_stats = remove_new_privacy_overlap_families(
+        original_parent_train,
+        parent_train,
+        original_parent_held_references,
+        parent_held_references,
+    )
+    parent_references = parent_train + parent_held_references
     annotation_test_source_rows = len(annotation_test)
     annotation_test, test_overlap_stats = remove_reference_overlap_families(
         annotation_test,
@@ -172,11 +339,16 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
     write_jsonl(output / "multidogo_annotation_dev.jsonl", annotation_dev)
     write_jsonl(output / "multidogo_annotation_test.jsonl", annotation_test)
     preserved_files: list[str] = []
+    output_rows = combined_train + annotation_dev + annotation_test
     for source_path in sorted(parent.glob("*.jsonl")):
         if source_path.name == "train.jsonl":
             continue
-        shutil.copy2(source_path, output / source_path.name)
+        normalized_rows = normalize_schema24_rows(read_jsonl(source_path))
+        write_jsonl(output / source_path.name, normalized_rows)
+        output_rows.extend(normalized_rows)
         preserved_files.append(source_path.name)
+
+    privacy_changed_rows, privacy_replacements = privacy_counts(output_rows)
 
     development_rows = list(combined_train)
     for split in ("dev", "test"):
@@ -190,12 +362,19 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
         }
     )
     manifest = dict(parent_manifest)
+    policy = dict(parent_manifest.get("policy", {}))
+    policy["real_source_privacy_normalization"] = (
+        "emails, phone/account-like digit sequences, contextual access codes, "
+        "account fragments, postal codes, and credential-like values replaced "
+        "with typed placeholders"
+    )
     manifest.update(
         {
             "schema_version": SCHEMA_VERSION,
             "counts": counts,
             "labels": dict(Counter(str(row["label"]) for row in development_rows)),
             "sources": dict(Counter(str(row["source"]) for row in development_rows)),
+            "policy": policy,
             "parent": {
                 "schema_version": 23,
                 "manifest_sha256": file_sha256(parent_manifest_path),
@@ -236,6 +415,17 @@ def build(parent: Path, curriculum: Path, output: Path) -> dict[str, object]:
                 "label_audit_is_post_build_hash_bound_sidecar": True,
                 "reddit_rows_directly_scraped": 0,
                 "sealed_ood_opened": False,
+                "parent_train_post_privacy_overlap_control": (
+                    parent_privacy_overlap_stats
+                ),
+            },
+            "schema24_privacy": {
+                "revision": CONTEXTUAL_PRIVACY_REVISION,
+                "rows_processed": len(output_rows),
+                "rows_with_replacements": privacy_changed_rows,
+                "replacement_counts": dict(privacy_replacements),
+                "access_codes_are_never_training_features": True,
+                "applied_before_overlap_control": True,
             },
             "preserved_parent_artifacts": {
                 filename: {

@@ -58,7 +58,12 @@ def fixture(tmp_path: Path) -> tuple[Path, Path]:
     parent = tmp_path / "parent"
     parent.mkdir()
     parent_train = [
-        base_row("parent-train", "family-parent", "A routine parent message.", "train")
+        base_row(
+            "parent-train",
+            "family-parent",
+            "Your verification code is 443088.",
+            "train",
+        )
     ]
     write_jsonl(parent / "train.jsonl", parent_train)
     write_jsonl(
@@ -153,10 +158,17 @@ def test_schema24_admits_only_novel_publisher_train_families(tmp_path: Path) -> 
     train = read_jsonl(output / "train.jsonl")
     assert manifest["schema_version"] == 24
     assert {row["id"] for row in train} == {"parent-train", "new-train"}
+    assert next(row for row in train if row["id"] == "parent-train")["text"] == (
+        "Your verification code is <ACCESS_CODE>."
+    )
     assert next(row for row in train if row["id"] == "new-train")["schema24_admitted"] is True
     increment = manifest["schema24_increment"]
     assert increment["collision_families_removed"] == 1  # type: ignore[index]
     assert increment["paper_dev_test_rows_used_for_fitting"] is False  # type: ignore[index]
+    assert manifest["schema24_privacy"]["rows_with_replacements"] == 1  # type: ignore[index]
+    assert manifest["schema24_privacy"]["replacement_counts"] == {  # type: ignore[index]
+        "access_code": 1
+    }
     assert len(read_jsonl(output / "multidogo_annotation_dev.jsonl")) == 1
     assert len(read_jsonl(output / "multidogo_annotation_test.jsonl")) == 1
 
@@ -174,3 +186,45 @@ def test_schema24_refuses_wrong_publisher_split(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="invalid annotation curriculum row"):
         build(parent, curriculum, tmp_path / "schema24")
+
+
+def test_schema24_removes_train_family_exposed_by_privacy_masking(tmp_path: Path) -> None:
+    parent, curriculum = fixture(tmp_path)
+    write_jsonl(
+        parent / "train.jsonl",
+        [
+            base_row(
+                "parent-train",
+                "family-parent",
+                "The account ending with 1234 has a balance of $6000.",
+                "train",
+            )
+        ],
+    )
+    write_jsonl(
+        parent / "dev.jsonl",
+        [
+            base_row(
+                "parent-dev",
+                "family-dev-parent",
+                "The account ending with 5678 has a balance of $6000.",
+                "dev",
+            )
+        ],
+    )
+    manifest_path = parent / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["counts"]["train"] = 1
+    manifest["counts"]["dev"] = 1
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    output = tmp_path / "schema24"
+    result = build(parent, curriculum, output)
+
+    train = read_jsonl(output / "train.jsonl")
+    assert "parent-train" not in {row["id"] for row in train}
+    stats = result["schema24_increment"][  # type: ignore[index]
+        "parent_train_post_privacy_overlap_control"
+    ]
+    assert stats["families_removed"] == 1
+    assert stats["new_exact_collision_pairs"] == 1

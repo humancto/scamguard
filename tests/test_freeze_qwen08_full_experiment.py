@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from scamguard.metrics import file_sha256
+from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
 from scripts.freeze_qwen08_full_experiment import freeze
 
 
@@ -72,6 +73,11 @@ def schema24_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
             "annotation_curriculum_manifest": str(curriculum),
             "annotation_curriculum_manifest_sha256": file_sha256(curriculum),
         },
+        "schema24_privacy": {
+            "revision": "contextual_sensitive_values_v1",
+            "access_codes_are_never_training_features": True,
+            "applied_before_overlap_control": True,
+        },
     }
     data_manifest_path = processed / "manifest.json"
     data_manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
@@ -122,11 +128,18 @@ def schema24_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
         json.dumps(
             {
                 "release_gate_passed": True,
-                "rows": 240,
-                "complete_rows": 240,
+                "rows": 635,
+                "complete_rows": 635,
+                "incomplete_rows": 0,
                 "incorrect_label_rows": 0,
                 "sensitive_data_rows": 0,
                 "agreement": 1.0,
+                "agreement_wilson_95_lower": 0.994,
+                "cohen_kappa": 1.0,
+                "audit_sha256": "a" * 64,
+                "audit_manifest_sha256": "b" * 64,
+                "audit_protocol_version": AUDIT_PROTOCOL_VERSION,
+                "audit_protocol_sha256": audit_protocol_sha256(),
                 "data_manifest_sha256": file_sha256(data_manifest_path),
                 "errors": [],
             }
@@ -162,6 +175,23 @@ def test_freeze_rejects_incomplete_human_audit(tmp_path: Path) -> None:
     report = json.loads(label_audit.read_text(encoding="utf-8"))
     report["incorrect_label_rows"] = 1
     report["release_gate_passed"] = False
+    label_audit.write_text(json.dumps(report), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="human label audit"):
+        freeze(
+            processed,
+            token_audit,
+            label_audit,
+            tmp_path / "qwen08.json",
+            tmp_path / "checkpoint",
+            "sg-qwen08-schema24",
+        )
+
+
+def test_freeze_rejects_stale_human_audit_rubric(tmp_path: Path) -> None:
+    processed, token_audit, label_audit = schema24_fixture(tmp_path)
+    report = json.loads(label_audit.read_text(encoding="utf-8"))
+    report["audit_protocol_sha256"] = "0" * 64
     label_audit.write_text(json.dumps(report), encoding="utf-8")
 
     with pytest.raises(ValueError, match="human label audit"):

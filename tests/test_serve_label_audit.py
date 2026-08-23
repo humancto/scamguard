@@ -7,8 +7,9 @@ from pathlib import Path
 import pytest
 
 from scamguard.metrics import file_sha256
+from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, LABEL_RUBRIC, audit_protocol_sha256
 from scripts.check_audit_completion import audit_ids_sha256, audit_input_sha256
-from scripts.serve_label_audit import audit_state, update_audit_row
+from scripts.serve_label_audit import audit_state, render_html, update_audit_row
 
 FIELDS = (
     "id",
@@ -65,7 +66,9 @@ def audit_fixture(tmp_path: Path) -> tuple[Path, Path]:
     manifest.write_text(
         json.dumps(
             {
-                "artifact_schema_version": 1,
+                "artifact_schema_version": 2,
+                "audit_protocol_version": AUDIT_PROTOCOL_VERSION,
+                "audit_protocol_sha256": audit_protocol_sha256(),
                 "selected_inputs_sha256": audit_input_sha256(audit),
                 "selected_ids_sha256": audit_ids_sha256(audit),
                 "selected_rows": 2,
@@ -94,6 +97,17 @@ def test_state_hides_project_labels_and_source_metadata(tmp_path: Path) -> None:
     }
     assert "label" not in state["row"]
     assert "source" not in state["row"]
+
+
+def test_review_page_uses_frozen_protocol_and_escapes_write_token() -> None:
+    html = render_html('</script><script id="attack">')
+
+    assert "__PROTOCOL__" not in html
+    assert "__TOKEN__" not in html
+    assert '<script id="attack">' not in html
+    assert str(AUDIT_PROTOCOL_VERSION) in html
+    for description in LABEL_RUBRIC.values():
+        assert json.dumps(description, ensure_ascii=False) in html
 
 
 def test_update_derives_agreement_and_advances_to_incomplete_row(tmp_path: Path) -> None:

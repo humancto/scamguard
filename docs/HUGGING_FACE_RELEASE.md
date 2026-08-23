@@ -52,9 +52,12 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
 
    The review UI binds to `127.0.0.1`, loads no remote assets, hides project labels, source labels,
    fraud categories, and model outputs, and derives agreement only after a reviewer saves their own
-   verdict. It checks the audit and dataset manifest binding before every write and atomically
-   persists progress, so the review can be stopped and resumed. Do not have a person who authored
-   the labels perform the independent review.
+   verdict. The displayed SAFE/UNCERTAIN/SCAM and sensitive-data rubric is versioned and hash-bound
+   in the audit manifest. The UI checks that rubric, audit, and dataset binding before every write
+   and atomically persists progress, so the review can be stopped and resumed. The completion
+   report publishes percent agreement, a 95% Wilson lower bound, Cohen's kappa, confusion counts,
+   and source/label diagnostics without message text. Do not have a person who authored the labels
+   perform the independent review.
 
    The freeze step requires schema version 24, a completed independent human-label audit, non-empty
    annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim
@@ -113,8 +116,9 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
     The manifest must hash and size the merged model, selected GGUF, tokenizer, native desktop
     runtime binary and its source, BF16 quality
     report, 39-gate report, quantized quality report, routed runtime report, its text-free routed
-    trace, data manifest, physical-mobile benchmark, and model card. The checker cross-links these
-    artifacts and recomputes routed latency percentiles from the trace.
+    trace, data manifest, hash-bound 635-row label-audit completion report, physical-mobile
+    benchmark, and model card. The checker cross-links these artifacts, rejects an outdated review
+    rubric or incomplete audit, and recomputes routed latency percentiles from the trace.
 
 ## Hugging Face package boundary
 

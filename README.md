@@ -264,11 +264,16 @@ join to the separately released unannotated collection, so the builder selects p
 turn-level customer rows directly, preserves the publisher's train/dev/test boundary, and stratifies difficult
 legitimate-service examples without misrepresenting intent labels as independently reviewed scam
 labels. `make schema24-annotated-hard-negatives` then removes parent/held collisions and whole
-families with exact or radius-six near overlap before admitting publisher-train rows. The separate
-`schema24-audit` workbook is bound to that exact manifest; after human review,
-`schema24-audit-check` rejects every incomplete decision, label disagreement, sensitive-data
-finding, workbook change, or dataset change. The schema-24 dataset validates, but the training
-freeze currently fails closed because the independent 635-row workbook is 0/635 complete.
+families with exact or radius-six near overlap before admitting publisher-train rows. Schema 24
+also replaces contextual access codes, account fragments, postal codes, and credential-like values
+with typed placeholders before repeating contamination control; the validator rejects any residual
+value or missing row-level normalization record. The separate `schema24-audit` workbook is bound to
+that exact manifest and a frozen blind-review rubric; after human review,
+`schema24-audit-check` rejects every incomplete decision, label disagreement,
+sensitive-data finding, rubric change, workbook change, or dataset change. Its text-free report
+adds Wilson-bound agreement, Cohen's kappa, confusion counts, and source/label diagnostics. The
+schema-24 dataset validates, but the training freeze currently fails closed because the independent
+635-row workbook is 0/635 complete.
 Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive scam education and
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are

@@ -12,6 +12,14 @@ from typing import Any
 
 from scamguard.metrics import file_sha256
 
+try:
+    from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
+except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
+    from audit_protocol import (  # type: ignore[no-redef]
+        AUDIT_PROTOCOL_VERSION,
+        audit_protocol_sha256,
+    )
+
 BASE_MODEL = "Qwen/Qwen3.5-0.8B"
 BASE_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
 LLAMA_CPP_REVISION = "521a64cd01979bb5b1a466152c576a9d809b068d"
@@ -27,6 +35,7 @@ REQUIRED_ARTIFACT_ROLES = {
 REQUIRED_REPORT_ROLES = {
     "bf16_quality",
     "data_manifest",
+    "label_audit",
     "mobile_benchmark",
     "model_card",
     "quality_gates",
@@ -320,6 +329,33 @@ def _validate_report_contents(
         report_paths.get("quantized_quality"), "quantized_quality", errors
     )
     routed = _json_report(report_paths.get("routed_runtime"), "routed_runtime", errors)
+    label_audit = _json_report(report_paths.get("label_audit"), "label_audit", errors)
+    if label_audit.get("release_gate_passed") is not True:
+        errors.append("label_audit release gate must pass")
+    if label_audit.get("rows") != 635:
+        errors.append("label_audit rows must equal the frozen 635-row sample")
+    if label_audit.get("complete_rows") != label_audit.get("rows"):
+        errors.append("label_audit complete_rows must equal rows")
+    if label_audit.get("incomplete_rows") != 0:
+        errors.append("label_audit incomplete_rows must equal zero")
+    if label_audit.get("incorrect_label_rows") != 0:
+        errors.append("label_audit incorrect_label_rows must equal zero")
+    if label_audit.get("sensitive_data_rows") != 0:
+        errors.append("label_audit sensitive_data_rows must equal zero")
+    if label_audit.get("errors") != []:
+        errors.append("label_audit errors must be empty")
+    if label_audit.get("audit_protocol_version") != AUDIT_PROTOCOL_VERSION:
+        errors.append("label_audit protocol version differs from the frozen reviewer rubric")
+    if label_audit.get("audit_protocol_sha256") != audit_protocol_sha256():
+        errors.append("label_audit protocol SHA-256 differs from the frozen reviewer rubric")
+    for field in ("audit_sha256", "audit_manifest_sha256"):
+        if not SHA256_PATTERN.fullmatch(str(label_audit.get(field, ""))):
+            errors.append(f"label_audit {field} is invalid")
+    data_manifest_path = report_paths.get("data_manifest")
+    if data_manifest_path and label_audit.get("data_manifest_sha256") != file_sha256(
+        data_manifest_path
+    ):
+        errors.append("label_audit data manifest differs from data_manifest evidence")
     if routed.get("measurement_mode") != "interleaved_persistent_per_request":
         errors.append(
             "routed runtime measurement_mode must equal interleaved_persistent_per_request"

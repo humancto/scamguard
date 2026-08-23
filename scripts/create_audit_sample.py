@@ -14,8 +14,13 @@ from typing import Any
 from scamguard.metrics import file_sha256
 
 try:
+    from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
     from scripts.check_audit_completion import audit_ids_sha256, audit_input_sha256
 except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
+    from audit_protocol import (  # type: ignore[no-redef]
+        AUDIT_PROTOCOL_VERSION,
+        audit_protocol_sha256,
+    )
     from check_audit_completion import (  # type: ignore[no-redef]
         audit_ids_sha256,
         audit_input_sha256,
@@ -133,7 +138,9 @@ def main() -> None:
         for split in split_names
     }
     manifest = {
-        "artifact_schema_version": 1,
+        "artifact_schema_version": 2,
+        "audit_protocol_version": AUDIT_PROTOCOL_VERSION,
+        "audit_protocol_sha256": audit_protocol_sha256(),
         "audit_path": str(args.output),
         "audit_template_sha256": file_sha256(args.output),
         "selected_inputs_sha256": audit_input_sha256(args.output),

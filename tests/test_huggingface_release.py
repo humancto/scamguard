@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
 from scripts.verify_huggingface_release import validate_release_manifest
 
 
@@ -30,6 +31,30 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
         path = tmp_path / f"{role}.json"
         path.write_text(f'{{"report":"{role}"}}', encoding="utf-8")
         report_paths[role] = path
+    label_audit = tmp_path / "label_audit.json"
+    label_audit.write_text(
+        json.dumps(
+            {
+                "rows": 635,
+                "complete_rows": 635,
+                "incomplete_rows": 0,
+                "agreement": 1.0,
+                "incorrect_label_rows": 0,
+                "sensitive_data_rows": 0,
+                "release_gate_passed": True,
+                "audit_sha256": "c" * 64,
+                "audit_manifest_sha256": "d" * 64,
+                "audit_protocol_version": AUDIT_PROTOCOL_VERSION,
+                "audit_protocol_sha256": audit_protocol_sha256(),
+                "data_manifest_sha256": hashlib.sha256(
+                    report_paths["data_manifest"].read_bytes()
+                ).hexdigest(),
+                "errors": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    report_paths["label_audit"] = label_audit
     routed_trace = tmp_path / "routed_runtime.traces.jsonl"
     trace_records = []
     for index in range(100):
@@ -303,6 +328,28 @@ def test_missing_physical_mobile_evidence_is_rejected(tmp_path: Path) -> None:
 
     assert "measured must be true" in errors
     assert "runtime.mobile.device must be recorded" in errors
+
+
+def test_incomplete_or_unbound_label_audit_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    report_path = tmp_path / "label_audit.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["complete_rows"] = 634
+    report["incomplete_rows"] = 1
+    report["release_gate_passed"] = False
+    report["audit_protocol_sha256"] = "0" * 64
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    for entry in manifest["reports"]:  # type: ignore[union-attr]
+        if entry["role"] == "label_audit":
+            entry["sha256"] = hashlib.sha256(report_path.read_bytes()).hexdigest()
+            entry["size_bytes"] = report_path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "label_audit release gate must pass" in errors
+    assert "label_audit complete_rows must equal rows" in errors
+    assert "label_audit incomplete_rows must equal zero" in errors
+    assert any("protocol SHA-256" in error for error in errors)
 
 
 def test_tampered_artifact_is_rejected(tmp_path: Path) -> None:

@@ -17,8 +17,10 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 try:
+    from scripts.audit_protocol import audit_protocol
     from scripts.check_audit_completion import LABELS, audit_summary, validate_audit_binding
 except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
+    from audit_protocol import audit_protocol  # type: ignore[no-redef]
     from check_audit_completion import (  # type: ignore[no-redef]
         LABELS,
         audit_summary,
@@ -170,14 +172,16 @@ HTML = """<!doctype html>
 <style>
 :root{color-scheme:light;--navy:#101a2e;--ink:#26344d;--muted:#66758e;--paper:#f6f9fd;--panel:#fff;--line:#d9e2ef;--blue:#1769aa;--amber:#9a6100;--red:#a9284a;--green:#16714d;--shadow:0 22px 65px rgba(39,63,99,.13)}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(90deg,transparent 31px,rgba(23,105,170,.08) 32px,transparent 33px),linear-gradient(rgba(217,226,239,.38) 1px,transparent 1px),var(--paper);background-size:100% 100%,100% 28px,auto;color:var(--ink);font-family:"Avenir Next",Avenir,system-ui,sans-serif}button,textarea{font:inherit}.shell{width:min(1120px,calc(100% - 32px));margin:auto;padding:34px 0 52px}header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:18px}.eyebrow{margin:0 0 4px;color:var(--blue);font:700 12px/1.2 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase}h1{margin:0;color:var(--navy);font:600 clamp(28px,5vw,48px)/1.02 "Iowan Old Style",Georgia,serif;letter-spacing:-.025em}.blind{max-width:410px;margin:0;color:var(--muted);font-size:14px;line-height:1.5}.progress{height:7px;overflow:hidden;background:var(--line);border-radius:99px}.progress>div{width:0;height:100%;background:var(--blue);transition:width .25s}.meter{display:flex;justify-content:space-between;margin:9px 0 23px;color:var(--muted);font:650 12px/1.3 ui-monospace,monospace}main{display:grid;grid-template-columns:minmax(0,1fr) 315px;gap:22px}.card{background:rgba(255,255,255,.96);border:1px solid var(--line);box-shadow:var(--shadow)}.message-card{min-height:410px;padding:clamp(25px,5vw,54px);display:flex;flex-direction:column}.sample-number{color:var(--muted);font:650 12px/1.3 ui-monospace,monospace;letter-spacing:.06em}blockquote{flex:1;display:grid;place-items:center;margin:24px 0;color:var(--navy);font:500 clamp(21px,3.5vw,34px)/1.42 "Iowan Old Style",Georgia,serif;overflow-wrap:anywhere}.privacy{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px}.privacy:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(22,113,77,.1)}.controls{padding:22px}.controls h2{margin:0 0 5px;color:var(--navy);font:650 18px/1.2 "Iowan Old Style",Georgia,serif}.hint{margin:0 0 19px;color:var(--muted);font-size:12px}.labels{display:grid;gap:9px}.label{width:100%;display:grid;grid-template-columns:28px 1fr;align-items:center;gap:10px;padding:13px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:left;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}.label:hover{transform:translateX(3px);border-color:var(--blue)}.label.selected[data-label=SAFE]{background:#e3f5ed;border-color:var(--green)}.label.selected[data-label=UNCERTAIN]{background:#fff1ca;border-color:var(--amber)}.label.selected[data-label=SCAM]{background:#ffe3eb;border-color:var(--red)}kbd{display:inline-grid;place-items:center;width:25px;height:25px;border:1px solid currentColor;border-radius:50%;font:700 11px/1 ui-monospace,monospace}.check{display:flex;gap:10px;align-items:flex-start;margin:19px 0 13px;font-size:13px;line-height:1.4}input[type=checkbox]{width:18px;height:18px;accent-color:var(--red)}textarea{width:100%;min-height:84px;resize:vertical;padding:11px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}.save{width:100%;margin-top:12px;padding:13px;border:0;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}.save:disabled{cursor:not-allowed;opacity:.42}.nav{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.nav button{padding:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:3px}.status{min-height:20px;margin:12px 0 0;color:var(--muted);font-size:12px}.status.error{color:var(--red);font-weight:650}.finished{display:none;margin-top:22px;padding:18px 20px;border-left:5px solid var(--green);background:#e3f5ed;color:#10583c}.finished strong{display:block;color:var(--navy)}@media(max-width:760px){header{display:block}.blind{margin-top:12px}main{grid-template-columns:1fr}.message-card{min-height:330px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.rubric{margin:0 0 19px;border:1px solid var(--line);background:var(--paper)}.rubric summary{padding:11px 12px;cursor:pointer;color:var(--navy);font-weight:700}.rubric-body{padding:0 12px 12px;color:var(--muted);font-size:12px;line-height:1.45}.rubric-body ul{margin:7px 0 0;padding-left:18px}.label strong,.label small{display:block}.label small{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.35}
 </style></head><body><div class="shell">
 <header><div><p class="eyebrow">ScamGuard / independent review</p><h1>Read the evidence.<br>Call it yourself.</h1></div><p class="blind">Project labels and model predictions are hidden. Judge only the message in front of you.</p></header>
 <div class="progress" aria-label="Review progress"><div id="progress"></div></div><div class="meter"><span id="count">Loading…</span><span id="remaining"></span></div>
 <main><section class="card message-card" aria-labelledby="sample"><span class="sample-number" id="sample">Sample</span><blockquote id="message">Loading audit row…</blockquote><span class="privacy">Localhost only · no message text leaves this computer</span></section>
-<aside class="card controls"><h2>Your verdict</h2><p class="hint">Keys 1–3 select. Enter saves and advances.</p><div class="labels" role="group" aria-label="Auditor label"><button class="label" data-label="SAFE"><kbd>1</kbd><span>Safe</span></button><button class="label" data-label="UNCERTAIN"><kbd>2</kbd><span>Uncertain</span></button><button class="label" data-label="SCAM"><kbd>3</kbd><span>Scam</span></button></div><label class="check"><input id="sensitive" type="checkbox"><span>Contains personal or sensitive data that should be quarantined</span></label><textarea id="notes" maxlength="2000" placeholder="Optional reviewer note"></textarea><button class="save" id="save" disabled>Save &amp; next <kbd>↵</kbd></button><div class="nav"><button id="previous">← Previous</button><button id="next">Next →</button></div><p class="status" id="status" role="status" aria-live="polite"></p></aside></main>
+<aside class="card controls"><h2>Your verdict</h2><p class="hint">Keys 1–3 select. Enter saves and advances.</p><details class="rubric" open><summary id="rubric-title">Frozen review rubric</summary><div class="rubric-body"><span>Judge the displayed message under these rules:</span><ul id="principles"></ul></div></details><div class="labels" role="group" aria-label="Auditor label"><button class="label" data-label="SAFE"><kbd>1</kbd><span><strong>Safe</strong><small></small></span></button><button class="label" data-label="UNCERTAIN"><kbd>2</kbd><span><strong>Uncertain</strong><small></small></span></button><button class="label" data-label="SCAM"><kbd>3</kbd><span><strong>Scam</strong><small></small></span></button></div><label class="check"><input id="sensitive" type="checkbox"><span id="sensitive-label"></span></label><textarea id="notes" maxlength="2000" placeholder="Optional reviewer note"></textarea><button class="save" id="save" disabled>Save &amp; next <kbd>↵</kbd></button><div class="nav"><button id="previous">← Previous</button><button id="next">Next →</button></div><p class="status" id="status" role="status" aria-live="polite"></p></aside></main>
 <div class="finished" id="finished"><strong>All rows have a decision.</strong>Return to the terminal and run the audit check. Any disagreement or sensitive-data finding still fails the release gate.</div></div>
 <script>
-const token=__TOKEN__;let state=null,selected="";const $=id=>document.getElementById(id),buttons=[...document.querySelectorAll(".label")];
+const token=__TOKEN__,protocol=__PROTOCOL__;let state=null,selected="";const $=id=>document.getElementById(id),buttons=[...document.querySelectorAll(".label")];
+$("rubric-title").textContent=`Frozen review rubric v${protocol.version}`;buttons.forEach(button=>button.querySelector("small").textContent=protocol.labels[button.dataset.label]);protocol.principles.forEach(text=>{const item=document.createElement("li");item.textContent=text;$("principles").appendChild(item)});$("sensitive-label").textContent=protocol.sensitive_data;
 function status(message,error=false){$("status").textContent=message;$("status").classList.toggle("error",error)}
 function select(label){selected=label;buttons.forEach(b=>b.classList.toggle("selected",b.dataset.label===label));$("save").disabled=!selected}
 function render(s){state=s;const r=s.row;$("sample").textContent=`Sample ${r.index+1} of ${s.total}`;$("message").textContent=r.text;$("count").textContent=`${s.complete} reviewed`;$("remaining").textContent=`${s.remaining} remaining`;$("progress").style.width=`${s.complete/s.total*100}%`;$("sensitive").checked=r.contains_sensitive_data.toLowerCase()==="yes";$("notes").value=r.notes;select(r.auditor_label);$("finished").style.display=s.review_finished?"block":"none";status(r.complete?"Saved decision loaded.":"Not yet reviewed.")}
@@ -185,6 +189,21 @@ async function load(index){try{const suffix=Number.isInteger(index)?`?index=${in
 async function save(){if(!selected||!state)return;$("save").disabled=true;status("Saving locally…");try{const response=await fetch("/api/row",{method:"POST",headers:{"Content-Type":"application/json","X-ScamGuard-Audit-Token":token},body:JSON.stringify({id:state.row.id,auditor_label:selected,contains_sensitive_data:$("sensitive").checked,notes:$("notes").value})}),payload=await response.json();if(!response.ok)throw Error(payload.error||"Unable to save decision.");render(payload);status("Saved. Next incomplete sample loaded.")}catch(error){status(error.message,true);$("save").disabled=!selected}}
 buttons.forEach(b=>b.addEventListener("click",()=>select(b.dataset.label)));$("save").addEventListener("click",save);$("previous").addEventListener("click",()=>load(Math.max(0,state.row.index-1)));$("next").addEventListener("click",()=>load(Math.min(state.total-1,state.row.index+1)));document.addEventListener("keydown",event=>{if(event.target.tagName==="TEXTAREA")return;if(event.key==="1")select("SAFE");if(event.key==="2")select("UNCERTAIN");if(event.key==="3")select("SCAM");if(event.key==="Enter"){event.preventDefault();save()}if(event.key==="ArrowLeft")load(Math.max(0,state.row.index-1));if(event.key==="ArrowRight")load(Math.min(state.total-1,state.row.index+1))});load();
 </script></body></html>"""
+
+
+def json_for_script(value: object) -> str:
+    return (
+        json.dumps(value, ensure_ascii=False)
+        .replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+    )
+
+
+def render_html(write_token: str) -> str:
+    return HTML.replace("__TOKEN__", json_for_script(write_token)).replace(
+        "__PROTOCOL__", json_for_script(audit_protocol())
+    )
 
 
 class AuditHTTPServer(HTTPServer):
@@ -237,7 +256,7 @@ class AuditHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         try:
             if parsed.path == "/":
-                body = HTML.replace("__TOKEN__", json.dumps(self.server.write_token)).encode()
+                body = render_html(self.server.write_token).encode()
                 self._headers(HTTPStatus.OK, "text/html; charset=utf-8")
                 self.wfile.write(body)
             elif parsed.path == "/api/state":
