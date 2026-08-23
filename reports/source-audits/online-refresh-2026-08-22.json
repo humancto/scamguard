@@ -1,0 +1,106 @@
+{
+  "artifact_schema_version": 1,
+  "audit_kind": "online_source_candidate_refresh",
+  "research_freeze": "2026-08-22",
+  "current_schema_version": 24,
+  "current_schema_changed": false,
+  "downloaded_message_rows": 0,
+  "direct_reddit_rows_admitted": 0,
+  "candidates": [
+    {
+      "source_id": "scamshield-scam-detection-data",
+      "primary_url": "https://huggingface.co/datasets/rehan-ml/scamshield-scam-detection-data",
+      "metadata_url": "https://huggingface.co/api/datasets/rehan-ml/scamshield-scam-detection-data",
+      "publisher_revision": "357ab9e9fa2c8bff77d1b564e2a7c33d38a2f9d5",
+      "declared_wrapper_license": "MIT",
+      "reported_rows": 23707,
+      "provenance": "UCI SMS, EMSCAD job advertisements, and about 255 Gemini-generated contrasts",
+      "rights_status": "quarantine_upstream_license_not_verified",
+      "decision": "reject_current_training_and_evaluation",
+      "admitted_rows": 0,
+      "reason_codes": [
+        "uci_sms_is_already_represented",
+        "wrapper_license_does_not_resolve_emscad_upstream_terms",
+        "job_postings_are_not_message_local_communications",
+        "no_row_level_original_source_identity"
+      ]
+    },
+    {
+      "source_id": "grandgemma-corpus",
+      "primary_url": "https://huggingface.co/datasets/s23deepak/GrandgemMa-Corpus",
+      "metadata_url": "https://huggingface.co/api/datasets/s23deepak/GrandgemMa-Corpus",
+      "publisher_revision": "1248b9f086d889aadde425763b26885e225dca60",
+      "declared_wrapper_license": "CC-BY-4.0",
+      "reported_rows": 6019,
+      "provenance": "4,400 TeleAntiFraud rows, 1,600 BothBosu rows, and 19 Claude-generated rows",
+      "rights_status": "reject_derivative_gated_source_bypass",
+      "decision": "reject_current_training_and_evaluation",
+      "admitted_rows": 0,
+      "reason_codes": [
+        "teleantifraud_upstream_is_gated",
+        "derivative_public_mirror_must_not_bypass_upstream_access_gate",
+        "bothbosu_is_already_represented_as_an_external_diagnostic",
+        "wrapper_license_does_not_replace_upstream_conditions"
+      ]
+    },
+    {
+      "source_id": "scambench-training",
+      "primary_url": "https://huggingface.co/datasets/shaw/scambench-training",
+      "metadata_url": "https://huggingface.co/api/datasets/shaw/scambench-training",
+      "publisher_revision": "31c9065c8f1b96ae29c59bfe6f563d07a390b44a",
+      "declared_wrapper_license": "CC-BY-SA-4.0",
+      "reported_rows": 37423,
+      "provenance": "76 Hugging Face sources and 39 generation pipelines across scam, prompt-injection, jailbreak, negotiation, and agent tasks",
+      "rights_status": "quarantine_mixed_upstream_rights",
+      "decision": "reject_current_training_and_evaluation",
+      "admitted_rows": 0,
+      "reason_codes": [
+        "per_row_upstream_license_is_not_part_of_the_documented_schema",
+        "contains_unrelated_agent_and_prompt_injection_tasks",
+        "contains_generated_translations_and_reasoning_traces",
+        "headline_wrapper_license_is_not_a_source_by_source_audit"
+      ]
+    },
+    {
+      "source_id": "vish-darija-tts-v1",
+      "primary_url": "https://zenodo.org/records/20039126",
+      "metadata_url": "https://zenodo.org/api/records/20039126",
+      "publisher_revision": "zenodo-record-20039126-revision-3",
+      "declared_wrapper_license": "CC-BY-4.0",
+      "reported_rows": 3400,
+      "provenance": "Balanced synthetic Moroccan Darija dialogues with Gemini TTS audio; no real calls, victims, or human speech",
+      "rights_status": "rights_clear_synthetic_artifact",
+      "decision": "track_future_multilingual_external_diagnostic",
+      "admitted_rows": 0,
+      "reason_codes": [
+        "fully_synthetic_not_real_world_evidence",
+        "native_darija_label_review_required",
+        "audio_robustness_is_outside_the_frozen_text_experiment",
+        "must_remain_family_disjoint_if_later_opened"
+      ]
+    },
+    {
+      "source_id": "conscambench-278",
+      "primary_url": "https://arxiv.org/abs/2607.11707v2",
+      "metadata_url": "https://export.arxiv.org/api/query?id_list=2607.11707",
+      "publisher_revision": "arxiv-2607.11707v2",
+      "declared_wrapper_license": null,
+      "reported_rows": 278,
+      "provenance": "Paper-reported eight-category conversational benchmark",
+      "rights_status": "quarantine_no_verified_dataset_artifact_or_license",
+      "decision": "track_until_primary_artifact_and_terms_are_published",
+      "admitted_rows": 0,
+      "reason_codes": [
+        "paper_claims_public_release_but_no_primary_artifact_was_linked",
+        "dataset_license_not_verified",
+        "construction_and_overlap_require_row_level_audit"
+      ]
+    }
+  ],
+  "decision": {
+    "schema24_remains_frozen": true,
+    "new_training_rows": 0,
+    "new_evaluation_rows": 0,
+    "next_action": "finish the independent schema-v24 audit; reconsider only as schema-v25 evidence after the frozen challenger is evaluated"
+  }
+}

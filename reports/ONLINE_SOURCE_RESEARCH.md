@@ -248,6 +248,24 @@ annotations audit-only, excludes publisher PII-slot rows, and preserves publishe
 families. After parent and held-set SimHash controls, it admits 1,095 train, 506 dev, and 1,199 test
 families. These remain weak SAFE service-domain labels pending the 635-row independent audit.
 
+### 2026-08-22 late-release contingency refresh
+
+This refresh ran after schema v24 and its blind audit were frozen. It therefore admits zero rows
+and cannot change the current experiment. The machine-readable decisions are in
+[`source-audits/online-refresh-2026-08-22.json`](source-audits/online-refresh-2026-08-22.json).
+
+| Candidate | Verified evidence | Decision |
+|---|---|---|
+| [ScamShield training data](https://huggingface.co/datasets/rehan-ml/scamshield-scam-detection-data) | Public revision `357ab9e9fa2c8bff77d1b564e2a7c33d38a2f9d5`; 23,707 rows combining UCI SMS, EMSCAD job advertisements, and about 255 Gemini contrasts under a wrapper MIT declaration. | Reject for the current corpus. UCI is already represented; a wrapper license does not resolve the [now-unverifiable original EMSCAD redistribution terms](https://zenodo.org/records/21829284); long job advertisements are not message-local communications; and the card exposes only coarse source classes rather than original row identities. |
+| [GrandgemMa-Corpus](https://huggingface.co/datasets/s23deepak/GrandgemMa-Corpus) | Public revision `1248b9f086d889aadde425763b26885e225dca60`; 6,019 rows, including 4,400 TeleAntiFraud rows, 1,600 BothBosu rows, and 19 generated rows. | Reject. TeleAntiFraud remains gated at its primary repository, so the public derivative is not used to bypass access approval. BothBosu is already a controlled external diagnostic, and the wrapper's CC-BY-4.0 declaration cannot replace upstream conditions. |
+| [ScamBench Training Corpus](https://huggingface.co/datasets/shaw/scambench-training) | Public revision `31c9065c8f1b96ae29c59bfe6f563d07a390b44a`; 37,423 multilingual rows compiled from 76 Hub datasets and 39 generation pipelines. The documented schema records the source dataset but not a row-level upstream license. | Reject. It mixes scam messages with prompt injection, jailbreak, negotiation, agent traces, translations, and generated reasoning. A corpus-level CC-BY-SA-4.0 declaration is not a substitute for auditing all upstream rights and duplicates. |
+| [VISH-DARIJA-TTS v1](https://zenodo.org/records/20039126) | Zenodo record 20039126 revision 3; CC-BY-4.0; 3,400 balanced Moroccan Darija scenarios. The publisher explicitly reports synthetic dialogue and Gemini TTS, with no real calls, victims, or human speech. | Track as a future multilingual synthetic/audio diagnostic only. It needs native Darija review and family-level isolation, and it cannot increase the real-data count. |
+| [ConScamBench-278](https://arxiv.org/abs/2607.11707v2) | The July 2026 paper reports a public 278-row, eight-category conversational benchmark and 97.8% accuracy, but no primary dataset artifact or dataset license was linked from the paper record during this refresh. | Track, do not download or score. Require a publisher artifact, explicit terms, construction audit, and overlap control before treating the reported result as comparable evidence. |
+
+The key conclusion is unchanged: public visibility, a wrapper license, or a large aggregate row
+count does not create clean training rights or independent evidence. These candidates remain a
+schema-v25 contingency until the current 0.8B challenger is audited and measured.
+
 ## Audited but rejected or quarantined
 
 | Candidate | Finding | Decision |

@@ -324,8 +324,9 @@ normalization, label-conflict quarantine, one-per-family collapse, and overlap r
 previously processed benchmark. It is local-evaluation-only and excluded from training/public row
 redistribution because the publisher's model-oriented OpenRAIL tag lacks a dataset-specific license
 file. See [the online source research](reports/ONLINE_SOURCE_RESEARCH.md) for measured admissions
-and rejections; dataset size is never inflated with unlicensed GitHub collections or duplicate
-repackagings.
+and rejections. Its 2026-08-22 contingency refresh separately records five new Hub/paper candidates
+with zero admissions, preserving schema v24 while the human audit is active; dataset size is never
+inflated with unlicensed GitHub collections or duplicate repackagings.
 
 Schema v6 replaces real-source email addresses, long phone-like values, and long account-like digit
 sequences with typed placeholders before IDs, family clustering, splitting, or fitting. The validator
