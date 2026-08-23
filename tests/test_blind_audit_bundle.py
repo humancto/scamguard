@@ -16,6 +16,8 @@ from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
 from scripts.build_blind_audit_bundle import build_bundle
 from scripts.check_audit_completion import audit_ids_sha256, audit_input_sha256
 from scripts.import_blind_audit import import_returned_audit, load_and_verify_bundle
+from scripts.verify_blind_audit_handoff import verify_handoff
+from scripts.verify_imported_blind_audit import verify_imported_audit
 
 CANONICAL_FIELDS = (
     "id",
@@ -213,6 +215,52 @@ def test_isolated_reviewer_server_saves_and_resumes(tmp_path: Path) -> None:
     assert json.loads(checked.stdout)["complete_rows"] == 1
 
 
+def test_production_handoff_preflight_uses_only_a_disposable_copy(tmp_path: Path) -> None:
+    _, _, bundle = build_fixture_bundle(tmp_path)
+    before = file_sha256(bundle)
+
+    result = verify_handoff(bundle)
+
+    assert result["passed"] is True
+    assert result["rows"] == 2
+    assert result["initial_complete_rows"] == 0
+    assert result["save_resume_smoke_passed"] is True
+    assert result["contains_message_text"] is False
+    assert result["contains_answer_key"] is False
+    assert result["source_bundle_untouched"] is True
+    assert file_sha256(bundle) == before
+
+
+def test_tracked_production_handoff_preflight_is_source_bound() -> None:
+    repository = Path(__file__).resolve().parents[1]
+    report = json.loads(
+        (repository / "reports/SCHEMA24_AUDIT_HANDOFF_PREFLIGHT.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    bindings = report["bindings"]
+
+    assert report["passed"] is True
+    assert report["rows"] == 635
+    assert report["initial_complete_rows"] == 0
+    assert report["initial_remaining_rows"] == 635
+    assert report["contains_answer_key"] is False
+    assert report["contains_message_text"] is False
+    assert bindings["bundle_sha256"] == (
+        "dd0c99d97894ace0e3868f947b08b5eab6ccfb6d03b7930e726c91ec1bbf6691"
+    )
+    assert bindings["canonical_audit_manifest_sha256"] == file_sha256(
+        repository / "data/audit/schema24-label-audit.manifest.json"
+    )
+    assert bindings["review_app_sha256"] == file_sha256(
+        repository / "scripts/review_blind_audit.py"
+    )
+    assert bindings["verifier_sha256"] == file_sha256(
+        repository / "scripts/verify_blind_audit_handoff.py"
+    )
+    assert bindings["audit_protocol_sha256"] == audit_protocol_sha256()
+
+
 def test_completed_return_is_verified_joined_and_passes_gate(tmp_path: Path) -> None:
     audit, manifest, bundle = build_fixture_bundle(tmp_path)
     extracted = tmp_path / "returned"
@@ -238,6 +286,46 @@ def test_completed_return_is_verified_joined_and_passes_gate(tmp_path: Path) -> 
         joined = {row["id"]: row for row in csv.DictReader(handle)}
     assert joined["safe-1"]["label_correct"] == "yes"
     assert joined["scam-1"]["label_correct"] == "yes"
+
+    verified = verify_imported_audit(
+        returned_csv=returned,
+        bundle_path=bundle,
+        canonical_audit=audit,
+        canonical_manifest=manifest,
+        reviewed_audit=output,
+        report_path=report,
+    )
+    assert verified["passed"] is True
+    assert verified["complete_rows"] == 2
+
+
+def test_import_verifier_rejects_reviewed_audit_drift(tmp_path: Path) -> None:
+    audit, manifest, bundle = build_fixture_bundle(tmp_path)
+    extracted = tmp_path / "drifted"
+    extracted.mkdir()
+    extract_bundle(bundle, extracted)
+    returned = extracted / "scamguard_blind_audit.csv"
+    complete_returned_csv(
+        returned,
+        {
+            "I can move your reservation to Tuesday.": "SAFE",
+            "Send the verification code now to stop suspension.": "SCAM",
+        },
+    )
+    reviewed = tmp_path / "reviewed.csv"
+    report = tmp_path / "completion.json"
+    import_returned_audit(returned, bundle, audit, manifest, reviewed, report)
+    reviewed.write_text(reviewed.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="fresh verified blind import"):
+        verify_imported_audit(
+            returned_csv=returned,
+            bundle_path=bundle,
+            canonical_audit=audit,
+            canonical_manifest=manifest,
+            reviewed_audit=reviewed,
+            report_path=report,
+        )
 
 
 def test_import_rejects_message_tampering(tmp_path: Path) -> None:

@@ -124,6 +124,7 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
                 "report_path": str(label_audit),
                 "report_sha256": file_sha256(label_audit),
                 "release_gate_passed": True,
+                "imported_from_blind_bundle": True,
                 "data_manifest_sha256": file_sha256(manifest),
             },
         },
@@ -220,3 +221,14 @@ def test_full_experiment_rejects_unselected_batch_geometry(tmp_path: Path) -> No
 
     assert any("requires selected microbatch 4" in error for error in errors)
     assert any("batch geometry" in error for error in errors)
+
+
+def test_full_experiment_rejects_non_blind_label_audit(tmp_path: Path) -> None:
+    args, config = frozen_experiment(tmp_path)
+    config["data"]["label_audit"]["imported_from_blind_bundle"] = False  # type: ignore[index]
+
+    errors = experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    )
+
+    assert "full run label audit was not imported from a blind bundle" in errors

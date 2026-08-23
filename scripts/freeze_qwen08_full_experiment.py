@@ -198,8 +198,11 @@ def validate_label_audit(
         or report.get("errors") != []
         or report.get("audit_protocol_version") != AUDIT_PROTOCOL_VERSION
         or report.get("audit_protocol_sha256") != audit_protocol_sha256()
+        or report.get("imported_from_blind_bundle") is not True
         or not SHA256_RE.fullmatch(str(report.get("audit_sha256", "")))
         or not SHA256_RE.fullmatch(str(report.get("audit_manifest_sha256", "")))
+        or not SHA256_RE.fullmatch(str(report.get("blind_bundle_sha256", "")))
+        or not SHA256_RE.fullmatch(str(report.get("returned_blind_audit_sha256", "")))
     ):
         raise ValueError("schema-v24 independent human label audit has not passed")
     if report.get("data_manifest_sha256") != file_sha256(data_manifest_path):
@@ -348,6 +351,13 @@ def freeze(
                 "cohen_kappa": label_audit["cohen_kappa"],
                 "audit_protocol_version": label_audit["audit_protocol_version"],
                 "audit_protocol_sha256": label_audit["audit_protocol_sha256"],
+                "imported_from_blind_bundle": label_audit[
+                    "imported_from_blind_bundle"
+                ],
+                "blind_bundle_sha256": label_audit["blind_bundle_sha256"],
+                "returned_blind_audit_sha256": label_audit[
+                    "returned_blind_audit_sha256"
+                ],
                 "release_gate_passed": label_audit["release_gate_passed"],
                 "data_manifest_sha256": label_audit["data_manifest_sha256"],
             },

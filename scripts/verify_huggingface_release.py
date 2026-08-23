@@ -56,6 +56,7 @@ REQUIRED_ARTIFACT_ROLES = {
     "tokenizer",
 }
 REQUIRED_REPORT_ROLES = {
+    "audit_handoff_preflight",
     "bf16_quality",
     "data_manifest",
     "label_audit",
@@ -355,6 +356,47 @@ def _validate_report_contents(
     mobile = _json_report(report_paths.get("mobile_benchmark"), "mobile_benchmark", errors)
     routed = _json_report(report_paths.get("routed_runtime"), "routed_runtime", errors)
     label_audit = _json_report(report_paths.get("label_audit"), "label_audit", errors)
+    audit_handoff = _json_report(
+        report_paths.get("audit_handoff_preflight"),
+        "audit_handoff_preflight",
+        errors,
+    )
+    if audit_handoff.get("measurement_kind") != (
+        "blind_audit_production_handoff_preflight"
+    ):
+        errors.append("audit_handoff_preflight measurement kind is invalid")
+    for field in (
+        "passed",
+        "isolated_python_check_passed",
+        "save_resume_smoke_passed",
+        "source_bundle_untouched",
+    ):
+        if audit_handoff.get(field) is not True:
+            errors.append(f"audit_handoff_preflight {field} must be true")
+    if audit_handoff.get("contains_answer_key") is not False:
+        errors.append("audit_handoff_preflight must not contain an answer key")
+    if audit_handoff.get("contains_message_text") is not False:
+        errors.append("audit_handoff_preflight report must not contain message text")
+    if audit_handoff.get("rows") != 635:
+        errors.append("audit_handoff_preflight rows must equal 635")
+    if audit_handoff.get("initial_complete_rows") != 0:
+        errors.append("audit_handoff_preflight must start with zero decisions")
+    if audit_handoff.get("initial_remaining_rows") != 635:
+        errors.append("audit_handoff_preflight must start with 635 remaining rows")
+    handoff_bindings = _mapping(
+        audit_handoff.get("bindings"), "audit_handoff_preflight.bindings", errors
+    )
+    for field in (
+        "bundle_sha256",
+        "canonical_audit_manifest_sha256",
+        "review_app_sha256",
+        "review_csv_template_sha256",
+        "verifier_sha256",
+    ):
+        if not SHA256_PATTERN.fullmatch(str(handoff_bindings.get(field, ""))):
+            errors.append(f"audit_handoff_preflight {field} is invalid")
+    if handoff_bindings.get("audit_protocol_sha256") != audit_protocol_sha256():
+        errors.append("audit_handoff_preflight protocol differs from the frozen rubric")
     if label_audit.get("release_gate_passed") is not True:
         errors.append("label_audit release gate must pass")
     if label_audit.get("rows") != 635:
@@ -373,6 +415,18 @@ def _validate_report_contents(
         errors.append("label_audit protocol version differs from the frozen reviewer rubric")
     if label_audit.get("audit_protocol_sha256") != audit_protocol_sha256():
         errors.append("label_audit protocol SHA-256 differs from the frozen reviewer rubric")
+    if label_audit.get("imported_from_blind_bundle") is not True:
+        errors.append("label_audit must be imported from the blind review bundle")
+    if label_audit.get("blind_bundle_sha256") != handoff_bindings.get("bundle_sha256"):
+        errors.append("label_audit bundle differs from the handoff preflight")
+    if label_audit.get("audit_manifest_sha256") != handoff_bindings.get(
+        "canonical_audit_manifest_sha256"
+    ):
+        errors.append("label_audit manifest differs from the handoff preflight")
+    if not SHA256_PATTERN.fullmatch(
+        str(label_audit.get("returned_blind_audit_sha256", ""))
+    ):
+        errors.append("label_audit returned blind audit SHA-256 is invalid")
     for field in ("audit_sha256", "audit_manifest_sha256"):
         if not SHA256_PATTERN.fullmatch(str(label_audit.get(field, ""))):
             errors.append(f"label_audit {field} is invalid")

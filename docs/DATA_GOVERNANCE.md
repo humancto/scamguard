@@ -119,4 +119,6 @@ For schema v24, give the reviewer only the answer-key-free artifact produced by
 CSV contains the independent label and sensitive-data decision but no project correctness field.
 `make schema24-audit-import` verifies its immutable inputs and derives correctness only after
 joining it to the sealed canonical workbook. `make schema24-audit-check` fails closed until every
-stratified row has a valid decision, with zero disagreements and zero sensitive-data findings.
+stratified row has a valid decision, with zero disagreements and zero sensitive-data findings. The
+check reconstructs the import from the returned blind CSV and compares the reviewed workbook and
+completion report, preserving rather than replacing the importer provenance fields.

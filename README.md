@@ -298,11 +298,15 @@ deterministic four-file ZIP for an independent reviewer; the ZIP contains only o
 text in a deterministic shuffled order, blank decision fields, the frozen rubric, and a
 dependency-free localhost app. Project
 labels, source labels, source names, categories, splits, and model outputs are absent from the
-artifact. After the reviewer returns the completed blind CSV, `make schema24-audit-import` verifies
+artifact. `make schema24-audit-handoff-preflight` black-box checks the production ZIP with isolated
+Python, an ephemeral loopback server, the public API schema, and a disposable save/resume cycle;
+it never writes a decision back to the source ZIP. After the reviewer returns the completed blind
+CSV, `make schema24-audit-import` verifies
 the ZIP, protocol, immutable messages, IDs, canonical audit manifest, and dataset manifest before
 joining decisions to the sealed answer key. `schema24-audit-check` then rejects every incomplete
 decision, label disagreement, sensitive-data finding, rubric change, workbook change, or dataset
-change. Its text-free report
+change by reconstructing the blind import in a temporary directory and byte-checking the reviewed
+workbook without overwriting its provenance report. Its text-free report
 adds Wilson-bound agreement, Cohen's kappa, confusion counts, and source/label diagnostics. The
 schema-24 dataset validates, but the training freeze currently fails closed because the independent
 635-row workbook is 0/635 complete.

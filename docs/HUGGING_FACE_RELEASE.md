@@ -54,6 +54,7 @@ both bind to the hash-verified decision in
    make schema24-annotated-hard-negatives
    make schema24-audit
    make schema24-audit-bundle
+   make schema24-audit-handoff-preflight
    # Send only dist/scamguard-schema24-blind-audit.zip to an independent reviewer.
    # Place the returned CSV at data/audit/returned/scamguard_blind_audit.csv.
    make schema24-audit-import
@@ -81,10 +82,12 @@ both bind to the hash-verified decision in
    annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim
    evidence, and zero examples over the frozen 640-token limit. The 640-token ceiling preserves
    decisive long-dialogue actions; it is not the under-20-ms fast-path latency budget. The freeze
-   step also requires the pinned 4 x 4 batch-geometry decision and refuses to overwrite an existing
-   config. The trainer independently rechecks the config, geometry report and hash, resolved model
-   commit, installed Transformers git commit, hyperparameters, LoRA module allowlist, data/report
-   hashes, counts, and output path before loading model weights.
+   step also requires proof that the audit came through the blind-bundle importer, the pinned 4 x 4
+   batch-geometry decision, and refuses to overwrite an existing config. The trainer independently
+   rechecks the config, blind-import declaration, geometry report and hash, resolved model commit,
+   installed Transformers git commit, hyperparameters, LoRA module allowlist, data/report hashes,
+   counts, and output path before loading model weights. The publication validator additionally
+   binds the imported review's bundle hash to the production handoff-preflight report.
 3. Freeze calibration, routing, and thresholds on development/selection data. Pass every internal
    and independent external-selection gate before opening any prediction-sealed test.
 

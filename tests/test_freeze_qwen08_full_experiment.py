@@ -140,6 +140,9 @@ def schema24_fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
                 "audit_manifest_sha256": "b" * 64,
                 "audit_protocol_version": AUDIT_PROTOCOL_VERSION,
                 "audit_protocol_sha256": audit_protocol_sha256(),
+                "imported_from_blind_bundle": True,
+                "blind_bundle_sha256": "c" * 64,
+                "returned_blind_audit_sha256": "d" * 64,
                 "data_manifest_sha256": file_sha256(data_manifest_path),
                 "errors": [],
             }
@@ -168,6 +171,7 @@ def test_freeze_writes_full_hash_bound_experiment(tmp_path: Path) -> None:
     assert config["batch_size"] == 4
     assert config["gradient_accumulation"] == 4
     assert config["batch_size"] * config["gradient_accumulation"] == 16
+    assert config["data"]["label_audit"]["imported_from_blind_bundle"] is True  # type: ignore[index]
     assert config["data"]["schema_version"] == 24  # type: ignore[index]
     assert config["data"]["evidence_audit"]["coverage"] == 1.0  # type: ignore[index]
     assert output.is_file()
@@ -178,6 +182,23 @@ def test_freeze_rejects_incomplete_human_audit(tmp_path: Path) -> None:
     report = json.loads(label_audit.read_text(encoding="utf-8"))
     report["incorrect_label_rows"] = 1
     report["release_gate_passed"] = False
+    label_audit.write_text(json.dumps(report), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="human label audit"):
+        freeze(
+            processed,
+            token_audit,
+            label_audit,
+            tmp_path / "qwen08.json",
+            tmp_path / "checkpoint",
+            "sg-qwen08-schema24",
+        )
+
+
+def test_freeze_rejects_non_blind_label_audit(tmp_path: Path) -> None:
+    processed, token_audit, label_audit = schema24_fixture(tmp_path)
+    report = json.loads(label_audit.read_text(encoding="utf-8"))
+    report["imported_from_blind_bundle"] = False
     label_audit.write_text(json.dumps(report), encoding="utf-8")
 
     with pytest.raises(ValueError, match="human label audit"):

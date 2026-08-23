@@ -1,5 +1,5 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-bundle schema24-audit-import schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
-.PHONY: qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
+.PHONY: schema24-audit-handoff-preflight qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
 .PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
@@ -10,6 +10,7 @@ QWEN08_FULL_OUTPUT ?= artifacts/checkpoints/qwen35-08b-schema24-lora
 QWEN08_FULL_TOKEN_AUDIT ?= reports/runs/qwen35-08b-schema24-token-audit.json
 QWEN08_FULL_LABEL_AUDIT ?= reports/data/schema24-label-audit-reviewed-completion.json
 SCHEMA24_AUDIT_BUNDLE ?= dist/scamguard-schema24-blind-audit.zip
+SCHEMA24_AUDIT_HANDOFF_REPORT ?= reports/SCHEMA24_AUDIT_HANDOFF_PREFLIGHT.json
 SCHEMA24_RETURNED_AUDIT ?= data/audit/returned/scamguard_blind_audit.csv
 SCHEMA24_REVIEWED_AUDIT ?= data/audit/schema24-label-audit.reviewed.csv
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
@@ -415,7 +416,7 @@ schema24-audit: schema24-annotated-hard-negatives
 		--extra-split multidogo_annotation_dev \
 		--extra-split multidogo_annotation_test
 
-schema24-audit-review: schema24-audit-bundle
+schema24-audit-review: schema24-audit-handoff-preflight
 	@echo "Send $(SCHEMA24_AUDIT_BUNDLE) to an independent reviewer; do not send the repository."
 	@echo "Reviewer: extract the ZIP, then run python3 review.py --open"
 
@@ -424,6 +425,12 @@ schema24-audit-bundle:
 		--audit data/audit/schema24-label-audit.csv \
 		--audit-manifest data/audit/schema24-label-audit.manifest.json \
 		--output "$(SCHEMA24_AUDIT_BUNDLE)" \
+		--replace
+
+schema24-audit-handoff-preflight: schema24-audit-bundle
+	$(PYTHON_BIN) scripts/verify_blind_audit_handoff.py \
+		--bundle "$(SCHEMA24_AUDIT_BUNDLE)" \
+		--output "$(SCHEMA24_AUDIT_HANDOFF_REPORT)" \
 		--replace
 
 schema24-audit-import:
@@ -436,10 +443,13 @@ schema24-audit-import:
 		--report "$(QWEN08_FULL_LABEL_AUDIT)"
 
 schema24-audit-check:
-	$(PYTHON_BIN) scripts/check_audit_completion.py \
-		--audit "$(SCHEMA24_REVIEWED_AUDIT)" \
-		--audit-manifest data/audit/schema24-label-audit.manifest.json \
-		--output "$(QWEN08_FULL_LABEL_AUDIT)"
+	$(PYTHON_BIN) scripts/verify_imported_blind_audit.py \
+		--returned-audit "$(SCHEMA24_RETURNED_AUDIT)" \
+		--bundle "$(SCHEMA24_AUDIT_BUNDLE)" \
+		--canonical-audit data/audit/schema24-label-audit.csv \
+		--canonical-manifest data/audit/schema24-label-audit.manifest.json \
+		--reviewed-audit "$(SCHEMA24_REVIEWED_AUDIT)" \
+		--report "$(QWEN08_FULL_LABEL_AUDIT)"
 
 encoder-schema16-cache:
 	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps

@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "bindings": {
+    "audit_protocol_sha256": "d9dcc931447ce5229ca5e07398b20944759dfe0f0224369c14c2729be10cbb59",
+    "blind_inputs_sha256": "9b4616fa24af4601171123c03b452ee844c3afbe89669998899a3b0f25a951fb",
+    "bundle_bytes": 62987,
+    "bundle_path": "dist/scamguard-schema24-blind-audit.zip",
+    "bundle_sha256": "dd0c99d97894ace0e3868f947b08b5eab6ccfb6d03b7930e726c91ec1bbf6691",
+    "canonical_audit_manifest_sha256": "bcbd4db2d26917832cae99a018919fa861cb9db4ee9bb95b6afa075490fd4131",
+    "review_app_sha256": "e99a6603be4c576783a3500e894e961d3f1a6198c15949ba5c3d18ebc7495276",
+    "review_csv_template_sha256": "a1532646002b8c37c572c9a12376404fa9b7cfa0015e2239a6ba9742b8b67f16",
+    "verifier_sha256": "a2c90f16f47ff0ccb1adbc577a57be35cbc1f2db473d6e354dc68b54fd8bdd19"
+  },
+  "contains_answer_key": false,
+  "contains_message_text": false,
+  "initial_complete_rows": 0,
+  "initial_remaining_rows": 635,
+  "isolated_python_check_passed": true,
+  "measurement_kind": "blind_audit_production_handoff_preflight",
+  "passed": true,
+  "rows": 635,
+  "save_resume_smoke_passed": true,
+  "server": {
+    "disposable_save_passed": true,
+    "ephemeral_port": true,
+    "loopback_host": "127.0.0.1",
+    "state_schema_passed": true,
+    "write_token_required": true
+  },
+  "source_bundle_untouched": true
+}

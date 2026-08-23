@@ -292,6 +292,8 @@ def experiment_config_errors(
                 errors.append(f"label audit hash mismatch: {label_report}")
             if label_audit.get("release_gate_passed") is not True:
                 errors.append("full run label audit release gate is not passed")
+            if label_audit.get("imported_from_blind_bundle") is not True:
+                errors.append("full run label audit was not imported from a blind bundle")
             if label_audit.get("data_manifest_sha256") != data.get("manifest_sha256"):
                 errors.append("full run label audit is bound to a different data manifest")
     return errors

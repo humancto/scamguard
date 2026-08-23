@@ -213,6 +213,33 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
         path = tmp_path / f"{role}.json"
         path.write_text(f'{{"report":"{role}"}}', encoding="utf-8")
         report_paths[role] = path
+    audit_handoff = tmp_path / "audit_handoff_preflight.json"
+    audit_handoff.write_text(
+        json.dumps(
+            {
+                "measurement_kind": "blind_audit_production_handoff_preflight",
+                "passed": True,
+                "contains_answer_key": False,
+                "contains_message_text": False,
+                "source_bundle_untouched": True,
+                "rows": 635,
+                "initial_complete_rows": 0,
+                "initial_remaining_rows": 635,
+                "isolated_python_check_passed": True,
+                "save_resume_smoke_passed": True,
+                "bindings": {
+                    "bundle_sha256": "b" * 64,
+                    "canonical_audit_manifest_sha256": "d" * 64,
+                    "review_app_sha256": "e" * 64,
+                    "review_csv_template_sha256": "f" * 64,
+                    "verifier_sha256": "1" * 64,
+                    "audit_protocol_sha256": audit_protocol_sha256(),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    report_paths["audit_handoff_preflight"] = audit_handoff
     label_audit = tmp_path / "label_audit.json"
     label_audit.write_text(
         json.dumps(
@@ -228,6 +255,9 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                 "audit_manifest_sha256": "d" * 64,
                 "audit_protocol_version": AUDIT_PROTOCOL_VERSION,
                 "audit_protocol_sha256": audit_protocol_sha256(),
+                "imported_from_blind_bundle": True,
+                "blind_bundle_sha256": "b" * 64,
+                "returned_blind_audit_sha256": "2" * 64,
                 "data_manifest_sha256": hashlib.sha256(
                     report_paths["data_manifest"].read_bytes()
                 ).hexdigest(),
@@ -582,6 +612,24 @@ def test_incomplete_or_unbound_label_audit_is_rejected(tmp_path: Path) -> None:
     assert "label_audit complete_rows must equal rows" in errors
     assert "label_audit incomplete_rows must equal zero" in errors
     assert any("protocol SHA-256" in error for error in errors)
+
+
+def test_non_blind_or_unpreflighted_label_audit_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    label_path = tmp_path / "label_audit.json"
+    label_report = json.loads(label_path.read_text(encoding="utf-8"))
+    label_report["imported_from_blind_bundle"] = False
+    label_report["blind_bundle_sha256"] = "0" * 64
+    label_path.write_text(json.dumps(label_report), encoding="utf-8")
+    for entry in manifest["reports"]:  # type: ignore[union-attr]
+        if entry["role"] == "label_audit":
+            entry["sha256"] = hashlib.sha256(label_path.read_bytes()).hexdigest()
+            entry["size_bytes"] = label_path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "label_audit must be imported from the blind review bundle" in errors
+    assert "label_audit bundle differs from the handoff preflight" in errors
 
 
 def test_runtime_pack_must_bind_deployable_artifacts(tmp_path: Path) -> None:
