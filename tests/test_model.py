@@ -52,6 +52,7 @@ class FakeProcessor:
 class SuffixOnlyFakeModel:
     def __init__(self) -> None:
         self.logits_to_keep: int | None = None
+        self.sequence_length: int | None = None
 
     def __call__(
         self,
@@ -62,6 +63,7 @@ class SuffixOnlyFakeModel:
     ) -> object:
         assert input_ids.shape == attention_mask.shape
         self.logits_to_keep = logits_to_keep
+        self.sequence_length = input_ids.shape[1]
         logits = torch.arange(16, dtype=torch.float32).view(1, 1, -1)
         return SimpleNamespace(logits=logits.expand(len(input_ids), logits_to_keep, -1))
 
@@ -74,11 +76,13 @@ def test_qwen_backend_uses_exact_low_memory_candidate_scoring() -> None:
     backend.torch = torch
     backend.device = torch.device("cpu")
     backend.temperature = 1.0
+    backend.sequence_bucket_size = 64
 
     scores = backend.predict("message")
 
     assert abs(scores.safe + scores.uncertain + scores.scam - 1.0) < 1e-6
     assert backend.model.logits_to_keep == 4
+    assert backend.model.sequence_length == 64
 
 
 def test_qwen_backend_matches_evaluator_probability_math() -> None:
@@ -91,10 +95,17 @@ def test_qwen_backend_matches_evaluator_probability_math() -> None:
     backend.torch = torch
     backend.device = torch.device("cpu")
     backend.temperature = 1.7
+    backend.sequence_bucket_size = 64
 
     runtime = backend.predict("message")
     expected = softmax(
-        score_message(backend.model, backend.processor, "message", backend.device)[None, :],
+        score_message(
+            backend.model,
+            backend.processor,
+            "message",
+            backend.device,
+            sequence_bucket_size=64,
+        )[None, :],
         backend.temperature,
     )[0]
 

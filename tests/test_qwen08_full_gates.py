@@ -20,12 +20,25 @@ def safe_domain_report(fpr: float = 0.01) -> dict[str, object]:
 
 def passing_report() -> dict[str, object]:
     return {
+        "score_cache": {
+            "message_batch_size": 1,
+            "candidate_batch_size": 3,
+            "sequence_bucket_size": 64,
+        },
         "dev": {"binary_safety": binary()},
         "test": {
             "binary_safety": binary(),
             "calibrated_decision": {"macro_f1": 0.95},
             "scam_by_category": {
-                "FINANCIAL": {"examples": 40, "recall": 0.98},
+                category: {"examples": 40, "recall": 0.98}
+                for category in (
+                    "CREDENTIAL_THEFT",
+                    "DELIVERY_TOLL",
+                    "FINANCIAL",
+                    "IDENTITY_IMPERSONATION",
+                    "OPPORTUNITY",
+                    "RELATIONSHIP",
+                )
             },
         },
         "multidogo_annotation_dev": safe_domain_report(),
@@ -41,6 +54,7 @@ def test_full_gate_accepts_only_complete_passing_report() -> None:
     result = evaluate_gates(passing_report())
 
     assert result["quality_status"] == "passed"
+    assert result["passed_gates"] == result["total_gates"] == 39
     assert result["quantization_authorized"] is True
     assert result["huggingface_publication_authorized"] is False
 
@@ -63,3 +77,24 @@ def test_full_gate_requires_all_six_domains() -> None:
 
     with pytest.raises(ValueError, match="six-domain"):
         evaluate_gates(report)
+
+
+def test_full_gate_rejects_non_product_scoring_batch() -> None:
+    report = passing_report()
+    report["score_cache"]["message_batch_size"] = 4  # type: ignore[index]
+    report["score_cache"]["candidate_batch_size"] = 12  # type: ignore[index]
+
+    result = evaluate_gates(report)
+
+    assert result["quality_status"] == "rejected"
+    assert "frozen quality message batch size" in result["failed_gates"]
+    assert "frozen quality candidate batch size" in result["failed_gates"]
+
+
+def test_full_gate_rejects_dynamic_sequence_shapes() -> None:
+    report = passing_report()
+    report["score_cache"]["sequence_bucket_size"] = 0  # type: ignore[index]
+
+    result = evaluate_gates(report)
+
+    assert "frozen quality sequence bucket size" in result["failed_gates"]

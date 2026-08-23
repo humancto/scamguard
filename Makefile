@@ -1,5 +1,5 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
-.PHONY: qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime routed-eval
+.PHONY: qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime routed-eval
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -19,9 +19,9 @@ ENCODER23_ROUTER_PREDICTIONS ?= reports/runs/sg-modernbert-schema23-router-sourc
 ROUTER_PREDICTIONS ?= $(ENCODER23_ROUTER_PREDICTIONS)
 SPECIALIST_PREDICTIONS ?= $(QWEN08_FULL_REPORT:.json=.predictions.jsonl)
 ROUTED_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-schema24-routed.json
-QWEN08_BASE_REPORT ?= reports/runs/qwen35-08b-base-schema24-open-baseline.json
-QWEN08_BASE_ROUTED_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-routed-diagnostic.json
-QWEN08_BASE_ROUTED_RUNTIME_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-routed-runtime.json
+QWEN08_BASE_REPORT ?= reports/runs/qwen35-08b-base-schema24-product-batch1.json
+QWEN08_BASE_ROUTED_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-product-batch1-routed.json
+QWEN08_BASE_ROUTED_RUNTIME_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-product-batch1-runtime.json
 ROUTED_RUNTIME_REPETITIONS ?= 3
 
 install:
@@ -454,12 +454,12 @@ routed-eval:
 		--specialist-predictions "$(SPECIALIST_PREDICTIONS)" \
 		--report "$(ROUTED_REPORT)"
 
-qwen-08b-base-routed-diagnostic:
+qwen-08b-base-routed-diagnostic: qwen-08b-base-product-eval
 	$(MAKE) routed-eval \
-		SPECIALIST_PREDICTIONS=reports/runs/qwen35-08b-base-schema24-open-baseline.predictions.jsonl \
+		SPECIALIST_PREDICTIONS="$(QWEN08_BASE_REPORT:.json=.predictions.jsonl)" \
 		ROUTED_REPORT="$(QWEN08_BASE_ROUTED_REPORT)"
 
-qwen-08b-base-routed-runtime:
+qwen-08b-base-routed-runtime: qwen-08b-base-routed-diagnostic
 	test -f "$(ENCODER23_ROUTER_PREDICTIONS)"
 	test -f "$(QWEN08_BASE_REPORT)"
 	test -f "$(QWEN08_BASE_REPORT:.json=.predictions.jsonl)"
@@ -745,8 +745,17 @@ qwen-08b-full-eval: qwen-08b-full
 		--model Qwen/Qwen3.5-0.8B \
 		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
 		--adapter "$(QWEN08_FULL_OUTPUT)" --data "$(QWEN08_FULL_DATA)" \
-		--external-data data/external --batch-size 4 --require-mps \
+		--external-data data/external --batch-size 1 --sequence-bucket-size 64 --require-mps \
 		--report "$(QWEN08_FULL_REPORT)"
+
+qwen-08b-base-product-eval:
+	uv run --extra train --extra qwen python training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--data "$(QWEN08_FULL_DATA)" --external-data data/external \
+		--splits dev test multidogo_annotation_dev multidogo_annotation_test \
+		--batch-size 1 --sequence-bucket-size 64 --require-mps \
+		--report "$(QWEN08_BASE_REPORT)"
 
 qwen-08b-full-gates: qwen-08b-full-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \

@@ -28,6 +28,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
         "model_card",
         "quality",
         "quantized_quality",
+        "runtime",
     ):
         path = tmp_path / f"{role}.json"
         path.write_text(f'{{"report":"{role}"}}', encoding="utf-8")
@@ -51,7 +52,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
             "evaluation_examples": 5_000,
         },
         "quality": {
-            "internal_gates": {"passed": 36, "total": 36},
+            "internal_gates": {"passed": 39, "total": 39},
             "external_selection_passed": True,
             "human_label_audit_passed": True,
             "multilingual_claims_reviewed": True,
@@ -65,11 +66,20 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
             "frozen_calibration_reused": True,
         },
         "runtime": {
+            "scoring_contract": {
+                "message_batch_size": 1,
+                "candidate_batch_size": 3,
+                "sequence_bucket_size": 64,
+                "exact_decision_parity": True,
+                "quantized_decision_parity": True,
+            },
             "desktop": {
                 "measured": True,
                 "device": "MacBook Pro M4 Max",
                 "p50_ms": 30.0,
                 "p95_ms": 45.0,
+                "p99_ms": 55.0,
+                "maximum_ms": 70.0,
                 "peak_memory_bytes": 900_000_000,
                 "samples": 1_000,
             },
@@ -78,6 +88,8 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                 "device": "physical iPhone",
                 "p50_ms": 70.0,
                 "p95_ms": 100.0,
+                "p99_ms": 120.0,
+                "maximum_ms": 150.0,
                 "peak_memory_bytes": 900_000_000,
                 "samples": 1_000,
             },
@@ -85,7 +97,10 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                 "measured": True,
                 "escalation_rate": 0.08,
                 "p50_ms": 8.0,
-                "p95_ms": 55.0,
+                "p95_ms": 15.0,
+                "p99_ms": 40.0,
+                "maximum_ms": 45.0,
+                "escalated_p95_ms": 45.0,
             },
         },
         "governance": {
@@ -148,3 +163,23 @@ def test_training_row_or_direct_reddit_release_is_rejected(tmp_path: Path) -> No
 
     assert "governance.release_contains_training_rows must be false" in errors
     assert "governance.direct_reddit_training_rows must be false" in errors
+
+
+def test_routed_tail_or_scoring_contract_mismatch_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    manifest["runtime"]["scoring_contract"]["sequence_bucket_size"] = 0  # type: ignore[index]
+    manifest["runtime"]["routed"]["escalated_p95_ms"] = 50.0  # type: ignore[index]
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "runtime.scoring_contract.sequence_bucket_size must equal 64" in errors
+    assert "runtime.routed.escalated_p95_ms must be under 50" in errors
+
+
+def test_stale_internal_gate_count_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    manifest["quality"]["internal_gates"] = {"passed": 36, "total": 36}  # type: ignore[index]
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "quality.internal_gates.total must equal 39" in errors

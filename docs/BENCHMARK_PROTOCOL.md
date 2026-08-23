@@ -137,10 +137,11 @@ The desktop verdict fast path must achieve p95 single-message latency at most 20
 one, measured from tokenizer entry through probability output. Model-forward-only timing is
 reported as a diagnostic and cannot satisfy this gate. Reports must state CPU/accelerator,
 input-length distribution, warmup, artifact bytes, and quantization. Qwen likelihood scoring or
-generation is measured separately. A routed hybrid must
-also publish its escalation rate and end-to-end p50/p95; it may not claim “under 20 ms” for all
-messages unless the full routed distribution passes. Mobile latency requires the same benchmark on
-a physical target device and cannot be inferred from desktop results.
+generation is measured separately. A routed hybrid must publish its escalation rate and end-to-end
+p50/p95/p99/maximum. Release requires routed p95 at most 20 ms and escalated-path p95 under 50 ms;
+the p99 and maximum prevent a sub-5% escalation rate from hiding the specialist tail. Mobile
+latency requires the same benchmark on a physical target device and cannot be inferred from desktop
+results.
 
 Routing must be frozen on development data from text-free per-example ledgers. Join router and
 specialist rows exactly on `(split, id)`, reject duplicate IDs or truth/source/category drift, and
@@ -148,12 +149,13 @@ report router-only, specialist-only, and routed metrics on the same untouched te
 component percentiles may support a conservative bound, but they cannot be algebraically converted
 into routed p95; record the frozen policy end to end per request.
 
-Every neural quality ledger must also freeze its accelerator scoring batch shape: messages per
-forward pass and candidate sequences per message. Before release, rerun the frozen policy at the
-product batch size and require exact route and calibrated-verdict parity per example. A probability
-tolerance may diagnose numerical drift but cannot excuse a threshold crossing. Report runtime
-quality separately when parity fails; do not substitute a similar aggregate metric for the failed
-per-example contract.
+Every neural quality ledger must also freeze its accelerator scoring shape: messages per forward
+pass, candidate sequences per message, and the padding/bucketing rule. Schema-24 Qwen scoring uses
+one message, three candidates, and 64-token left-padding buckets. Before release, rerun the frozen
+policy at that product shape and require exact route and calibrated-verdict parity per example. A
+probability tolerance may diagnose numerical drift but cannot excuse a threshold crossing. Report
+runtime quality separately when parity fails; do not substitute a similar aggregate metric for the
+failed per-example contract.
 
 Every calibration artifact must state its SAFE-threshold semantics. Historical encoder artifacts
 store a maximum SAFE-path risk (`p_safe >= 1 - threshold` and `p_scam < threshold`); Qwen verdict

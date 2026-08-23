@@ -323,6 +323,9 @@ def main() -> None:
         "examples": specialist_report[args.split]["examples"],
         "labels": ["SAFE", "UNCERTAIN", "SCAM"],
         "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+        "sequence_bucket_size": specialist_report["score_cache"][
+            "sequence_bucket_size"
+        ],
     }
     verify_score_cache_identity(specialist_score_metadata, expected_score_identity)
 
@@ -414,12 +417,16 @@ def main() -> None:
                     int(specialist_score_metadata["batch_size"])
                     * len(specialist_score_metadata["labels"])
                 ),
+                "sequence_bucket_size": specialist_score_metadata[
+                    "sequence_bucket_size"
+                ],
                 "metadata_path": str(args.specialist_score_cache_metadata),
                 "metadata_sha256": file_sha256(args.specialist_score_cache_metadata),
             },
             "runtime_scoring": {
                 "message_batch_size": 1,
                 "candidate_batch_size": len(specialist.labels),
+                "sequence_bucket_size": specialist.sequence_bucket_size,
             },
         },
         "data": {
@@ -456,8 +463,8 @@ def main() -> None:
         },
         "limitations": [
             "BF16 reference timing does not establish final GGUF or phone latency.",
-            "The frozen specialist quality ledger and product runtime use different "
-            "accelerator batch shapes; exact decision parity is therefore required.",
+            "The frozen specialist quality ledger and product runtime share an explicit "
+            "message, candidate, and sequence-bucket shape; exact decision parity is required.",
             "Cold model load, evidence extraction, SDK result construction, and I/O are excluded.",
             "Overall p95 is accompanied by escalated p95, p99, and maximum to expose the tail.",
         ],

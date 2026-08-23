@@ -21,7 +21,7 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 
 from scamguard.metrics import binary_safety_metrics, choose_threshold, file_sha256, wilson_interval
 from scamguard.prompts import SYSTEM_PROMPT
-from scamguard.qwen_scoring import candidate_token_sequences
+from scamguard.qwen_scoring import bucketed_sequence_length, candidate_token_sequences
 
 LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 SCORING_VERSION = "qwen-verdict-likelihood-v2"
@@ -49,6 +49,7 @@ def score_cache_identity(
     data_sha256: str,
     examples: int,
     batch_size: int,
+    sequence_bucket_size: int = 0,
 ) -> dict[str, Any]:
     return {
         "scoring_version": SCORING_VERSION,
@@ -58,6 +59,7 @@ def score_cache_identity(
         "data_sha256": data_sha256,
         "examples": examples,
         "batch_size": batch_size,
+        "sequence_bucket_size": sequence_bucket_size,
         "labels": list(LABELS),
         "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
     }
@@ -171,8 +173,21 @@ def choose_safe_threshold(
     return max(ranked)[2]
 
 
-def score_message(model: Any, processor: Any, text: str, device: torch.device) -> np.ndarray:
-    return score_messages(model, processor, [text], device)[0]
+def score_message(
+    model: Any,
+    processor: Any,
+    text: str,
+    device: torch.device,
+    *,
+    sequence_bucket_size: int = 0,
+) -> np.ndarray:
+    return score_messages(
+        model,
+        processor,
+        [text],
+        device,
+        sequence_bucket_size=sequence_bucket_size,
+    )[0]
 
 
 def score_messages(
@@ -182,6 +197,7 @@ def score_messages(
     device: torch.device,
     *,
     batch_size: int = 4,
+    sequence_bucket_size: int = 0,
     memory_telemetry: dict[str, int] | None = None,
     progress_label: str | None = None,
     progress_every: int = 10,
@@ -207,7 +223,7 @@ def score_messages(
             for candidate in candidates:
                 sequences.append(candidate)
                 metadata.append((common_prefix, candidate[common_prefix:]))
-        maximum = max(len(sequence) for sequence in sequences)
+        maximum = bucketed_sequence_length(sequences, sequence_bucket_size)
         # Left padding aligns every candidate suffix at the right edge. Qwen's
         # logits_to_keep can then avoid materializing a [batch, full_sequence,
         # 248k_vocab] tensor when only the positions predicting the verdict
@@ -416,6 +432,15 @@ def main() -> None:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument(
+        "--sequence-bucket-size",
+        type=int,
+        default=0,
+        help=(
+            "Left-pad candidate sequences to a multiple of this many tokens; zero keeps "
+            "dynamic shapes. Release evaluation uses 64 to match product runtime."
+        ),
+    )
+    parser.add_argument(
         "--splits",
         nargs="+",
         help=(
@@ -435,6 +460,10 @@ def main() -> None:
         help="Fail before loading weights when Apple Metal is not visible.",
     )
     args = parser.parse_args()
+    if args.batch_size < 1:
+        parser.error("--batch-size must be positive")
+    if args.sequence_bucket_size < 0:
+        parser.error("--sequence-bucket-size cannot be negative")
 
     mps_available = torch.backends.mps.is_available()
     if args.require_mps and not mps_available:
@@ -523,6 +552,7 @@ def main() -> None:
             data_sha256=data_sha256[split],
             examples=len(split_rows),
             batch_size=args.batch_size,
+            sequence_bucket_size=args.sequence_bucket_size,
         )
         cached = None if args.no_cache else load_score_cache(cache_dir, split, identity)
         if cached is not None:
@@ -535,6 +565,7 @@ def main() -> None:
             [str(row["text"]) for row in split_rows],
             device,
             batch_size=args.batch_size,
+            sequence_bucket_size=args.sequence_bucket_size,
             memory_telemetry=memory_telemetry,
             progress_label=split,
         )
@@ -557,7 +588,13 @@ def main() -> None:
         candidates, _ = candidate_token_sequences(processor.tokenizer, prompt, LABELS)
         latency_input_tokens.append(max(len(candidate) for candidate in candidates))
         started = time.perf_counter_ns()
-        score_message(model, processor, str(row["text"]), device)
+        score_message(
+            model,
+            processor,
+            str(row["text"]),
+            device,
+            sequence_bucket_size=args.sequence_bucket_size,
+        )
         if device.type == "mps":
             torch.mps.synchronize()
         all_latencies.append((time.perf_counter_ns() - started) / 1_000_000)
@@ -609,6 +646,10 @@ def main() -> None:
             "enabled": not args.no_cache,
             "directory": str(cache_dir) if not args.no_cache else None,
             "identity_includes_batch_size": True,
+            "message_batch_size": args.batch_size,
+            "candidate_sequences_per_message": len(LABELS),
+            "candidate_batch_size": args.batch_size * len(LABELS),
+            "sequence_bucket_size": args.sequence_bucket_size,
             "scoring_version": SCORING_VERSION,
         },
         "latency": {
@@ -617,6 +658,7 @@ def main() -> None:
             "samples": len(all_latencies),
             "product_batch_size": 1,
             "internal_candidate_batch_size": len(LABELS),
+            "sequence_bucket_size": args.sequence_bucket_size,
             "warmup": "all benchmark slices scored before timed loop",
             "quantization": runtime_artifact_description(args.adapter),
             "input_tokens": {
@@ -706,6 +748,7 @@ def main() -> None:
                 "SAFE threshold maximizes three-way macro F1 after freezing SCAM policy"
             ),
             "scoring": result["scoring"],
+            "sequence_bucket_size": args.sequence_bucket_size,
             "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
         }
         (args.adapter / "scamguard_calibration.json").write_text(

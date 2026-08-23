@@ -17,7 +17,7 @@
     "evaluation_examples": 0
   },
   "quality": {
-    "internal_gates": {"passed": 0, "total": 36},
+    "internal_gates": {"passed": 0, "total": 39},
     "external_selection_passed": false,
     "human_label_audit_passed": false,
     "multilingual_claims_reviewed": false,
@@ -31,11 +31,20 @@
     "frozen_calibration_reused": false
   },
   "runtime": {
+    "scoring_contract": {
+      "message_batch_size": 1,
+      "candidate_batch_size": 3,
+      "sequence_bucket_size": 64,
+      "exact_decision_parity": false,
+      "quantized_decision_parity": false
+    },
     "desktop": {
       "measured": false,
       "device": "",
       "p50_ms": 0,
       "p95_ms": 0,
+      "p99_ms": 0,
+      "maximum_ms": 0,
       "peak_memory_bytes": 0,
       "samples": 0
     },
@@ -44,6 +53,8 @@
       "device": "",
       "p50_ms": 0,
       "p95_ms": 0,
+      "p99_ms": 0,
+      "maximum_ms": 0,
       "peak_memory_bytes": 0,
       "samples": 0
     },
@@ -51,7 +62,10 @@
       "measured": false,
       "escalation_rate": 0,
       "p50_ms": 0,
-      "p95_ms": 0
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "maximum_ms": 0,
+      "escalated_p95_ms": 0
     }
   },
   "governance": {

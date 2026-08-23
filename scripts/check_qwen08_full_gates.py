@@ -48,6 +48,33 @@ def evaluate_gates(report: dict[str, Any]) -> dict[str, object]:
             }
         )
 
+    def exactly(name: str, actual: float, required: float) -> None:
+        gates.append(
+            {
+                "name": name,
+                "actual": actual,
+                "operator": "==",
+                "required": required,
+                "passed": actual == required,
+            }
+        )
+
+    exactly(
+        "frozen quality message batch size",
+        nested(report, "score_cache", "message_batch_size"),
+        1.0,
+    )
+    exactly(
+        "frozen quality candidate batch size",
+        nested(report, "score_cache", "candidate_batch_size"),
+        3.0,
+    )
+    exactly(
+        "frozen quality sequence bucket size",
+        nested(report, "score_cache", "sequence_bucket_size"),
+        64.0,
+    )
+
     for split, label in (("dev", "development"), ("test", "unchanged regression")):
         minimum(
             f"{label} scam recall",
@@ -135,7 +162,9 @@ def evaluate_gates(report: dict[str, Any]) -> dict[str, object]:
         "gates": gates,
         "quantization_authorized": passed,
         "huggingface_publication_authorized": False,
-        "publication_note": "runtime, generation, quantization, mobile, and release audits remain",
+        "publication_note": (
+            "runtime parity, generation, quantization, mobile, and release audits remain"
+        ),
     }
 
 

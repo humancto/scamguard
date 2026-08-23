@@ -102,8 +102,8 @@ replace required physical-phone measurements.
 
 The paired routing evaluator confirms the architecture contract without promoting the base model.
 On identical schema-v23/24 test IDs, mandatory encoder-uncertain escalation to untouched Qwen base
-preserves 100% binary recall and improves calibrated three-way macro F1 from 0.7519 to 0.7869, but
-raises SAFE FPR from 1.03% to 1.32% and still fails the 0.94 macro-F1 gate. Development selection
+preserves 100% binary recall and improves calibrated three-way macro F1 from 0.7519 to 0.7730, but
+raises SAFE FPR from 1.03% to 1.37% and still fails the 0.94 macro-F1 gate. Development selection
 therefore chooses no additional confidence-margin traffic. A trained 0.8B specialist must beat the
 encoder-only baseline on the same rows and clear every gate; model size alone earns no routing role.
 

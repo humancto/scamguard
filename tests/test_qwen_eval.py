@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import numpy as np
 import torch
 
+from scamguard.qwen_scoring import bucketed_sequence_length
 from training.eval_qwen import (
     LABELS,
     choose_safe_threshold,
@@ -96,6 +97,12 @@ def test_batched_qwen_scores_match_unbatched_reference() -> None:
     assert model.kept_values[2:] == [0, 0, 0]
 
 
+def test_sequence_length_bucketing_is_bounded_and_explicit() -> None:
+    assert bucketed_sequence_length([[1, 2], [1, 2, 3]], 0) == 3
+    assert bucketed_sequence_length([[1, 2], [1, 2, 3]], 64) == 64
+    assert bucketed_sequence_length([[1] * 65], 64) == 128
+
+
 def test_score_cache_requires_exact_experiment_identity(tmp_path) -> None:
     identity = score_cache_identity(
         model="Qwen/example",
@@ -114,6 +121,8 @@ def test_score_cache_requires_exact_experiment_identity(tmp_path) -> None:
     np.testing.assert_array_equal(loaded, scores)
     changed_batch = identity | {"batch_size": 8}
     assert load_score_cache(tmp_path, "dev", changed_batch) is None
+    changed_bucket = identity | {"sequence_bucket_size": 64}
+    assert load_score_cache(tmp_path, "dev", changed_bucket) is None
 
 
 def test_score_cache_rejects_partial_or_invalid_arrays(tmp_path) -> None:

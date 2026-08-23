@@ -198,8 +198,9 @@ For the pinned untouched 0.8B negative control, measure the actual persistent ro
 make qwen-08b-base-routed-runtime
 ```
 
-This command verifies the frozen ledgers and specialist score-cache identity, keeps both models
-loaded, and emits text-free batch-one request traces under `reports/runs/`. It requires exact route
+This command first creates or verifies batch-one, three-candidate, bucket-64 base scores, then
+verifies the frozen ledgers and specialist score-cache identity, keeps both models loaded, and
+emits text-free request traces under `reports/runs/`. It requires exact route
 and calibrated-verdict parity while separately disclosing probability drift, runtime quality,
 fast/escalated/full p50/p95/p99/maximum, and process peak RSS. The tracked result is
 `reports/ROUTED_BASE_RUNTIME.md`.

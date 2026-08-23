@@ -15,6 +15,7 @@ BASE_MODEL = "Qwen/Qwen3.5-0.8B"
 BASE_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
 ALLOWED_QUANTIZATIONS = {"Q4_K_M", "Q5_K_M", "Q8_0"}
 ALLOWED_ROLES = {"fast_path", "routed_specialist"}
+REQUIRED_INTERNAL_GATES = 39
 REQUIRED_ARTIFACT_ROLES = {"merged_model", "gguf_model", "tokenizer"}
 REQUIRED_REPORT_ROLES = {
     "data_manifest",
@@ -22,6 +23,7 @@ REQUIRED_REPORT_ROLES = {
     "model_card",
     "quality",
     "quantized_quality",
+    "runtime",
 }
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 
@@ -49,7 +51,14 @@ def _validate_runtime_device(
     _require_true(device, "measured", errors)
     if not str(device.get("device", "")).strip():
         errors.append(f"runtime.{name}.device must be recorded")
-    for field in ("p50_ms", "p95_ms", "peak_memory_bytes", "samples"):
+    for field in (
+        "p50_ms",
+        "p95_ms",
+        "p99_ms",
+        "maximum_ms",
+        "peak_memory_bytes",
+        "samples",
+    ):
         if not _positive_number(device.get(field)):
             errors.append(f"runtime.{name}.{field} must be positive")
     if (
@@ -58,6 +67,18 @@ def _validate_runtime_device(
         and device["p50_ms"] > device["p95_ms"]
     ):
         errors.append(f"runtime.{name}.p50_ms cannot exceed p95_ms")
+    if (
+        _positive_number(device.get("p95_ms"))
+        and _positive_number(device.get("p99_ms"))
+        and device["p95_ms"] > device["p99_ms"]
+    ):
+        errors.append(f"runtime.{name}.p95_ms cannot exceed p99_ms")
+    if (
+        _positive_number(device.get("p99_ms"))
+        and _positive_number(device.get("maximum_ms"))
+        and device["p99_ms"] > device["maximum_ms"]
+    ):
+        errors.append(f"runtime.{name}.p99_ms cannot exceed maximum_ms")
     return device
 
 
@@ -169,6 +190,10 @@ def validate_release_manifest(manifest: dict[str, Any], repo_root: Path) -> list
         or passed != total
     ):
         errors.append("quality.internal_gates must record a positive passed == total")
+    elif total != REQUIRED_INTERNAL_GATES:
+        errors.append(
+            f"quality.internal_gates.total must equal {REQUIRED_INTERNAL_GATES}"
+        )
     for field in (
         "external_selection_passed",
         "human_label_audit_passed",
@@ -190,6 +215,17 @@ def validate_release_manifest(manifest: dict[str, Any], repo_root: Path) -> list
         _require_true(quantization, field, errors)
 
     runtime = _mapping(manifest.get("runtime"), "runtime", errors)
+    scoring_contract = _mapping(
+        runtime.get("scoring_contract"), "runtime.scoring_contract", errors
+    )
+    if scoring_contract.get("message_batch_size") != 1:
+        errors.append("runtime.scoring_contract.message_batch_size must equal 1")
+    if scoring_contract.get("candidate_batch_size") != 3:
+        errors.append("runtime.scoring_contract.candidate_batch_size must equal 3")
+    if scoring_contract.get("sequence_bucket_size") != 64:
+        errors.append("runtime.scoring_contract.sequence_bucket_size must equal 64")
+    _require_true(scoring_contract, "exact_decision_parity", errors)
+    _require_true(scoring_contract, "quantized_decision_parity", errors)
     desktop = _validate_runtime_device(runtime, "desktop", errors)
     _validate_runtime_device(runtime, "mobile", errors)
     role = model.get("deployment_role")
@@ -206,9 +242,34 @@ def validate_release_manifest(manifest: dict[str, Any], repo_root: Path) -> list
             or not 0 <= escalation_rate <= 1
         ):
             errors.append("runtime.routed.escalation_rate must be between 0 and 1")
-        for field in ("p50_ms", "p95_ms"):
+        for field in ("p50_ms", "p95_ms", "p99_ms", "maximum_ms", "escalated_p95_ms"):
             if not _positive_number(routed.get(field)):
                 errors.append(f"runtime.routed.{field} must be positive")
+        if _positive_number(routed.get("p95_ms")) and routed["p95_ms"] > 20:
+            errors.append("runtime.routed.p95_ms must be at most 20")
+        if (
+            _positive_number(routed.get("escalated_p95_ms"))
+            and routed["escalated_p95_ms"] >= 50
+        ):
+            errors.append("runtime.routed.escalated_p95_ms must be under 50")
+        if (
+            _positive_number(routed.get("p50_ms"))
+            and _positive_number(routed.get("p95_ms"))
+            and routed["p50_ms"] > routed["p95_ms"]
+        ):
+            errors.append("runtime.routed.p50_ms cannot exceed p95_ms")
+        if (
+            _positive_number(routed.get("p95_ms"))
+            and _positive_number(routed.get("p99_ms"))
+            and routed["p95_ms"] > routed["p99_ms"]
+        ):
+            errors.append("runtime.routed.p95_ms cannot exceed p99_ms")
+        if (
+            _positive_number(routed.get("p99_ms"))
+            and _positive_number(routed.get("maximum_ms"))
+            and routed["p99_ms"] > routed["maximum_ms"]
+        ):
+            errors.append("runtime.routed.p99_ms cannot exceed maximum_ms")
 
     governance = _mapping(manifest.get("governance"), "governance", errors)
     for field in (

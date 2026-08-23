@@ -3,10 +3,10 @@
 ## Decision
 
 The untouched Qwen3.5-0.8B base remains rejected as the routed specialist. With both models
-persistently loaded on Apple Silicon Metal, the encoder fast path clears 20 ms at p95, but the
-complete routed distribution does not. Exact product-runtime decisions also differ from the frozen
-quality ledger on ten of 2,374 test IDs. Similar aggregate quality is not a substitute for exact
-decision parity.
+persistently loaded on Apple Silicon Metal, the encoder fast path and complete routed distribution
+clear 20 ms at p95. Exact product-runtime probabilities, routes, and decisions match the frozen
+quality ledger. The base is still rejected because its quality is poor and its specialist tail is
+far beyond budget: full-distribution p99 is 190.79 ms and escalated p95 is 216.66 ms.
 
 This is a negative control for the eventual schema-24 LoRA candidate, not a projection of its
 quality or latency.
@@ -21,32 +21,29 @@ excludes cold load, file I/O, evidence extraction, and SDK result construction.
 
 | Path | Samples | Mean | p50 | p95 | p99 | Maximum |
 |---|---:|---:|---:|---:|---:|---:|
-| Full routed distribution | 7,122 | 17.07 ms | 8.41 ms | 36.28 ms | 187.72 ms | 315.43 ms |
-| Encoder-only fast path | 6,789 | 9.27 ms | 8.34 ms | 14.85 ms | 24.93 ms | 85.60 ms |
-| Escalated path | 333 | 176.13 ms | 165.63 ms | 235.89 ms | 271.52 ms | 315.43 ms |
-| Qwen specialist component | 333 | 166.12 ms | 155.90 ms | 222.84 ms | 252.68 ms | 297.02 ms |
+| Full routed distribution | 7,122 | 16.74 ms | 8.60 ms | 17.26 ms | 190.79 ms | 238.98 ms |
+| Encoder-only fast path | 6,789 | 8.83 ms | 8.55 ms | 10.71 ms | 13.58 ms | 42.84 ms |
+| Escalated path | 333 | 177.92 ms | 169.73 ms | 216.66 ms | 233.26 ms | 238.98 ms |
+| Qwen specialist component | 333 | 168.35 ms | 160.28 ms | 205.44 ms | 222.59 ms | 228.05 ms |
 
-The full-distribution p95 fails the at-most-20-ms desktop gate. The escalated-path p95 also fails
-the under-50-ms laptop boundary. Process peak RSS was 1,254,113,280 bytes. These macOS/MPS BF16
+The full-distribution p95 passes the at-most-20-ms desktop gate because escalation remains below
+5%, but the disclosed p99 shows the cost immediately above that percentile. The escalated-path p95
+fails the under-50-ms laptop boundary. Process peak RSS was 1,134,280,704 bytes. These macOS/MPS BF16
 measurements neither establish GGUF performance nor substitute for a physical-phone run.
 
 ## Scoring-contract parity
 
-The frozen specialist quality ledger was generated with 16 messages per accelerator batch and
-three verdict candidates per message: 48 candidate sequences per forward pass. Product runtime is
-one message and three candidate sequences per forward pass. Both paths now share the same float64
-temperature-softmax arithmetic, but accelerator batch shape still changes BF16 logits slightly.
+Frozen specialist quality and product runtime both use one message, three verdict candidates, and
+a 64-token left-padding bucket per forward pass. The cache identity includes all three values, and
+both paths share the same float64 temperature-softmax arithmetic.
 
-The maximum specialist probability difference was 0.0030255. No probability crossed the disclosed
-0.005 diagnostic tolerance, yet ten specialist decisions and ten final routed decisions changed;
-router decisions and route selection matched exactly. The transitions on the first repetition
-were three `SAFE -> UNCERTAIN`, two `SCAM -> UNCERTAIN`, three `UNCERTAIN -> SAFE`, and two
-`UNCERTAIN -> SCAM`. Exact decision parity therefore fails.
+The maximum specialist probability difference is exactly zero. All specialist verdicts, routes,
+and final routed decisions match on every request across all three repetitions. The router's
+maximum probability difference is 0.00000173, with no decision or route change.
 
-The runtime trace still measures 100% scam recall, 1.2600% SAFE FPR, and 0.7871 three-way macro F1.
-Relative to the frozen batch-16 ledger, those aggregate deltas are 0 recall, -0.0573 percentage
-points FPR, and +0.00019 macro F1. Those small aggregate changes do not waive per-example parity or
-the existing 0.94 macro-F1 gate.
+The runtime trace measures 100% scam recall, 1.3746% SAFE FPR, and 0.7730 three-way macro F1,
+exactly matching the frozen product-shaped ledger. The base remains far below the 0.94 macro-F1
+gate despite its parity and full-distribution p95 passes.
 
 ## Reproduction
 
@@ -67,10 +64,10 @@ quantization, and on a physical phone.
 
 - Test corpus SHA-256: `c55b396197575d32936a44c5432e6adc85b21cdb6f442fb663c760cd026dc554`
 - Selected-ID order SHA-256: `67d51198e0c621d2c977989c2800b678ad504501eaa7e5a83e9b9edeaaf42d33`
-- Frozen routed report SHA-256: `db3fbee9a42e9b9ebd55cbc4c3047c2d3d27d2ef2b78bce7b8c8f6bbc728c164`
-- Specialist score-cache metadata SHA-256: `5d7e573739b2adb4cde8bdee686aa1e33553025b8c59f905848e14f0c3cfd41d`
-- Runtime JSON SHA-256: `6382dd32679983cd7ab1be7df8c934636b78d1638de24f2144d921f90b25c01f`
-- Text-free trace ledger SHA-256: `8193a95c4d30a2651925a24b59a389cd31f64511e4df00cba9118af16a89457d`
+- Frozen routed report SHA-256: `11ac4c30f4ce1122681d96f5348c0815ab42cd769464af5868118da971ce80b2`
+- Specialist score-cache metadata SHA-256: `90d13ae8c02349feffae7f0628c8fefec1cf213154eb6180de3b8d74051cbbfe`
+- Runtime JSON SHA-256: `6827927909fc8258e936472a453559dcc1601f381da3603c35914d1b555c3d88`
+- Text-free trace ledger SHA-256: `df7dd0ab01d22f4040f3118c2a6b56912094e092e5889acf6005f84620b718d6`
 
 The generated JSON and trace stay under ignored `reports/runs/`; this tracked report freezes their
 identities and interpretation. The independent 635-row human audit remains 0/635, so full LoRA

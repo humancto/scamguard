@@ -13,7 +13,7 @@ import numpy as np
 from .metrics import file_sha256
 from .preprocessing import DIALOGUE_POLICIES, prepare_model_text
 from .prompts import SYSTEM_PROMPT
-from .qwen_scoring import candidate_token_sequences
+from .qwen_scoring import bucketed_sequence_length, candidate_token_sequences
 
 
 @dataclass(frozen=True, slots=True)
@@ -316,6 +316,9 @@ class QwenVerdictBackend:
         self.safe_threshold = float(calibration["safe_threshold"])
         self.safe_probability_threshold = self.safe_threshold
         self.safe_max_scam_probability = None
+        self.sequence_bucket_size = int(calibration.get("sequence_bucket_size", 0))
+        if self.sequence_bucket_size < 0:
+            raise ValueError("Qwen calibration has an invalid sequence bucket size")
         self.model_id = str(calibration.get("model_id", adapter_path.name))
 
     def predict(self, text: str) -> ModelScores:
@@ -330,7 +333,7 @@ class QwenVerdictBackend:
         sequences, common_prefix = candidate_token_sequences(
             self.processor.tokenizer, prompt, self.labels
         )
-        maximum = max(map(len, sequences))
+        maximum = bucketed_sequence_length(sequences, self.sequence_bucket_size)
         candidates = [sequence[common_prefix:] for sequence in sequences]
         kept_logits = max(len(candidate) + 1 for candidate in candidates)
         pad = self.processor.tokenizer.pad_token_id
@@ -421,6 +424,11 @@ class QwenBaseVerdictBackend(QwenVerdictBackend):
         self.safe_threshold = float(report["safe_threshold"])
         self.safe_probability_threshold = self.safe_threshold
         self.safe_max_scam_probability = None
+        self.sequence_bucket_size = int(
+            report.get("score_cache", {}).get("sequence_bucket_size", 0)
+        )
+        if self.sequence_bucket_size < 0:
+            raise ValueError("Qwen base calibration has an invalid sequence bucket size")
         self.model_id = f"{model}@{revision}:base-control"
 
 

@@ -6,6 +6,19 @@ from collections.abc import Sequence
 from typing import Any
 
 
+def bucketed_sequence_length(sequences: Sequence[Sequence[int]], bucket_size: int) -> int:
+    """Return the smallest bucket that fits every sequence, or the raw maximum for zero."""
+
+    if not sequences:
+        raise ValueError("cannot pad an empty candidate batch")
+    if bucket_size < 0:
+        raise ValueError("sequence bucket size cannot be negative")
+    maximum = max(len(sequence) for sequence in sequences)
+    if bucket_size == 0:
+        return maximum
+    return ((maximum + bucket_size - 1) // bucket_size) * bucket_size
+
+
 def candidate_token_sequences(
     tokenizer: Any, prompt: str, labels: Sequence[str]
 ) -> tuple[list[list[int]], int]:
