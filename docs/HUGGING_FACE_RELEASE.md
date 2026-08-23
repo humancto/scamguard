@@ -64,6 +64,17 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    module allowlist, data/report hashes, counts, and output path before loading model weights.
 3. Freeze calibration, routing, and thresholds on development/selection data. Pass every internal
    and independent external-selection gate before opening any prediction-sealed test.
+
+   ```bash
+   make encoder-schema23-ledger
+   make routed-eval \
+     SPECIALIST_PREDICTIONS=reports/runs/qwen35-08b-schema24-full.predictions.jsonl \
+     ROUTED_REPORT=reports/runs/sg-modernbert-schema23-qwen08-schema24-routed.json
+   ```
+
+   The evaluator joins text-free ledgers exactly, chooses the uncertainty margin on development
+   only, and publishes component baselines plus escalation. The untouched Qwen base fails this
+   role; `reports/ROUTED_BASE_DIAGNOSTIC.md` is the frozen negative control.
 4. Merge the adapter with `training/merge_qwen_adapter.py`. Its equivalence audit must show that
    adapter and merged verdict scores remain within the configured tolerance.
 5. Convert the merged directory with `scripts/export_gguf.sh`. Evaluate at least `Q4_K_M` and

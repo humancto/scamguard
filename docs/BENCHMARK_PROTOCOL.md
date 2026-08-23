@@ -142,6 +142,12 @@ also publish its escalation rate and end-to-end p50/p95; it may not claim “und
 messages unless the full routed distribution passes. Mobile latency requires the same benchmark on
 a physical target device and cannot be inferred from desktop results.
 
+Routing must be frozen on development data from text-free per-example ledgers. Join router and
+specialist rows exactly on `(split, id)`, reject duplicate IDs or truth/source/category drift, and
+report router-only, specialist-only, and routed metrics on the same untouched test rows. Aggregate
+component percentiles may support a conservative bound, but they cannot be algebraically converted
+into routed p95; record the frozen policy end to end per request.
+
 ## Required report
 
 Each run must publish the immutable configuration and data manifest plus:

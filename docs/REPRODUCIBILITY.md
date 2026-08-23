@@ -178,6 +178,20 @@ sandbox can expose an arm64 PyTorch build while hiding Metal, which otherwise ma
 back silently to float32 CPU training. Use a separate, explicitly documented CPU/CUDA command on
 non-Apple hardware rather than removing the guard without recording the accelerator.
 
+Create the schema-v23 router ledger and evaluate a specialist with the frozen development-only
+routing policy:
+
+```bash
+make encoder-schema23-ledger
+make routed-eval \
+  SPECIALIST_PREDICTIONS=reports/runs/qwen35-08b-schema24-full.predictions.jsonl \
+  ROUTED_REPORT=reports/runs/sg-modernbert-schema23-qwen08-schema24-routed.json
+```
+
+The encoder step is checkpoint-only evaluation. Both input ledgers and the routed test ledger omit
+message text. `training/eval_routed.py` rejects duplicate or mismatched `(split, id)` joins and
+never derives end-to-end p95 from aggregate component percentiles.
+
 Score the family-collapsed multi-turn diagnostic with the already-frozen encoder calibration:
 
 ```bash

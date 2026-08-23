@@ -708,6 +708,57 @@ def report_slice(
     return result
 
 
+def prediction_ledger_records(
+    rows_by_split: dict[str, list[dict[str, Any]]],
+    logits_by_split: dict[str, np.ndarray],
+    temperature: float,
+    scam_threshold: float,
+    safe_threshold: float,
+) -> list[dict[str, Any]]:
+    """Build a text-free ledger that can be joined to specialist predictions."""
+    unexpected_splits = set(logits_by_split) - set(rows_by_split)
+    if unexpected_splits:
+        raise ValueError(
+            f"prediction ledger logits expose unknown splits: {sorted(unexpected_splits)}"
+        )
+    records: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for split, logits in logits_by_split.items():
+        rows = rows_by_split[split]
+        probabilities = softmax(logits[:, : len(LABELS)], temperature)
+        if len(rows) != len(probabilities):
+            raise ValueError(f"prediction count differs for split {split!r}")
+        for row, values in zip(rows, probabilities, strict=True):
+            identifier = str(row["id"])
+            key = (split, identifier)
+            if key in seen:
+                raise ValueError(f"duplicate prediction ledger key: {key!r}")
+            seen.add(key)
+            if values[LABEL_TO_ID["SCAM"]] >= scam_threshold:
+                calibrated = "SCAM"
+            elif values[LABEL_TO_ID["SAFE"]] >= safe_threshold:
+                calibrated = "SAFE"
+            else:
+                calibrated = "UNCERTAIN"
+            records.append(
+                {
+                    "id": identifier,
+                    "split": split,
+                    "source": row["source"],
+                    "source_language": row.get("source_language"),
+                    "category": row["category"],
+                    "truth": row["label"],
+                    "argmax": LABELS[int(values.argmax())],
+                    "calibrated_verdict": calibrated,
+                    "threshold_scam": bool(values[LABEL_TO_ID["SCAM"]] >= scam_threshold),
+                    "probabilities": {
+                        label: float(values[index]) for index, label in enumerate(LABELS)
+                    },
+                }
+            )
+    return records
+
+
 def paired_validation_metrics(
     rows: list[dict[str, Any]], logits: np.ndarray, temperature: float
 ) -> dict[str, float | int]:
@@ -1085,6 +1136,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--report", type=Path, default=Path("reports/runs/sg-modernbert-schema9-safety.json")
+    )
+    parser.add_argument(
+        "--predictions",
+        type=Path,
+        help="Text-free per-example ledger; defaults beside --report.",
     )
     parser.add_argument("--epochs", type=float, default=4.0)
     parser.add_argument("--batch-size", type=int, default=16)
@@ -1713,6 +1769,25 @@ def main() -> None:
         "desktop_fast_path_latency": result["latency"]["end_to_end_p95_ms"] <= 20.0,
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)
+    prediction_path = args.predictions or args.report.with_suffix(".predictions.jsonl")
+    prediction_path.parent.mkdir(parents=True, exist_ok=True)
+    prediction_records = prediction_ledger_records(
+        rows,
+        predictions,
+        temperature,
+        threshold,
+        float(calibration["safe_threshold"]),
+    )
+    prediction_path.write_text(
+        "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in prediction_records),
+        encoding="utf-8",
+    )
+    result["prediction_ledger"] = {
+        "path": str(prediction_path),
+        "sha256": file_sha256(prediction_path),
+        "examples": len(prediction_records),
+        "contains_message_text": False,
+    }
     args.report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
 

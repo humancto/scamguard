@@ -25,6 +25,7 @@ from training.train_encoder import (
     paired_validation_metrics,
     pairwise_scam_margin_loss,
     predict_in_dataset_order,
+    prediction_ledger_records,
     report_slice,
     retention_kl_loss,
     safety_selection_metrics,
@@ -113,6 +114,49 @@ def test_predict_in_dataset_order_rejects_silent_sampler_permutation() -> None:
 
     with pytest.raises(RuntimeError, match="sampler changed row order"):
         predict_in_dataset_order(StubTrainer([2, 0, 1]), object(), rows)
+
+
+def test_encoder_prediction_ledger_is_text_free_and_uses_calibrated_rule() -> None:
+    rows = {
+        "train": [
+            {
+                "id": "train-only",
+                "text": "training text has no prediction",
+                "label": "SAFE",
+                "category": "NONE",
+                "source": "fixture",
+            }
+        ],
+        "dev": [
+            {
+                "id": "safe-1",
+                "text": "private phrase that must not be serialized",
+                "label": "SAFE",
+                "category": "NONE",
+                "source": "fixture",
+            },
+            {
+                "id": "scam-1",
+                "text": "another private phrase",
+                "label": "SCAM",
+                "category": "FINANCIAL",
+                "source": "fixture",
+            },
+        ]
+    }
+    logits = {"dev": np.array([[4.0, 0.0, -2.0], [0.0, 0.0, 0.4]])}
+
+    ledger = prediction_ledger_records(
+        rows,
+        logits,
+        temperature=1.0,
+        scam_threshold=0.4,
+        safe_threshold=0.8,
+    )
+
+    assert [record["calibrated_verdict"] for record in ledger] == ["SAFE", "SCAM"]
+    assert all("text" not in record for record in ledger)
+    assert "private phrase" not in json.dumps(ledger)
 
 
 def test_safety_selection_metrics_optimizes_recall_under_fpr_cap() -> None:
