@@ -114,5 +114,9 @@ speaker-neutral input transform removes corpus-specific role labels before token
 Before a model release, audit random and high-loss samples from every source/category, document
 class-conditional label error, run PII/secrets scans, and publish a model card. Dataset licenses do
 not automatically grant rights to every downstream model distribution; review that separately.
-`make audit-check` fails closed until every stratified workbook row has an independent label,
-correctness decision, and sensitive-data decision with internally consistent values.
+For schema v24, give the reviewer only the answer-key-free artifact produced by
+`make schema24-audit-bundle`; never give them the repository or canonical workbook. The returned
+CSV contains the independent label and sensitive-data decision but no project correctness field.
+`make schema24-audit-import` verifies its immutable inputs and derives correctness only after
+joining it to the sealed canonical workbook. `make schema24-audit-check` fails closed until every
+stratified row has a valid decision, with zero disagreements and zero sensitive-data findings.

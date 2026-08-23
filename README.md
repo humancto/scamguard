@@ -289,9 +289,16 @@ families with exact or radius-six near overlap before admitting publisher-train 
 also replaces contextual access codes, account fragments, postal codes, and credential-like values
 with typed placeholders before repeating contamination control; the validator rejects any residual
 value or missing row-level normalization record. The separate `schema24-audit` workbook is bound to
-that exact manifest and a frozen blind-review rubric; after human review,
-`schema24-audit-check` rejects every incomplete decision, label disagreement,
-sensitive-data finding, rubric change, workbook change, or dataset change. Its text-free report
+that exact manifest and a frozen blind-review rubric. `make schema24-audit-bundle` produces a
+deterministic four-file ZIP for an independent reviewer; the ZIP contains only opaque row IDs, message
+text in a deterministic shuffled order, blank decision fields, the frozen rubric, and a
+dependency-free localhost app. Project
+labels, source labels, source names, categories, splits, and model outputs are absent from the
+artifact. After the reviewer returns the completed blind CSV, `make schema24-audit-import` verifies
+the ZIP, protocol, immutable messages, IDs, canonical audit manifest, and dataset manifest before
+joining decisions to the sealed answer key. `schema24-audit-check` then rejects every incomplete
+decision, label disagreement, sensitive-data finding, rubric change, workbook change, or dataset
+change. Its text-free report
 adds Wilson-bound agreement, Cohen's kappa, confusion counts, and source/label diagnostics. The
 schema-24 dataset validates, but the training freeze currently fails closed because the independent
 635-row workbook is 0/635 complete.
@@ -299,7 +306,8 @@ Generic spam and evidence-free wrong-number openers are `UNCERTAIN`; defensive s
 standalone authentication-code notifications are `SAFE` unless the text itself adds a risky
 external action. Source-reported positives without strong message-local fraud evidence are
 `UNCERTAIN`, not SCAM. The schema-24 audit workbook has 635 stratified rows and still needs
-independent human decisions.
+independent human decisions. The repository and canonical audit workbook must not be given to the
+reviewer because they contain the answer key.
 
 The previous schema-v6, schema-v9, and rejected schema-v10/v11 model reports remain historical regression
 evidence; they are not relabeled as schema-v12 results. Schema v8 adds a separate,

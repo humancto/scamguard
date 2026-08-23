@@ -38,8 +38,10 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    ```bash
    make schema24-annotated-hard-negatives
    make schema24-audit
-   # An independent reviewer uses the local blind-review UI. It edits only the ignored CSV.
-   make schema24-audit-review
+   make schema24-audit-bundle
+   # Send only dist/scamguard-schema24-blind-audit.zip to an independent reviewer.
+   # Place the returned CSV at data/audit/returned/scamguard_blind_audit.csv.
+   make schema24-audit-import
    make schema24-audit-check
    make qwen-08b-full-data
    make qwen-08b-full-token-audit
@@ -50,14 +52,15 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    make qwen-08b-full-gates
    ```
 
-   The review UI binds to `127.0.0.1`, loads no remote assets, hides project labels, source labels,
-   fraud categories, and model outputs, and derives agreement only after a reviewer saves their own
-   verdict. The displayed SAFE/UNCERTAIN/SCAM and sensitive-data rubric is versioned and hash-bound
-   in the audit manifest. The UI checks that rubric, audit, and dataset binding before every write
-   and atomically persists progress, so the review can be stopped and resumed. The completion
-   report publishes percent agreement, a 95% Wilson lower bound, Cohen's kappa, confusion counts,
-   and source/label diagnostics without message text. Do not have a person who authored the labels
-   perform the independent review.
+   The reviewer receives only the four-file ZIP—not the repository or canonical workbook. Its CSV
+   physically omits project labels, sources, source labels, fraud categories, splits, and model
+   outputs. The dependency-free UI binds to `127.0.0.1`, loads no remote assets, hash-checks itself,
+   the frozen rubric, IDs, and message text, and atomically persists progress. The import step
+   rejects incomplete decisions, changed messages or IDs, unexpected fields, protocol drift,
+   bundle tampering, and canonical dataset drift before deriving agreement against the sealed
+   answer key. The completion report publishes percent agreement, a 95% Wilson lower bound,
+   Cohen's kappa, confusion counts, and source/label diagnostics without message text. Do not have
+   a person who authored the labels perform the independent review.
 
    The freeze step requires schema version 24, a completed independent human-label audit, non-empty
    annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim

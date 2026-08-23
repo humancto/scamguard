@@ -220,24 +220,20 @@ def validate_audit_binding(
     return manifest, errors
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--audit", type=Path, default=Path("data/audit/label_audit.csv"))
-    parser.add_argument("--audit-manifest", type=Path)
-    parser.add_argument("--output", type=Path)
-    args = parser.parse_args()
-    summary, errors = audit_summary(args.audit)
-    manifest_path = args.audit_manifest or args.audit.with_suffix(".manifest.json")
+def completion_result(audit_path: Path, manifest_path: Path) -> dict[str, object]:
+    """Return the manifest-bound release-gate result without writing or exiting."""
+
+    summary, errors = audit_summary(audit_path)
     binding: dict[str, object] | None = None
     if manifest_path.is_file():
-        binding, binding_errors = validate_audit_binding(args.audit, manifest_path)
+        binding, binding_errors = validate_audit_binding(audit_path, manifest_path)
         errors.extend(binding_errors)
     else:
         errors.append(f"audit manifest is missing: {manifest_path}")
     summary["release_gate_passed"] = bool(summary["release_gate_passed"] and not errors)
-    result = {
+    return {
         **summary,
-        "audit_sha256": file_sha256(args.audit),
+        "audit_sha256": file_sha256(audit_path),
         "audit_manifest_path": str(manifest_path),
         "audit_manifest_sha256": file_sha256(manifest_path) if manifest_path.is_file() else None,
         "audit_protocol_version": binding.get("audit_protocol_version") if binding else None,
@@ -246,11 +242,21 @@ def main() -> None:
         "data_manifest_sha256": binding.get("data_manifest_sha256") if binding else None,
         "errors": errors[:20],
     }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--audit", type=Path, default=Path("data/audit/label_audit.csv"))
+    parser.add_argument("--audit-manifest", type=Path)
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    manifest_path = args.audit_manifest or args.audit.with_suffix(".manifest.json")
+    result = completion_result(args.audit, manifest_path)
     print(json.dumps(result, indent=2))
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    if not summary["release_gate_passed"]:
+    if not result["release_gate_passed"]:
         raise SystemExit("independent label-audit release gate is incomplete")
 
 
