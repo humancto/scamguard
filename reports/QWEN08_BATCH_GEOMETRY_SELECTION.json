@@ -1,0 +1,106 @@
+{
+  "artifact_schema_version": 1,
+  "candidates": [
+    {
+      "decision": "eligible_but_slower",
+      "effective_batch_size": 16,
+      "forward_backward_seconds": 10.803443665994564,
+      "gradient_accumulation": 16,
+      "memory_gate_passed": true,
+      "microbatch_size": 1,
+      "mps_driver_allocated_bytes": 12412829696,
+      "mps_recommended_max_bytes": 115448725504,
+      "recommended_memory_fraction": 0.10751811803734401,
+      "report": "qwen35-08b-microbatch1-accum16-preflight.json",
+      "report_sha256": "2dd60ce77d9a6b56d377b76006e22c48a3a0927406a5d601ead3ce8d7c3cc52a",
+      "sequence_length": 640,
+      "tokens_per_effective_batch": 10240
+    },
+    {
+      "decision": "eligible_but_slower",
+      "effective_batch_size": 16,
+      "forward_backward_seconds": 9.949637958023231,
+      "gradient_accumulation": 8,
+      "memory_gate_passed": true,
+      "microbatch_size": 2,
+      "mps_driver_allocated_bytes": 22670000128,
+      "mps_recommended_max_bytes": 115448725504,
+      "recommended_memory_fraction": 0.1963642303458304,
+      "report": "qwen35-08b-microbatch2-accum8-preflight.json",
+      "report_sha256": "3034184bc0e1dfeb97d9103c427611cccd913f43dacf01165a8415923c6bf94e",
+      "sequence_length": 640,
+      "tokens_per_effective_batch": 10240
+    },
+    {
+      "decision": "selected_fastest_within_memory_gate",
+      "effective_batch_size": 16,
+      "forward_backward_seconds": 9.716223082999932,
+      "gradient_accumulation": 4,
+      "memory_gate_passed": true,
+      "microbatch_size": 4,
+      "mps_driver_allocated_bytes": 43274518528,
+      "mps_recommended_max_bytes": 115448725504,
+      "recommended_memory_fraction": 0.37483755960996423,
+      "report": "qwen35-08b-microbatch4-accum4-preflight.json",
+      "report_sha256": "069e21e75580e5341722c1ce316778693a9b8d01a22fc77b625bb9cf404d105a",
+      "sequence_length": 640,
+      "tokens_per_effective_batch": 10240
+    },
+    {
+      "decision": "rejected_memory_ceiling",
+      "effective_batch_size": 16,
+      "forward_backward_seconds": 10.147788083995692,
+      "gradient_accumulation": 2,
+      "memory_gate_passed": false,
+      "microbatch_size": 8,
+      "mps_driver_allocated_bytes": 82380111872,
+      "mps_recommended_max_bytes": 115448725504,
+      "recommended_memory_fraction": 0.7135644981125906,
+      "report": "qwen35-08b-microbatch8-accum2-preflight.json",
+      "report_sha256": "a06195a38a1b1f7e91ccb62702f3c510e982bdc65940d39c4015118ce45762c0",
+      "sequence_length": 640,
+      "tokens_per_effective_batch": 10240
+    },
+    {
+      "decision": "rejected_memory_ceiling",
+      "effective_batch_size": 16,
+      "forward_backward_seconds": 132.07652770800632,
+      "gradient_accumulation": 1,
+      "memory_gate_passed": false,
+      "microbatch_size": 16,
+      "mps_driver_allocated_bytes": 158701764608,
+      "mps_recommended_max_bytes": 115448725504,
+      "recommended_memory_fraction": 1.3746515079761654,
+      "report": "QWEN08_BATCH16X640_PREFLIGHT.json",
+      "report_sha256": "fb975638f2d0d615ed76b3e0ebe7def65c0e44d8ee860330797ebd307223cb3e",
+      "sequence_length": 640,
+      "tokens_per_effective_batch": 10240
+    }
+  ],
+  "decision_kind": "qwen08_mps_batch_geometry_selection",
+  "policy": {
+    "maximum_recommended_memory_fraction": 0.5,
+    "selection": "minimum measured forward_backward_seconds among memory-gate passes"
+  },
+  "quality_contract": {
+    "effective_batch_size": 16,
+    "optimizer_semantics_changed": false,
+    "sequence_length": 640,
+    "tokens_per_effective_batch": 10240
+  },
+  "selected": {
+    "effective_batch_size": 16,
+    "forward_backward_seconds": 9.716223082999932,
+    "gradient_accumulation": 4,
+    "microbatch_size": 4,
+    "mps_driver_allocated_bytes": 43274518528,
+    "recommended_memory_fraction": 0.37483755960996423
+  },
+  "selection_data_only": "synthetic fixed-token stress; no fitting or audit rows",
+  "source_bindings": {
+    "batch_preflight_sha256": "854ec227ba76bf86d31bead85fcca576cb564fc2a7b1bbd6d62d01911d0d92d1",
+    "experiment_freezer_before_selection_sha256": "6d3545786f7136ac63a110b421be8145d798f8b9f2646e2f40269981461e17a4",
+    "selector_sha256": "c1eb2ac7c2f977a393a64d7b2e35cda6079c139853ac75cf99570e6f8f45843c",
+    "training_launcher_before_selection_sha256": "06e4a51ef7c682b4a35a0c5247e0360fe6f8147927cc7b737ab6c96347423663"
+  }
+}

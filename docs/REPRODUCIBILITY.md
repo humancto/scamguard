@@ -42,20 +42,31 @@ reference result is [`reports/QWEN08_TRAINING_PREFLIGHT.json`](../reports/QWEN08
 It is environment and training-plumbing evidence only—not a quality result, audit substitute, or
 authorization to start the frozen experiment.
 
-The separate worst-case geometry probe runs one completion-only backward pass at the proposed
-16-message, 640-token microbatch without an optimizer update:
+The separate worst-case geometry probe runs completion-only backward passes at 640 tokens without
+an optimizer update. The measured selection preserves effective batch 16 using microbatch 4 and
+four accumulation steps:
 
 ```bash
 make qwen-08b-batch-preflight
 ```
 
-The measured batch fits only by driving MPS allocation beyond PyTorch's recommended maximum:
-132.08 seconds for one backward pass and 158,701,764,608 driver-allocated bytes versus a
-115,448,725,504-byte recommendation. The source-bound result is
+The frozen synthetic matrix keeps the model, seed, 10,240 attended tokens, completion-only
+supervision, and effective batch constant:
+
+| Microbatch | Accumulation | Time / effective batch | MPS driver memory | Decision |
+|---:|---:|---:|---:|---|
+| 1 | 16 | 10.80 s | 12.41 GB | eligible |
+| 2 | 8 | 9.95 s | 22.67 GB | eligible |
+| 4 | 4 | 9.72 s | 43.27 GB | selected |
+| 8 | 2 | 10.15 s | 82.38 GB | rejected memory |
+| 16 | 1 | 132.08 s | 158.70 GB | rejected memory |
+
+The memory gate admits configurations at or below 50% of PyTorch's 115.45 GB recommended MPS
+maximum, then selects the fastest admitted result. The selection preserves optimizer semantics and
+uses no fitting, development, test, or audit row. See
+[`reports/QWEN08_BATCH_GEOMETRY_SELECTION.json`](../reports/QWEN08_BATCH_GEOMETRY_SELECTION.json)
+and the historical rejected
 [`reports/QWEN08_BATCH16X640_PREFLIGHT.json`](../reports/QWEN08_BATCH16X640_PREFLIGHT.json).
-Therefore batch 16 with accumulation 1 is a rejected launch geometry even though the kernel
-completed; a lower-memory configuration must preserve effective batch 16 through measured
-gradient accumulation before the experiment is frozen.
 
 ## Schema-v12 encoder
 

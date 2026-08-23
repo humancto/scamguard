@@ -52,7 +52,7 @@ QWEN08_BASE_ROUTED_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-pro
 QWEN08_BASE_ROUTED_RUNTIME_REPORT ?= reports/runs/sg-modernbert-schema23-qwen08-base-product-batch1-runtime.json
 QWEN08_BASE_NATIVE_PREFIX_REPORT ?= reports/runs/qwen35-08b-upstream-q4-native-prefix.json
 QWEN08_TRAINING_PREFLIGHT_REPORT ?= reports/runs/qwen35-08b-training-preflight.json
-QWEN08_BATCH_PREFLIGHT_REPORT ?= reports/runs/qwen35-08b-batch16x640-preflight.json
+QWEN08_BATCH_PREFLIGHT_REPORT ?= reports/runs/qwen35-08b-microbatch4-accum4-preflight.json
 ROUTED_RUNTIME_REPETITIONS ?= 3
 MOBILE_BENCHMARK_REPORT ?=
 MOBILE_GGUF_MODEL ?=
@@ -887,7 +887,8 @@ qwen-08b-training-preflight:
 
 qwen-08b-batch-preflight:
 	uv run --extra train --extra qwen python scripts/preflight_qwen08_batch.py \
-		--batch-size 16 --sequence-length 640 --local-files-only \
+		--batch-size 4 --sequence-length 640 --gradient-accumulation 4 \
+		--local-files-only \
 		--output "$(QWEN08_BATCH_PREFLIGHT_REPORT)"
 
 qwen-token-audit: qwen-data

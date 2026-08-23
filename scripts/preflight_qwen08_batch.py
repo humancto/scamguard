@@ -77,10 +77,17 @@ def expanded_batch(
 
 
 def run_preflight(
-    *, output: Path, batch_size: int, sequence_length: int, local_files_only: bool
+    *,
+    output: Path,
+    batch_size: int,
+    sequence_length: int,
+    gradient_accumulation: int,
+    local_files_only: bool,
 ) -> dict[str, Any]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite batch preflight: {output}")
+    if gradient_accumulation <= 0:
+        raise ValueError("gradient accumulation must be positive")
     if platform.machine() != "arm64" or not torch.backends.mps.is_available():
         raise RuntimeError("Qwen batch preflight requires native arm64 MPS")
     torch.manual_seed(SEED)
@@ -148,10 +155,14 @@ def run_preflight(
     torch.mps.empty_cache()
     torch.mps.synchronize()
     backward_started = time.perf_counter()
-    loss = model(**device_batch).loss
-    if loss is None or not torch.isfinite(loss).item():
-        raise RuntimeError("Qwen batch preflight produced a non-finite loss")
-    loss.backward()
+    losses: list[float] = []
+    model.zero_grad(set_to_none=True)
+    for _step in range(gradient_accumulation):
+        loss = model(**device_batch).loss
+        if loss is None or not torch.isfinite(loss).item():
+            raise RuntimeError("Qwen batch preflight produced a non-finite loss")
+        losses.append(float(loss.detach().cpu().item()))
+        (loss / gradient_accumulation).backward()
     torch.mps.synchronize()
     backward_elapsed = time.perf_counter() - backward_started
     gradients = [
@@ -180,9 +191,15 @@ def run_preflight(
             "microbatch_size": batch_size,
             "sequence_length": sequence_length,
             "tokens_per_microbatch": batch_size * sequence_length,
-            "gradient_accumulation": 1,
-            "effective_batch_size": batch_size,
-            "supervised_tokens": supervised_tokens,
+            "gradient_accumulation": gradient_accumulation,
+            "microbatches_executed": gradient_accumulation,
+            "effective_batch_size": batch_size * gradient_accumulation,
+            "tokens_per_effective_batch": (
+                batch_size * sequence_length * gradient_accumulation
+            ),
+            "supervised_tokens_per_effective_batch": (
+                supervised_tokens * gradient_accumulation
+            ),
         },
         "lora": {
             "rank": 16,
@@ -194,8 +211,9 @@ def run_preflight(
             "visual_trainable_tensors": 0,
         },
         "probe": {
-            "loss": float(loss.detach().cpu().item()),
+            "mean_unscaled_loss": sum(losses) / len(losses),
             "forward_backward_seconds": backward_elapsed,
+            "seconds_per_microbatch": backward_elapsed / gradient_accumulation,
             "complete_seconds": time.perf_counter() - started,
         },
         "environment": {
@@ -232,6 +250,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--sequence-length", type=int, default=640)
+    parser.add_argument("--gradient-accumulation", type=int, default=1)
     parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument(
         "--output",
@@ -243,6 +262,7 @@ def main() -> int:
         output=args.output,
         batch_size=args.batch_size,
         sequence_length=args.sequence_length,
+        gradient_accumulation=args.gradient_accumulation,
         local_files_only=args.local_files_only,
     )
     print(json.dumps(report, indent=2, sort_keys=True))
