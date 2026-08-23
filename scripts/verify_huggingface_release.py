@@ -14,10 +14,16 @@ from scamguard.metrics import file_sha256
 
 BASE_MODEL = "Qwen/Qwen3.5-0.8B"
 BASE_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
+LLAMA_CPP_REVISION = "521a64cd01979bb5b1a466152c576a9d809b068d"
 ALLOWED_QUANTIZATIONS = {"Q4_K_M", "Q5_K_M", "Q8_0"}
 ALLOWED_ROLES = {"fast_path", "routed_specialist"}
 REQUIRED_INTERNAL_GATES = 39
-REQUIRED_ARTIFACT_ROLES = {"merged_model", "gguf_model", "tokenizer"}
+REQUIRED_ARTIFACT_ROLES = {
+    "merged_model",
+    "gguf_model",
+    "runtime_binary",
+    "tokenizer",
+}
 REQUIRED_REPORT_ROLES = {
     "bf16_quality",
     "data_manifest",
@@ -27,6 +33,7 @@ REQUIRED_REPORT_ROLES = {
     "quantized_quality",
     "routed_trace",
     "routed_runtime",
+    "runtime_source",
 }
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 
@@ -367,6 +374,11 @@ def _validate_report_contents(
     bf16_path = report_paths.get("bf16_quality")
     if bf16_path and specialist.get("calibration_report_sha256") != file_sha256(bf16_path):
         errors.append("routed runtime calibration report differs from BF16 quality evidence")
+    quantized_path = report_paths.get("quantized_quality")
+    if quantized_path and specialist.get("quantized_quality_report_sha256") != file_sha256(
+        quantized_path
+    ):
+        errors.append("routed runtime quantized report differs from quantized quality evidence")
     for section in ("frozen_quality_scoring", "runtime_scoring"):
         scoring = _mapping(
             specialist.get(section), f"routed_runtime.specialist.{section}", errors
@@ -385,6 +397,29 @@ def _validate_report_contents(
         errors.append("routed runtime overall p95 gate must pass")
     if latency_gates.get("escalated_path_p95_under_50_ms") is not True:
         errors.append("routed runtime escalated-path p95 gate must pass")
+    native_runtime = _mapping(
+        specialist.get("native_runtime"), "routed_runtime.specialist.native_runtime", errors
+    )
+    runtime_binary = artifact_paths.get("runtime_binary")
+    if runtime_binary and native_runtime.get("runner_sha256") != file_sha256(runtime_binary):
+        errors.append("routed native runner SHA-256 differs from runtime_binary artifact")
+    if gguf_path and native_runtime.get("model_sha256") != file_sha256(gguf_path):
+        errors.append("routed native model SHA-256 differs from GGUF artifact")
+    if native_runtime.get("protocol_version") != 1:
+        errors.append("routed native runtime protocol_version must equal 1")
+    for field, expected in expected_shape.items():
+        if native_runtime.get(field) != expected:
+            errors.append(f"routed native runtime {field} must equal {expected}")
+    environment = _mapping(
+        routed.get("environment"), "routed_runtime.environment", errors
+    )
+    if environment.get("llama_cpp_revision") != LLAMA_CPP_REVISION:
+        errors.append(f"routed llama.cpp revision must equal {LLAMA_CPP_REVISION}")
+    runtime_source = report_paths.get("runtime_source")
+    if runtime_source and environment.get("runner_source_sha256") != file_sha256(
+        runtime_source
+    ):
+        errors.append("routed runner source SHA-256 differs from runtime_source evidence")
     routed_manifest = _mapping(
         _mapping(manifest.get("runtime"), "runtime", errors).get("routed"),
         "runtime.routed",
@@ -403,6 +438,7 @@ def _validate_report_contents(
         "p99_ms": overall.get("p99_ms"),
         "maximum_ms": overall.get("maximum_ms"),
         "escalated_p95_ms": escalated.get("p95_ms"),
+        "peak_memory_bytes": routed.get("process_peak_rss_bytes"),
     }
     for field, evidence_value in metric_bindings.items():
         if routed_manifest.get(field) != evidence_value:
@@ -515,7 +551,14 @@ def validate_release_manifest(manifest: dict[str, Any], repo_root: Path) -> list
             or not 0 <= escalation_rate <= 1
         ):
             errors.append("runtime.routed.escalation_rate must be between 0 and 1")
-        for field in ("p50_ms", "p95_ms", "p99_ms", "maximum_ms", "escalated_p95_ms"):
+        for field in (
+            "p50_ms",
+            "p95_ms",
+            "p99_ms",
+            "maximum_ms",
+            "escalated_p95_ms",
+            "peak_memory_bytes",
+        ):
             if not _positive_number(routed.get(field)):
                 errors.append(f"runtime.routed.{field} must be positive")
         if _positive_number(routed.get("p95_ms")) and routed["p95_ms"] > 20:

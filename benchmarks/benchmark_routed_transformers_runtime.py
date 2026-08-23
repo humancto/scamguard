@@ -138,12 +138,24 @@ def trace_requests(
                 or confidence_margin(router_runtime_record) <= margin_max
             )
             specialist_ms = 0.0
+            specialist_native_ms = 0.0
+            specialist_round_trip_ms = 0.0
+            specialist_maximum_sequence_tokens = 0
             specialist_verdict: str | None = None
             if escalated:
                 specialist_started = time.perf_counter_ns()
                 specialist_scores = specialist.predict(str(row["text"]))
                 specialist_finished = time.perf_counter_ns()
                 specialist_ms = (specialist_finished - specialist_started) / 1_000_000
+                specialist_native_ms = float(
+                    getattr(specialist, "last_native_elapsed_ms", 0.0)
+                )
+                specialist_round_trip_ms = float(
+                    getattr(specialist, "last_round_trip_ms", 0.0)
+                )
+                specialist_maximum_sequence_tokens = int(
+                    getattr(specialist, "last_maximum_sequence_tokens", 0)
+                )
                 specialist_verdict = backend_verdict(specialist, specialist_scores)
                 specialist_error = maximum_probability_error(
                     specialist_scores, expected_specialist_record
@@ -186,6 +198,11 @@ def trace_requests(
                     "expected_escalated": expected_final_record["escalated"],
                     "router_ms": router_ms,
                     "specialist_ms": specialist_ms,
+                    "specialist_native_ms": specialist_native_ms,
+                    "specialist_round_trip_ms": specialist_round_trip_ms,
+                    "specialist_maximum_sequence_tokens": (
+                        specialist_maximum_sequence_tokens
+                    ),
                     "routing_overhead_ms": max(0.0, total_ms - router_ms - specialist_ms),
                     "total_ms": total_ms,
                 }

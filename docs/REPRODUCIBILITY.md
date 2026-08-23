@@ -270,6 +270,23 @@ make qwen-08b-full-gguf-eval-q4 LLAMA_CPP_DIR=../llama.cpp
 make qwen-08b-full-gguf-eval-q5 LLAMA_CPP_DIR=../llama.cpp
 ```
 
+Build the persistent batch-one native scorer and measure the complete routed policy for each
+quantization. The runner keeps the GGUF resident, tokenizes inside its timed request, scores exactly
+`SAFE`, `UNCERTAIN`, and `SCAM`, and exchanges text only through a local pipe. Each routed trace
+includes the router, prompt rendering, pipe round trip, native inference, calibration, and verdict:
+
+```bash
+make gguf-verdict-runner LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-full-gguf-routed-runtime-q4 LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-full-gguf-routed-runtime-q5 LLAMA_CPP_DIR=../llama.cpp
+```
+
+The runner builds directly against pinned llama.cpp revision
+`521a64cd01979bb5b1a466152c576a9d809b068d`. Its startup protocol, executable, model, source, and
+per-request trace are hash-bound in the report. A warmup request absorbs lazy Metal kernel
+compilation before measured repetitions. The frozen quantized prediction ledger remains
+authoritative: every routed runtime decision must match it exactly.
+
 The custom scorer changes no model math. It removes the generic multiple-choice helper's inserted
 space so candidates exactly continue the ScamGuard JSON prefix, and prints the already-computed
 length-normalized answer log-probabilities. `training/eval_gguf.py` applies the same frozen

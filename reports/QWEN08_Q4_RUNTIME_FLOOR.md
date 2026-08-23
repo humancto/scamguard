@@ -7,7 +7,10 @@ fast path. The verified upstream Q4_0 control occupies 563,036,064 bytes. On a 4
 192-token prompt processing alone measures 33.26 ms p95. The exact three-candidate ScamGuard
 verdict scorer measures a 50.24 ms p95 of ten run means at a short-text 256-token context and
 53.98 ms at the quality-preserving 640-token context. It therefore fails the strict fast-path
-target and narrowly misses the PRD's formal `<50 ms` laptop target in the measured scorer.
+target and narrowly misses the PRD's formal `<50 ms` laptop target in the measured scorer. A newer
+persistent native runner now supplies the stronger measurement the aggregate scorer could not:
+across 50 individually timed requests it measures 59.65 ms p95 with four threads, so the upstream
+base definitively fails the escalated-path latency gate as well.
 
 This freezes the deployment role, not the final model: a fast encoder/rule router owns the common
 path, and a trained 0.8B Qwen specialist may handle only the uncertainty band if the complete routed
@@ -77,6 +80,29 @@ upstream llama.cpp exposes score-phase start/end timestamps but not per-task tim
 structured category/evidence/action generation is also outside this measurement. Both limitations
 make the routing decision conservative rather than a claim of final product latency.
 
+## Persistent native per-request control
+
+`native/gguf_verdict_runner.cpp` removes the aggregate-timing ambiguity. It loads the GGUF once,
+accepts one locally hex-framed prompt at a time, tokenizes inside the timed native request, scores
+the exact three continuations, and returns raw likelihoods plus elapsed microseconds. The Python
+round-trip measurement includes pipe I/O. The first request is an unmeasured warmup for lazy Metal
+kernel compilation. The runner uses the complete 640-token admission ceiling plus one 64-token
+suffix-headroom bucket; no input is truncated.
+
+The same 50 frozen test messages were run once per configuration after warmup:
+
+| Threads | Mean round trip | p50 | Per-request p95 | p99 | Maximum |
+|---:|---:|---:|---:|---:|---:|
+| 4 | 56.66 ms | 55.60 ms | **59.65 ms** | 59.96 ms | 60.15 ms |
+| 8 | 56.61 ms | 55.58 ms | 59.83 ms | 59.90 ms | **59.91 ms** |
+| 12 | 56.74 ms | 55.63 ms | 60.04 ms | 60.22 ms | 60.35 ms |
+
+Four threads is frozen as the default because it has the best p95. On an independent smoke prompt,
+all three raw candidate scores match the patched reference evaluator within `2.46e-5` maximum
+absolute error; the runtime release gate still requires exact calibrated-verdict parity on every
+frozen example. These numbers apply to the untouched upstream Q4_0 control, not to the future
+trained Q4_K_M or Q5_K_M candidates.
+
 ## Deployment contract
 
 1. Keep the 640-token training ceiling and reject truncation. At runtime, allocate the smallest
@@ -106,6 +132,12 @@ make the routing decision conservative rather than a claim of final product late
   `9e88febf53bd7c64aad81af1ccd2c73726bf04d5f32d99aa543b32b48d904534`
 - Patched llama-perplexity binary SHA-256:
   `de64bbd9844dafde58929f4b214ccb6004889ff5ef473a661b17c8e0344f9def`
+- Persistent runner source SHA-256:
+  `3930297c87ac0098597183b8f8875d68db5599ac1e631cd47811ce90af4d7487`
+- Persistent runner build script SHA-256:
+  `489a58ee8189b98b8f3c13c708311e05ef77e75a85cc9540b15af051956b3a05`
+- Local persistent runner binary SHA-256:
+  `4bc0784a89bf81d36b2044be734f488d653a699a011a2c9477392138883ea4ca`
 
 The raw benchmark reports are ignored local run artifacts. They contain all timing samples and no
 message text. The stable upstream receipt is tracked. Hugging Face publication remains

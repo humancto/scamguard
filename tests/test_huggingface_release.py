@@ -19,14 +19,14 @@ def evidence(path: Path, role: str, root: Path) -> dict[str, object]:
 def valid_manifest(tmp_path: Path) -> dict[str, object]:
     artifacts = []
     artifact_paths: dict[str, Path] = {}
-    for role in ("merged_model", "gguf_model", "tokenizer"):
+    for role in ("merged_model", "gguf_model", "runtime_binary", "tokenizer"):
         path = tmp_path / f"{role}.bin"
         path.write_bytes(f"artifact:{role}".encode())
         artifact_paths[role] = path
         artifacts.append(evidence(path, role, tmp_path))
 
     report_paths: dict[str, Path] = {}
-    for role in ("data_manifest", "mobile_benchmark", "model_card"):
+    for role in ("data_manifest", "mobile_benchmark", "model_card", "runtime_source"):
         path = tmp_path / f"{role}.json"
         path.write_text(f'{{"report":"{role}"}}', encoding="utf-8")
         report_paths[role] = path
@@ -119,12 +119,27 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                     "calibration_report_sha256": hashlib.sha256(
                         bf16.read_bytes()
                     ).hexdigest(),
+                    "quantized_quality_report_sha256": hashlib.sha256(
+                        quantized.read_bytes()
+                    ).hexdigest(),
                     "frozen_quality_scoring": {
                         "message_batch_size": 1,
                         "candidate_batch_size": 3,
                         "sequence_bucket_size": 64,
                     },
                     "runtime_scoring": {
+                        "message_batch_size": 1,
+                        "candidate_batch_size": 3,
+                        "sequence_bucket_size": 64,
+                    },
+                    "native_runtime": {
+                        "runner_sha256": hashlib.sha256(
+                            artifact_paths["runtime_binary"].read_bytes()
+                        ).hexdigest(),
+                        "model_sha256": hashlib.sha256(
+                            artifact_paths["gguf_model"].read_bytes()
+                        ).hexdigest(),
+                        "protocol_version": 1,
                         "message_batch_size": 1,
                         "candidate_batch_size": 3,
                         "sequence_bucket_size": 64,
@@ -157,6 +172,13 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                     "sha256": hashlib.sha256(routed_trace.read_bytes()).hexdigest(),
                     "rows": len(trace_records),
                     "contains_message_text": False,
+                },
+                "process_peak_rss_bytes": 1_100_000_000,
+                "environment": {
+                    "llama_cpp_revision": "521a64cd01979bb5b1a466152c576a9d809b068d",
+                    "runner_source_sha256": hashlib.sha256(
+                        report_paths["runtime_source"].read_bytes()
+                    ).hexdigest(),
                 },
             }
         ),
@@ -234,6 +256,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                 "p99_ms": 45.0,
                 "maximum_ms": 45.0,
                 "escalated_p95_ms": 45.0,
+                "peak_memory_bytes": 1_100_000_000,
             },
         },
         "governance": {

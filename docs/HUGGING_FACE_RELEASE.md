@@ -91,6 +91,9 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    routed tail latency, and a text-free per-request trace. The authorization tool hashes that trace
    and recomputes p50/p95/p99/maximum rather than trusting copied summaries. Require routed p95 at most 20 ms,
    escalated-path p95 under 50 ms, and exact parity with the frozen product-shaped quality ledger.
+   Use `benchmarks/benchmark_routed_gguf_runtime.py`, not aggregate `llama-perplexity` throughput,
+   for desktop release evidence. It keeps both models loaded and records the actual interleaved
+   policy request, including local native-runner IPC.
 8. Complete the label, multilingual-claim, redistribution, PII, and secrets audits. Build a model
    card that includes failures, dataset provenance tiers, frozen thresholds, hardware, runtime,
    limitations, hashes, the Apache-2.0 license, and upstream attribution.
@@ -106,7 +109,8 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
 
     Upload only when it returns `"publication_authorized": true`.
 
-    The manifest must hash and size the merged model, selected GGUF, tokenizer, BF16 quality
+    The manifest must hash and size the merged model, selected GGUF, tokenizer, native desktop
+    runtime binary and its source, BF16 quality
     report, 39-gate report, quantized quality report, routed runtime report, its text-free routed
     trace, data manifest, physical-mobile benchmark, and model card. The checker cross-links these
     artifacts and recomputes routed latency percentiles from the trace.
