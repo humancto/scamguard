@@ -59,6 +59,7 @@ def test_tracked_selection_is_bound_and_preserves_effective_batch() -> None:
     assert selected["gradient_accumulation"] == 4
     assert selected["effective_batch_size"] == 16
     assert report["quality_contract"]["optimizer_semantics_changed"] is False
+    assert bindings["source_commit"] == "33bb42c8f355eaade20a8094d0fe4409528c7a69"
     assert bindings["selector_sha256"] == file_sha256(
         repository / "scripts" / "select_qwen08_batch_geometry.py"
     )

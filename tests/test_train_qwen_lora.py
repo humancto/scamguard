@@ -66,9 +66,9 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
         revision="2fc06364715b967f1860aea9cf38778875588b17",
         seed=20260820,
         epochs=1.0,
-        batch_size=16,
+        batch_size=4,
         eval_batch_size=4,
-        gradient_accumulation=1,
+        gradient_accumulation=4,
         gradient_checkpointing=True,
         learning_rate=0.0001,
         max_length=640,
@@ -95,6 +95,7 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
         "weight_decay": 0.01,
         "trainer_eval": True,
         "checkpoint_output": str(output),
+        "batch_geometry_selection": {},
         "lora": {
             "rank": 16,
             "alpha": 32,
@@ -126,6 +127,33 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
                 "data_manifest_sha256": file_sha256(manifest),
             },
         },
+    }
+    selection_path = tmp_path / "batch-selection.json"
+    selection_path.write_text(
+        json.dumps(
+            {
+                "selected": {
+                    "microbatch_size": 4,
+                    "gradient_accumulation": 4,
+                    "effective_batch_size": 16,
+                },
+                "quality_contract": {
+                    "sequence_length": 640,
+                    "tokens_per_effective_batch": 10_240,
+                    "optimizer_semantics_changed": False,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    config["batch_geometry_selection"] = {
+        "report_path": str(selection_path),
+        "report_sha256": file_sha256(selection_path),
+        "microbatch_size": 4,
+        "gradient_accumulation": 4,
+        "effective_batch_size": 16,
+        "sequence_length": 640,
+        "tokens_per_effective_batch": 10_240,
     }
     return args, config
 
@@ -179,3 +207,16 @@ def test_loaded_base_revision_must_be_present_and_exact() -> None:
         require_loaded_revision(requested=revision, loaded=None)
     with pytest.raises(RuntimeError, match="differs"):
         require_loaded_revision(requested=revision, loaded="b" * 40)
+
+
+def test_full_experiment_rejects_unselected_batch_geometry(tmp_path: Path) -> None:
+    args, config = frozen_experiment(tmp_path)
+    args.batch_size = 2
+    args.gradient_accumulation = 8
+
+    errors = experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    )
+
+    assert any("requires selected microbatch 4" in error for error in errors)
+    assert any("batch geometry" in error for error in errors)

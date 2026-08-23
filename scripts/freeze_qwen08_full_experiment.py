@@ -26,6 +26,7 @@ except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo
 BASE_MODEL = "Qwen/Qwen3.5-0.8B"
 BASE_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
 TRANSFORMERS_REVISION = "0c92811846095910816a87aca50050d10c545270"
+BATCH_SELECTION_PATH = Path("reports/QWEN08_BATCH_GEOMETRY_SELECTION.json")
 SHA256_RE = re.compile(r"[0-9a-f]{64}")
 
 
@@ -207,6 +208,42 @@ def validate_label_audit(
         raise ValueError("schema-v24 label audit report is missing")
 
 
+def validate_batch_selection(path: Path) -> dict[str, object]:
+    report = json.loads(path.read_text(encoding="utf-8"))
+    selected = report.get("selected")
+    quality = report.get("quality_contract")
+    source_bindings = report.get("source_bindings")
+    if (
+        report.get("decision_kind") != "qwen08_mps_batch_geometry_selection"
+        or not isinstance(selected, dict)
+        or selected.get("microbatch_size") != 4
+        or selected.get("gradient_accumulation") != 4
+        or selected.get("effective_batch_size") != 16
+        or not isinstance(quality, dict)
+        or quality.get("effective_batch_size") != 16
+        or quality.get("sequence_length") != 640
+        or quality.get("tokens_per_effective_batch") != 10_240
+        or quality.get("optimizer_semantics_changed") is not False
+        or not isinstance(source_bindings, dict)
+        or source_bindings.get("source_commit")
+        != "33bb42c8f355eaade20a8094d0fe4409528c7a69"
+    ):
+        raise ValueError("Qwen 0.8B batch-geometry selection is incompatible")
+    return {
+        "report_path": str(path),
+        "report_sha256": file_sha256(path),
+        "microbatch_size": selected["microbatch_size"],
+        "gradient_accumulation": selected["gradient_accumulation"],
+        "effective_batch_size": selected["effective_batch_size"],
+        "sequence_length": quality["sequence_length"],
+        "tokens_per_effective_batch": quality["tokens_per_effective_batch"],
+        "forward_backward_seconds": selected["forward_backward_seconds"],
+        "mps_driver_allocated_bytes": selected["mps_driver_allocated_bytes"],
+        "recommended_memory_fraction": selected["recommended_memory_fraction"],
+        "source_commit": source_bindings["source_commit"],
+    }
+
+
 def freeze(
     processed: Path,
     token_audit_path: Path,
@@ -214,6 +251,7 @@ def freeze(
     output: Path,
     checkpoint_output: Path,
     experiment_id: str,
+    batch_selection_path: Path = BATCH_SELECTION_PATH,
 ) -> dict[str, object]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite frozen Qwen experiment: {output}")
@@ -231,6 +269,7 @@ def freeze(
     validate_token_audit(token_audit, token_audit_path, sft_audit)
     label_audit = json.loads(label_audit_path.read_text(encoding="utf-8"))
     validate_label_audit(label_audit, label_audit_path, manifest_path)
+    batch_selection = validate_batch_selection(batch_selection_path)
 
     evaluation = {
         f"{path.stem}_sha256": file_sha256(path)
@@ -250,9 +289,9 @@ def freeze(
         "transformers_revision": TRANSFORMERS_REVISION,
         "seed": 20260820,
         "epochs": 1.0,
-        "batch_size": 16,
+        "batch_size": 4,
         "eval_batch_size": 4,
-        "gradient_accumulation": 1,
+        "gradient_accumulation": 4,
         "gradient_checkpointing": True,
         "trainer_eval": True,
         "evaluation_policy": "development loss only; frozen benchmark evaluation after training",
@@ -261,6 +300,7 @@ def freeze(
         "weight_decay": 0.01,
         "max_length": 640,
         "sampling": "group_by_length",
+        "batch_geometry_selection": batch_selection,
         "lora": {
             "rank": 16,
             "alpha": 32,
@@ -331,6 +371,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--checkpoint-output", type=Path, required=True)
     parser.add_argument("--experiment-id", required=True)
+    parser.add_argument("--batch-selection", type=Path, default=BATCH_SELECTION_PATH)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -341,6 +382,7 @@ def main() -> None:
                 args.output,
                 args.checkpoint_output,
                 args.experiment_id,
+                args.batch_selection,
             ),
             indent=2,
         )

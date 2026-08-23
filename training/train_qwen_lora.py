@@ -177,6 +177,80 @@ def experiment_config_errors(
     if config.get("run_kind") == "full":
         if data.get("schema_version") != 24:
             errors.append("full run requires data.schema_version 24")
+        if args.batch_size != 4 or args.gradient_accumulation != 4:
+            errors.append(
+                "full run requires selected microbatch 4 with gradient accumulation 4"
+            )
+        selection = config.get("batch_geometry_selection")
+        if not isinstance(selection, dict):
+            errors.append("full run requires a batch_geometry_selection declaration")
+        else:
+            selection_path = Path(str(selection.get("report_path", "")))
+            if not selection_path.is_file():
+                errors.append(f"missing frozen batch geometry selection: {selection_path}")
+            elif sha256(selection_path) != selection.get("report_sha256"):
+                errors.append(f"batch geometry selection hash mismatch: {selection_path}")
+            else:
+                try:
+                    selection_report = json.loads(
+                        selection_path.read_text(encoding="utf-8")
+                    )
+                except json.JSONDecodeError:
+                    errors.append("batch geometry selection report is invalid JSON")
+                else:
+                    selected = selection_report.get("selected")
+                    quality = selection_report.get("quality_contract")
+                    expected_selection = {
+                        "microbatch_size": args.batch_size,
+                        "gradient_accumulation": args.gradient_accumulation,
+                        "effective_batch_size": (
+                            args.batch_size * args.gradient_accumulation
+                        ),
+                        "sequence_length": args.max_length,
+                        "tokens_per_effective_batch": (
+                            args.batch_size
+                            * args.gradient_accumulation
+                            * args.max_length
+                        ),
+                    }
+                    if (
+                        not isinstance(selected, dict)
+                        or not isinstance(quality, dict)
+                        or selected.get("microbatch_size")
+                        != expected_selection["microbatch_size"]
+                        or selected.get("gradient_accumulation")
+                        != expected_selection["gradient_accumulation"]
+                        or selected.get("effective_batch_size")
+                        != expected_selection["effective_batch_size"]
+                        or quality.get("sequence_length")
+                        != expected_selection["sequence_length"]
+                        or quality.get("tokens_per_effective_batch")
+                        != expected_selection["tokens_per_effective_batch"]
+                        or quality.get("optimizer_semantics_changed") is not False
+                    ):
+                        errors.append(
+                            "batch geometry selection differs from the full-run command"
+                        )
+            declared_geometry = {
+                "microbatch_size": selection.get("microbatch_size"),
+                "gradient_accumulation": selection.get("gradient_accumulation"),
+                "effective_batch_size": selection.get("effective_batch_size"),
+                "sequence_length": selection.get("sequence_length"),
+                "tokens_per_effective_batch": selection.get(
+                    "tokens_per_effective_batch"
+                ),
+            }
+            expected_declared_geometry = {
+                "microbatch_size": args.batch_size,
+                "gradient_accumulation": args.gradient_accumulation,
+                "effective_batch_size": args.batch_size * args.gradient_accumulation,
+                "sequence_length": args.max_length,
+                "tokens_per_effective_batch": (
+                    args.batch_size * args.gradient_accumulation * args.max_length
+                ),
+            }
+            if declared_geometry != expected_declared_geometry:
+                errors.append("frozen batch geometry declaration differs from command")
         sft_exclusions = data.get("sft_exclusions")
         if not isinstance(sft_exclusions, dict) or any(
             not isinstance(sft_exclusions.get(split), int)

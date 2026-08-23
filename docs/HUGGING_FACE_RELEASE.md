@@ -34,6 +34,14 @@ parameters, and requires finite loss and adapter gradients. It never opens schem
 audit rows and does not authorize training or publication. The current text-free result is
 [`reports/QWEN08_TRAINING_PREFLIGHT.json`](../reports/QWEN08_TRAINING_PREFLIGHT.json).
 
+The full-run geometry is separately locked by a five-shape, no-update MPS stress matrix at the
+frozen 640-token length and effective batch 16. Microbatch 4 with four accumulation steps is the
+fastest shape under the 50%-of-recommended-memory ceiling: 9.72 seconds and 43.27 GB of MPS driver
+memory per synthetic effective batch, versus 132.08 seconds and 158.70 GB for 16 x 1. The selected
+shape changes neither tokens per effective batch nor optimizer semantics. The freezer and trainer
+both bind to the hash-verified decision in
+[`reports/QWEN08_BATCH_GEOMETRY_SELECTION.json`](../reports/QWEN08_BATCH_GEOMETRY_SELECTION.json).
+
 ## Release sequence
 
 1. Finish the schema-v24 real-dialogue annotation audit, rebuild immutable family-disjoint data,
@@ -73,10 +81,10 @@ audit rows and does not authorize training or publication. The current text-free
    annotation train/dev/test strata, zero publisher dev/test rows in fitting, complete verbatim
    evidence, and zero examples over the frozen 640-token limit. The 640-token ceiling preserves
    decisive long-dialogue actions; it is not the under-20-ms fast-path latency budget. The freeze
-   step refuses to overwrite an existing
-   config. The trainer independently rechecks the config, resolved model commit, installed
-   Transformers git commit, hyperparameters, LoRA module allowlist, data/report hashes, counts,
-   and output path before loading model weights.
+   step also requires the pinned 4 x 4 batch-geometry decision and refuses to overwrite an existing
+   config. The trainer independently rechecks the config, geometry report and hash, resolved model
+   commit, installed Transformers git commit, hyperparameters, LoRA module allowlist, data/report
+   hashes, counts, and output path before loading model weights.
 3. Freeze calibration, routing, and thresholds on development/selection data. Pass every internal
    and independent external-selection gate before opening any prediction-sealed test.
 

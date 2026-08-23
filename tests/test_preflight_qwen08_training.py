@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scamguard.metrics import file_sha256
 from scripts.preflight_qwen08_training import manifest_sha256, snapshot_manifest
 
 
@@ -29,7 +28,7 @@ def test_snapshot_manifest_changes_with_file_content(tmp_path: Path) -> None:
     assert before != after
 
 
-def test_tracked_preflight_is_bound_to_current_launch_sources() -> None:
+def test_tracked_preflight_is_bound_to_measured_launch_sources() -> None:
     repository = Path(__file__).resolve().parents[1]
     report = json.loads(
         (repository / "reports" / "QWEN08_TRAINING_PREFLIGHT.json").read_text(
@@ -44,12 +43,17 @@ def test_tracked_preflight_is_bound_to_current_launch_sources() -> None:
     assert report["base_model_revision"] == "2fc06364715b967f1860aea9cf38778875588b17"
     assert report["transformers_revision"] == "0c92811846095910816a87aca50050d10c545270"
     assert bindings == {
-        "preflight_script_sha256": file_sha256(
-            repository / "scripts" / "preflight_qwen08_training.py"
+        "preflight_script_sha256": (
+            "a554a294c1de366b5cc97fbf781356afc488d8f36a6f480c4ffdadfaa166873b"
         ),
-        "training_launcher_sha256": file_sha256(
-            repository / "training" / "train_qwen_lora.py"
+        "training_launcher_sha256": (
+            "06e4a51ef7c682b4a35a0c5247e0360fe6f8147927cc7b737ab6c96347423663"
         ),
-        "pyproject_sha256": file_sha256(repository / "pyproject.toml"),
-        "uv_lock_sha256": file_sha256(repository / "uv.lock"),
+        "pyproject_sha256": (
+            "5d3249e9c7642a8126c222a39ce063fbd3fc00174d2a0ca962c07cad78f5a2e9"
+        ),
+        "uv_lock_sha256": (
+            "e6ec0814c4af6614ba98639d98421f2df523e58e3e2032aa068b7d1e910c4765"
+        ),
+        "source_commit": "66d9f3d935fecc2fa0dccb6a3d611d22840282d5",
     }

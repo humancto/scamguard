@@ -926,6 +926,7 @@ qwen-08b-full-freeze: qwen-08b-full-token-audit schema24-audit-check
 		uv run --extra train --extra qwen python scripts/freeze_qwen08_full_experiment.py \
 			--processed "$(QWEN08_FULL_DATA)" --token-audit "$(QWEN08_FULL_TOKEN_AUDIT)" \
 			--label-audit "$(QWEN08_FULL_LABEL_AUDIT)" \
+			--batch-selection reports/QWEN08_BATCH_GEOMETRY_SELECTION.json \
 			--output "$(QWEN08_FULL_CONFIG)" --checkpoint-output "$(QWEN08_FULL_OUTPUT)" \
 			--experiment-id sg-qwen35-08b-schema24-full-v1; \
 	fi
@@ -942,8 +943,8 @@ qwen-08b-full:
 			--model Qwen/Qwen3.5-0.8B \
 			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
 			--data "$(QWEN08_FULL_DATA)/qwen_sft" \
-			--batch-size 16 --eval-batch-size 4 \
-			--gradient-accumulation 1 --gradient-checkpointing \
+			--batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --gradient-checkpointing \
 			--max-length 640 \
 			--sampling-strategy group_by_length --require-mps \
 			--output "$(QWEN08_FULL_OUTPUT)"; \

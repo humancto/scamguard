@@ -165,6 +165,9 @@ def test_freeze_writes_full_hash_bound_experiment(tmp_path: Path) -> None:
 
     assert config["run_kind"] == "full"
     assert config["base_model"] == "Qwen/Qwen3.5-0.8B"
+    assert config["batch_size"] == 4
+    assert config["gradient_accumulation"] == 4
+    assert config["batch_size"] * config["gradient_accumulation"] == 16
     assert config["data"]["schema_version"] == 24  # type: ignore[index]
     assert config["data"]["evidence_audit"]["coverage"] == 1.0  # type: ignore[index]
     assert output.is_file()
@@ -219,4 +222,28 @@ def test_freeze_rejects_token_truncation(tmp_path: Path) -> None:
             tmp_path / "qwen08.json",
             tmp_path / "checkpoint",
             "sg-qwen08-schema24",
+        )
+
+
+def test_freeze_rejects_unselected_batch_geometry(tmp_path: Path) -> None:
+    processed, token_audit, label_audit = schema24_fixture(tmp_path)
+    repository = Path(__file__).resolve().parents[1]
+    selection = json.loads(
+        (repository / "reports/QWEN08_BATCH_GEOMETRY_SELECTION.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    selection["selected"]["microbatch_size"] = 2
+    selection_path = tmp_path / "tampered-batch-selection.json"
+    selection_path.write_text(json.dumps(selection), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="batch-geometry selection"):
+        freeze(
+            processed,
+            token_audit,
+            label_audit,
+            tmp_path / "qwen08.json",
+            tmp_path / "checkpoint",
+            "sg-qwen08-schema24",
+            selection_path,
         )
