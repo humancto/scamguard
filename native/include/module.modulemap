@@ -1,0 +1,4 @@
+module ScamGuardGGUF {
+  header "scamguard_gguf.h"
+  export *
+}

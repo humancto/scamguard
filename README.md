@@ -165,6 +165,8 @@ The measured ONNX/Core ML/Android export gates are in
 [docs/DEPLOYMENT_PLAN.md](docs/DEPLOYMENT_PLAN.md).
 The physical iOS/Android raw-trace receipt and verifier are in
 [docs/MOBILE_BENCHMARK_PROTOCOL.md](docs/MOBILE_BENCHMARK_PROTOCOL.md).
+The shared in-process C ABI, iOS XCFramework build, Swift wrapper, Android JNI build, and Kotlin
+wrapper are in [docs/MOBILE_RUNTIME_INTEGRATION.md](docs/MOBILE_RUNTIME_INTEGRATION.md).
 
 ## ScamBench gates
 
