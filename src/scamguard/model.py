@@ -349,21 +349,79 @@ class QwenVerdictBackend:
                 logits_to_keep=kept_logits,
             ).logits
             log_probabilities = self.torch.log_softmax(logits.float(), dim=-1)
-        scores = []
+        scores: list[float] = []
         for row, candidate in enumerate(candidates):
             token_scores = [
                 log_probabilities[row, kept_logits - len(candidate) + offset - 1, token]
                 for offset, token in enumerate(candidate)
             ]
-            scores.append(self.torch.stack(token_scores).mean())
-        probabilities = (
-            self.torch.softmax(self.torch.stack(scores) / self.temperature, dim=-1)
-            .detach()
-            .cpu()
-            .tolist()
-        )
+            # Keep the deployed scorer numerically identical to eval_qwen.py:
+            # collect token log-probabilities as host floats, average in float64,
+            # and temperature-softmax in NumPy. Accelerator batch shape can still
+            # affect logits, so runtime-vs-ledger decision parity remains a gate.
+            scores.append(sum(float(score.item()) for score in token_scores) / len(token_scores))
+        adjusted = np.asarray(scores, dtype=np.float64) / self.temperature
+        adjusted -= adjusted.max()
+        probabilities = np.exp(adjusted)
+        probabilities = (probabilities / probabilities.sum()).tolist()
         values = dict(zip(self.labels, (float(value) for value in probabilities), strict=True))
         return ModelScores(safe=values["SAFE"], uncertain=values["UNCERTAIN"], scam=values["SCAM"])
+
+
+class QwenBaseVerdictBackend(QwenVerdictBackend):
+    """Runs a pinned local-cache base checkpoint using an immutable evaluation report."""
+
+    def __init__(
+        self,
+        model: str,
+        revision: str,
+        calibration_report: str | Path,
+        *,
+        device: str | None = None,
+    ) -> None:
+        import torch
+        from transformers import AutoModelForImageTextToText, AutoProcessor
+
+        report_path = Path(calibration_report).expanduser().resolve()
+        if not report_path.is_file():
+            raise FileNotFoundError(report_path)
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        if report.get("model") != model or report.get("adapter") is not None:
+            raise ValueError("Qwen base calibration report identifies a different runtime")
+        if report.get("base_model_revision") != revision:
+            raise ValueError("Qwen base calibration report identifies a different revision")
+        labels = tuple(str(label) for label in report.get("labels", ()))
+        if not labels:
+            labels = ("SAFE", "UNCERTAIN", "SCAM")
+        if labels != ("SAFE", "UNCERTAIN", "SCAM"):
+            raise ValueError("Qwen base calibration has an incompatible ordered label set")
+        semantics = report.get("safe_threshold_semantics", "minimum_safe_probability")
+        if semantics != "minimum_safe_probability":
+            raise ValueError("Qwen base calibration has incompatible SAFE semantics")
+
+        if device is None:
+            device = "mps" if torch.backends.mps.is_available() else "cpu"
+        self.torch = torch
+        self.device = torch.device(device)
+        self.processor = AutoProcessor.from_pretrained(
+            model,
+            revision=revision,
+            local_files_only=True,
+        )
+        self.model = AutoModelForImageTextToText.from_pretrained(
+            model,
+            revision=revision,
+            local_files_only=True,
+            dtype=torch.bfloat16 if self.device.type == "mps" else torch.float32,
+            low_cpu_mem_usage=True,
+        ).to(self.device).eval()
+        self.labels = labels
+        self.temperature = float(report["temperature"])
+        self.scam_threshold = float(report["scam_threshold"])
+        self.safe_threshold = float(report["safe_threshold"])
+        self.safe_probability_threshold = self.safe_threshold
+        self.safe_max_scam_probability = None
+        self.model_id = f"{model}@{revision}:base-control"
 
 
 def load_backend(path: str | Path) -> ModelBackend:

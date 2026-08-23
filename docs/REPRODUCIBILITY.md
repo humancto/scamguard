@@ -192,6 +192,18 @@ The encoder step is checkpoint-only evaluation. Both input ledgers and the route
 message text. `training/eval_routed.py` rejects duplicate or mismatched `(split, id)` joins and
 never derives end-to-end p95 from aggregate component percentiles.
 
+For the pinned untouched 0.8B negative control, measure the actual persistent route three times:
+
+```bash
+make qwen-08b-base-routed-runtime
+```
+
+This command verifies the frozen ledgers and specialist score-cache identity, keeps both models
+loaded, and emits text-free batch-one request traces under `reports/runs/`. It requires exact route
+and calibrated-verdict parity while separately disclosing probability drift, runtime quality,
+fast/escalated/full p50/p95/p99/maximum, and process peak RSS. The tracked result is
+`reports/ROUTED_BASE_RUNTIME.md`.
+
 Score the family-collapsed multi-turn diagnostic with the already-frozen encoder calibration:
 
 ```bash

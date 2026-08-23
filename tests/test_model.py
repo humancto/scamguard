@@ -81,6 +81,28 @@ def test_qwen_backend_uses_exact_low_memory_candidate_scoring() -> None:
     assert backend.model.logits_to_keep == 4
 
 
+def test_qwen_backend_matches_evaluator_probability_math() -> None:
+    from training.eval_qwen import score_message, softmax
+
+    backend = model_module.QwenVerdictBackend.__new__(model_module.QwenVerdictBackend)
+    backend.labels = ("SAFE", "UNCERTAIN", "SCAM")
+    backend.processor = FakeProcessor()
+    backend.model = SuffixOnlyFakeModel()
+    backend.torch = torch
+    backend.device = torch.device("cpu")
+    backend.temperature = 1.7
+
+    runtime = backend.predict("message")
+    expected = softmax(
+        score_message(backend.model, backend.processor, "message", backend.device)[None, :],
+        backend.temperature,
+    )[0]
+
+    np.testing.assert_allclose(
+        [runtime.safe, runtime.uncertain, runtime.scam], expected, rtol=0.0, atol=0.0
+    )
+
+
 class FakeONNXSessionOptions:
     pass
 

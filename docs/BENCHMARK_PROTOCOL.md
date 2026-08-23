@@ -148,6 +148,13 @@ report router-only, specialist-only, and routed metrics on the same untouched te
 component percentiles may support a conservative bound, but they cannot be algebraically converted
 into routed p95; record the frozen policy end to end per request.
 
+Every neural quality ledger must also freeze its accelerator scoring batch shape: messages per
+forward pass and candidate sequences per message. Before release, rerun the frozen policy at the
+product batch size and require exact route and calibrated-verdict parity per example. A probability
+tolerance may diagnose numerical drift but cannot excuse a threshold crossing. Report runtime
+quality separately when parity fails; do not substitute a similar aggregate metric for the failed
+per-example contract.
+
 Every calibration artifact must state its SAFE-threshold semantics. Historical encoder artifacts
 store a maximum SAFE-path risk (`p_safe >= 1 - threshold` and `p_scam < threshold`); Qwen verdict
 calibration stores a direct minimum SAFE probability. Evaluation ledgers and production runtime
@@ -162,7 +169,7 @@ Each run must publish the immutable configuration and data manifest plus:
 - three-way macro F1;
 - Brier score and 15-bin expected calibration error;
 - results for test, out-of-domain, adversarial, and hard-negative slices;
-- median/p95 batch-one latency, peak memory, artifact bytes, quantization, and routing rate;
+- p50/p95/p99/maximum batch-one latency, peak memory, artifact bytes, quantization, and routing rate;
 - seed, runtime, hardware, tokenizer, model revision, and source revisions.
 
 ## Comparison discipline

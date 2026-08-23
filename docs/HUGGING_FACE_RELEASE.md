@@ -74,7 +74,10 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
 
    The evaluator joins text-free ledgers exactly, chooses the uncertainty margin on development
    only, and publishes component baselines plus escalation. The untouched Qwen base fails this
-   role; `reports/ROUTED_BASE_DIAGNOSTIC.md` is the frozen negative control.
+   role; `reports/ROUTED_BASE_DIAGNOSTIC.md` is the frozen quality negative control and
+   `reports/ROUTED_BASE_RUNTIME.md` is the persistent runtime negative control. Freeze the
+   accelerator scoring-batch identity and require exact product-batch-one route and verdict parity;
+   aggregate metric similarity cannot waive a decision mismatch.
 4. Merge the adapter with `training/merge_qwen_adapter.py`. Its equivalence audit must show that
    adapter and merged verdict scores remain within the configured tolerance.
 5. Convert the merged directory with `scripts/export_gguf.sh`. Evaluate at least `Q4_K_M` and
@@ -82,8 +85,10 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    llama.cpp quantizer when Q4 loses a gate.
 6. Rerun the exact frozen quality protocol on the selected GGUF. Quantization is rejected if any
    safety decision or required gate regresses outside the published tolerance.
-7. Measure tokenizer-to-verdict p50/p95, peak memory, and artifact bytes on the reference desktop
-   and a physical phone. If Qwen is routed, also publish escalation rate and full routed p50/p95.
+7. Measure tokenizer-to-verdict p50/p95/p99/maximum, peak memory, and artifact bytes on the
+   reference desktop and a physical phone. If Qwen is routed, also publish escalation rate, full
+   routed tail latency, and a text-free per-request trace. Require exact parity with the frozen
+   quality ledger at the product batch size.
 8. Complete the label, multilingual-claim, redistribution, PII, and secrets audits. Build a model
    card that includes failures, dataset provenance tiers, frozen thresholds, hardware, runtime,
    limitations, hashes, the Apache-2.0 license, and upstream attribution.

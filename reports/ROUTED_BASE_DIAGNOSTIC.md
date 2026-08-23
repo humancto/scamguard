@@ -40,16 +40,18 @@ this exact paired comparison.
 
 ## Latency discipline
 
-This diagnostic does not publish a routed p95. Aggregate encoder and Qwen percentiles cannot be
-combined into a request percentile, and the existing Q4 exact-scorer p95 is a percentile of run
-means rather than per-request samples. After the specialist and policy are frozen, the complete
-router-to-specialist path must be timed per request on desktop and a physical phone.
+The follow-up persistent runtime control now publishes a routed p95 from 7,122 actual request
+traces; it is documented in `reports/ROUTED_BASE_RUNTIME.md`. Aggregate encoder and Qwen
+percentiles still cannot be combined into a request percentile. The measured base route fails the
+20-ms full-distribution gate and exact runtime-to-ledger decision parity. A physical-phone result
+remains required for any mobile claim.
 
 ## Reproduction
 
 ```bash
 make encoder-schema23-ledger
 make qwen-08b-base-routed-diagnostic
+make qwen-08b-base-routed-runtime
 
 # Final trained specialist:
 make routed-eval \
