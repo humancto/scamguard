@@ -26,14 +26,18 @@ def test_persistent_scorer_validates_and_parses_native_protocol(tmp_path: Path) 
             #!/usr/bin/env python3
             import sys
 
-            print("READY\\t1\\t1234\\t640", flush=True)
+            prefix_enabled = "--prefix-hex" in sys.argv
+            prefix_tokens = 7 if prefix_enabled else 0
+            print(f"READY\\t2\\t1234\\t640\\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
                     break
                 identifier, _question = line.split("\\t", 1)
+                reused = 1 if prefix_enabled else 0
                 print(
-                    f"RESULT\\t{identifier}\\t-1.0\\t-2.0\\t-3.0\\t1234\\t42",
+                    f"RESULT\\t{identifier}\\t-1.0\\t-2.0\\t-3.0\\t1234\\t42"
+                    f"\\t{reused}\\t{prefix_tokens}",
                     flush=True,
                 )
             """
@@ -53,10 +57,18 @@ def test_persistent_scorer_validates_and_parses_native_protocol(tmp_path: Path) 
         assert first.raw_scores == (-1.0, -2.0, -3.0)
         assert first.native_elapsed_ms == pytest.approx(1.234)
         assert first.maximum_sequence_tokens == 42
+        assert first.prefix_reused is False
+        assert first.prefix_tokens == 0
         assert first.round_trip_ms > 0.0
         assert second.raw_scores == first.raw_scores
         with pytest.raises(ValueError, match="unsupported characters"):
             scorer.score("bad id", "question")
+
+    with PersistentGGUFScorer(runner=runner, model=model, prefix="fixed prefix") as scorer:
+        cached = scorer.score("cached", "fixed prefix and request")
+
+        assert cached.prefix_reused is True
+        assert cached.prefix_tokens == 7
 
 
 def test_quantized_evidence_must_bind_model_ledger_calibration_and_runtime(

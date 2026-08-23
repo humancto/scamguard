@@ -8,9 +8,11 @@ fast path. The verified upstream Q4_0 control occupies 563,036,064 bytes. On a 4
 verdict scorer measures a 50.24 ms p95 of ten run means at a short-text 256-token context and
 53.98 ms at the quality-preserving 640-token context. It therefore fails the strict fast-path
 target and narrowly misses the PRD's formal `<50 ms` laptop target in the measured scorer. A newer
-persistent native runner now supplies the stronger measurement the aggregate scorer could not:
-across 50 individually timed requests it measures 59.65 ms p95 with four threads, so the upstream
-base definitively fails the escalated-path latency gate as well.
+persistent native runner now supplies the stronger measurement the aggregate scorer could not.
+Uncached, 50 individually timed requests measure 59.65 ms p95 with four threads and fail the
+escalated-path latency gate. Reusing the exact 141-token fixed prompt state reduces the same
+requests to 42.50 ms p95 with zero calibrated-verdict mismatches, establishing a viable desktop
+specialist path that still requires trained-artifact confirmation.
 
 This freezes the deployment role, not the final model: a fast encoder/rule router owns the common
 path, and a trained 0.8B Qwen specialist may handle only the uncertainty band if the complete routed
@@ -89,19 +91,24 @@ round-trip measurement includes pipe I/O. The first request is an unmeasured war
 kernel compilation. The runner uses the complete 640-token admission ceiling plus one 64-token
 suffix-headroom bucket; no input is truncated.
 
-The same 50 frozen test messages were run once per configuration after warmup:
+The same 50 frozen test messages were run after warmup. The fixed-prefix configuration uses three
+repetitions (150 requests) to make its release-relevant percentile less sensitive to a single run:
 
-| Threads | Mean round trip | p50 | Per-request p95 | p99 | Maximum |
-|---:|---:|---:|---:|---:|---:|
-| 4 | 56.66 ms | 55.60 ms | **59.65 ms** | 59.96 ms | 60.15 ms |
-| 8 | 56.61 ms | 55.58 ms | 59.83 ms | 59.90 ms | **59.91 ms** |
-| 12 | 56.74 ms | 55.63 ms | 60.04 ms | 60.22 ms | 60.35 ms |
+| Threads | Requests | Mean round trip | p50 | Per-request p95 | p99 | Maximum |
+|---:|---:|---:|---:|---:|---:|---:|
+| 4 | 50 | 56.66 ms | 55.60 ms | **59.65 ms** | 59.96 ms | 60.15 ms |
+| 8 | 50 | 56.61 ms | 55.58 ms | 59.83 ms | 59.90 ms | **59.91 ms** |
+| 12 | 50 | 56.74 ms | 55.63 ms | 60.04 ms | 60.22 ms | 60.35 ms |
+| 4, fixed-prefix cache | 150 | **38.64 ms** | **38.20 ms** | **42.50 ms** | **43.17 ms** | **43.36 ms** |
 
 Four threads is frozen as the default because it has the best p95. On an independent smoke prompt,
 all three raw candidate scores match the patched reference evaluator within `2.46e-5` maximum
 absolute error; the runtime release gate still requires exact calibrated-verdict parity on every
-frozen example. These numbers apply to the untouched upstream Q4_0 control, not to the future
-trained Q4_K_M or Q5_K_M candidates.
+frozen example. Across the 50-message prefix-cache comparison, maximum raw-score drift versus the
+uncached native runner is `0.003125`, maximum calibrated-probability drift is `0.00004351`, and
+calibrated-verdict mismatches are zero. Prefix reuse is verified on every escalated trace row and
+cannot silently fall back during release measurement. These numbers apply to the untouched upstream
+Q4_0 control, not to the future trained Q4_K_M or Q5_K_M candidates.
 
 ## Deployment contract
 
@@ -128,16 +135,18 @@ trained Q4_K_M or Q5_K_M candidates.
   `0b8349490a2a7eeb171fa4448da80fc0af462dffdc0ff6efd96771da463245f4`
 - Exact ctx-640 report SHA-256:
   `bc6940df5c40c6ccb8df18f1505aec16048a54423294bdc533bafcdef5c310e9`
+- Persistent fixed-prefix control report SHA-256:
+  `26beda09e2d66372d667e078c1e5bcb8fe002698c1684b1ffadb8968eae2c144`
 - llama-bench binary SHA-256:
   `9e88febf53bd7c64aad81af1ccd2c73726bf04d5f32d99aa543b32b48d904534`
 - Patched llama-perplexity binary SHA-256:
   `de64bbd9844dafde58929f4b214ccb6004889ff5ef473a661b17c8e0344f9def`
 - Persistent runner source SHA-256:
-  `3930297c87ac0098597183b8f8875d68db5599ac1e631cd47811ce90af4d7487`
+  `36ce1cf425a97b763d23308525a9bb156d4f34541f228e88c50bdcbb47a31884`
 - Persistent runner build script SHA-256:
   `489a58ee8189b98b8f3c13c708311e05ef77e75a85cc9540b15af051956b3a05`
 - Local persistent runner binary SHA-256:
-  `4bc0784a89bf81d36b2044be734f488d653a699a011a2c9477392138883ea4ca`
+  `9c3b2525b72a0f56684a9c6ba63b14366c59d0a5a16b09f02f898afba267f8c3`
 
 The raw benchmark reports are ignored local run artifacts. They contain all timing samples and no
 message text. The stable upstream receipt is tracked. Hugging Face publication remains

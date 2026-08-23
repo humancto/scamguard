@@ -47,6 +47,8 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                 "escalated": escalated,
                 "router_ms": router_ms,
                 "specialist_ms": specialist_ms,
+                "specialist_prefix_reused": escalated,
+                "specialist_prefix_tokens": 100 if escalated else 0,
                 "routing_overhead_ms": overhead_ms,
                 "total_ms": router_ms + specialist_ms + overhead_ms,
             }
@@ -139,10 +141,13 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                         "model_sha256": hashlib.sha256(
                             artifact_paths["gguf_model"].read_bytes()
                         ).hexdigest(),
-                        "protocol_version": 1,
+                        "protocol_version": 2,
                         "message_batch_size": 1,
                         "candidate_batch_size": 3,
                         "sequence_bucket_size": 64,
+                        "prefix_cache_enabled": True,
+                        "prefix_tokens": 100,
+                        "prefix_sha256": "b" * 64,
                     },
                 },
                 "parity": {"release_gate_passed": True},
@@ -321,6 +326,49 @@ def test_tampered_routed_trace_is_rejected(tmp_path: Path) -> None:
     assert any("size mismatch" in error for error in errors)
     assert any("trace SHA-256" in error for error in errors)
     assert any("trace row count" in error for error in errors)
+
+
+def test_missing_native_prefix_cache_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    report_path = tmp_path / "routed_runtime.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["specialist"]["native_runtime"]["prefix_cache_enabled"] = False
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    for entry in manifest["reports"]:  # type: ignore[union-attr]
+        if entry["role"] == "routed_runtime":
+            entry["sha256"] = hashlib.sha256(report_path.read_bytes()).hexdigest()
+            entry["size_bytes"] = report_path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "routed native runtime prefix_cache_enabled must be true" in errors
+
+
+def test_uncached_escalated_trace_row_is_rejected(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    trace_path = tmp_path / "routed_runtime.traces.jsonl"
+    trace_records = [
+        json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines()
+    ]
+    trace_records[95]["specialist_prefix_reused"] = False
+    trace_records[95]["specialist_prefix_tokens"] = 0
+    trace_path.write_text(
+        "".join(json.dumps(record) + "\n" for record in trace_records),
+        encoding="utf-8",
+    )
+    report_path = tmp_path / "routed_runtime.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["trace_ledger"]["sha256"] = hashlib.sha256(trace_path.read_bytes()).hexdigest()
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    for entry in manifest["reports"]:  # type: ignore[union-attr]
+        path = report_path if entry["role"] == "routed_runtime" else trace_path
+        if entry["role"] in {"routed_runtime", "routed_trace"}:
+            entry["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+            entry["size_bytes"] = path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "routed_trace[95] must reuse the specialist prefix cache" in errors
 
 
 def test_non_numeric_routed_summary_is_rejected_without_crashing(tmp_path: Path) -> None:

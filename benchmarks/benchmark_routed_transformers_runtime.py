@@ -141,6 +141,8 @@ def trace_requests(
             specialist_native_ms = 0.0
             specialist_round_trip_ms = 0.0
             specialist_maximum_sequence_tokens = 0
+            specialist_prefix_reused = False
+            specialist_prefix_tokens = 0
             specialist_verdict: str | None = None
             if escalated:
                 specialist_started = time.perf_counter_ns()
@@ -155,6 +157,12 @@ def trace_requests(
                 )
                 specialist_maximum_sequence_tokens = int(
                     getattr(specialist, "last_maximum_sequence_tokens", 0)
+                )
+                specialist_prefix_reused = bool(
+                    getattr(specialist, "last_prefix_reused", False)
+                )
+                specialist_prefix_tokens = int(
+                    getattr(specialist, "last_prefix_tokens", 0)
                 )
                 specialist_verdict = backend_verdict(specialist, specialist_scores)
                 specialist_error = maximum_probability_error(
@@ -203,6 +211,8 @@ def trace_requests(
                     "specialist_maximum_sequence_tokens": (
                         specialist_maximum_sequence_tokens
                     ),
+                    "specialist_prefix_reused": specialist_prefix_reused,
+                    "specialist_prefix_tokens": specialist_prefix_tokens,
                     "routing_overhead_ms": max(0.0, total_ms - router_ms - specialist_ms),
                     "total_ms": total_ms,
                 }

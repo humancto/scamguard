@@ -93,7 +93,8 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    escalated-path p95 under 50 ms, and exact parity with the frozen product-shaped quality ledger.
    Use `benchmarks/benchmark_routed_gguf_runtime.py`, not aggregate `llama-perplexity` throughput,
    for desktop release evidence. It keeps both models loaded and records the actual interleaved
-   policy request, including local native-runner IPC.
+   policy request, including local native-runner IPC. Every escalated trace row must prove that the
+   exact fixed prompt prefix state was reused; an uncached fallback cannot satisfy authorization.
 8. Complete the label, multilingual-claim, redistribution, PII, and secrets audits. Build a model
    card that includes failures, dataset provenance tiers, frozen thresholds, hardware, runtime,
    limitations, hashes, the Apache-2.0 license, and upstream attribution.

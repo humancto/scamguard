@@ -285,7 +285,10 @@ The runner builds directly against pinned llama.cpp revision
 `521a64cd01979bb5b1a466152c576a9d809b068d`. Its startup protocol, executable, model, source, and
 per-request trace are hash-bound in the report. A warmup request absorbs lazy Metal kernel
 compilation before measured repetitions. The frozen quantized prediction ledger remains
-authoritative: every routed runtime decision must match it exactly.
+authoritative: every routed runtime decision must match it exactly. Protocol v2 also precomputes
+the invariant system/user framing once, copies its native KV/recurrent state into each request, and
+records `specialist_prefix_reused` plus the cached token count on every escalated trace row. The
+release validator rejects a missing or silently bypassed prefix cache.
 
 The custom scorer changes no model math. It removes the generic multiple-choice helper's inserted
 space so candidates exactly continue the ScamGuard JSON prefix, and prints the already-computed
@@ -309,12 +312,15 @@ uv run --no-project --with cmake cmake \
 make qwen-08b-base-gguf
 make qwen-08b-base-gguf-benchmark LLAMA_CPP_DIR=../llama.cpp
 make qwen-08b-base-gguf-verdict-benchmark LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-base-native-gguf-prefix-benchmark LLAMA_CPP_DIR=../llama.cpp
 ```
 
 The fetch step pins the Hugging Face repository revision, byte count, SHA-256, and Apache-2.0
 license before the artifact is used. The generic benchmark records Metal and CPU kernel floors.
-The exact scorer records contexts 256 and 640 separately; its reports contain IDs and hashes but no
-message text. See `reports/QWEN08_Q4_RUNTIME_FLOOR.md` for the measured scope and limitations.
+The exact scorer records contexts 256 and 640 separately. The native prefix control records all
+uncached and cached round-trip timing samples, pinned identities, parity drift, and release gates;
+its report contains hashes but no message text. See `reports/QWEN08_Q4_RUNTIME_FLOOR.md` for the
+measured scope and limitations.
 
 The exporter passes `--no-mtp`. Qwen3.5-4B's text config advertises one MTP layer, while the
 selected Hugging Face checkpoint contains no MTP tensors; including that metadata produces a GGUF

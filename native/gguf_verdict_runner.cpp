@@ -22,6 +22,7 @@ constexpr std::array<std::string_view, 3> k_answers = {"SAFE\"", "UNCERTAIN\"", 
 
 struct options {
     std::string model;
+    std::string prefix;
     int32_t ctx_size = 640;
     int32_t batch_size = 640;
     int32_t ubatch_size = 128;
@@ -32,7 +33,8 @@ struct options {
 [[noreturn]] void usage(const char * program) {
     std::cerr << "usage: " << program
               << " --model MODEL.gguf [--ctx-size 640] [--batch-size 640]"
-                 " [--ubatch-size 128] [--threads 4] [--n-gpu-layers 99]\n";
+                 " [--ubatch-size 128] [--threads 4] [--n-gpu-layers 99]"
+                 " [--prefix-hex HEX]\n";
     std::exit(2);
 }
 
@@ -60,6 +62,8 @@ int32_t parse_non_negative(const char * value, const char * name) {
     }
 }
 
+std::string decode_hex(std::string_view encoded);
+
 options parse_options(int argc, char ** argv) {
     options result;
     for (int index = 1; index < argc; ++index) {
@@ -70,6 +74,8 @@ options parse_options(int argc, char ** argv) {
         const char * value = argv[++index];
         if (argument == "--model") {
             result.model = value;
+        } else if (argument == "--prefix-hex") {
+            result.prefix = decode_hex(value);
         } else if (argument == "--ctx-size") {
             result.ctx_size = parse_positive(value, "--ctx-size");
         } else if (argument == "--batch-size") {
@@ -185,6 +191,8 @@ struct score_result {
     std::array<double, 3> scores;
     int64_t elapsed_microseconds;
     size_t maximum_sequence_tokens;
+    bool prefix_reused;
+    size_t prefix_tokens;
 };
 
 score_result score_request(
@@ -194,6 +202,7 @@ score_result score_request(
     int32_t vocabulary_size,
     int32_t context_size,
     int32_t batch_size,
+    const std::vector<llama_token> & cached_prefix,
     const std::string & question) {
     const auto started = std::chrono::steady_clock::now();
     std::array<std::vector<llama_token>, 3> sequences;
@@ -209,6 +218,18 @@ score_result score_request(
     size_t common_prefix = maximum_sequence_tokens;
     for (const auto & sequence : sequences) {
         common_prefix = std::min(common_prefix, sequence.size());
+    }
+
+    const bool prefix_reused = !cached_prefix.empty();
+    if (prefix_reused) {
+        if (cached_prefix.size() >= common_prefix) {
+            throw std::runtime_error("cached prefix leaves no common request token to score");
+        }
+        for (const auto & sequence : sequences) {
+            if (!std::equal(cached_prefix.begin(), cached_prefix.end(), sequence.begin())) {
+                throw std::runtime_error("cached prefix tokenization differs from request tokenization");
+            }
+        }
     }
     size_t shared = 0;
     while (shared < common_prefix) {
@@ -236,9 +257,26 @@ score_result score_request(
         throw std::runtime_error("request does not fit in the shared GGUF context");
     }
 
+    llama_memory_t memory = llama_get_memory(context);
+    if (prefix_reused) {
+        for (llama_seq_id sequence = 0; sequence < 3; ++sequence) {
+            if (!llama_memory_seq_rm(memory, sequence, -1, -1)) {
+                throw std::runtime_error("failed to clear a dynamic GGUF sequence");
+            }
+            llama_memory_seq_cp(
+                memory,
+                3,
+                sequence,
+                0,
+                static_cast<llama_pos>(cached_prefix.size()));
+        }
+    } else {
+        llama_memory_clear(memory, true);
+    }
+
     clear_batch(batch);
     const std::vector<llama_seq_id> all_sequences = {0, 1, 2};
-    for (size_t position = 0; position < common_prefix; ++position) {
+    for (size_t position = cached_prefix.size(); position < common_prefix; ++position) {
         add_token(
             batch,
             sequences[0][position],
@@ -264,7 +302,6 @@ score_result score_request(
         }
     }
 
-    llama_memory_clear(llama_get_memory(context), true);
     std::vector<float> copied_logits(
         static_cast<size_t>(next_output_index) * static_cast<size_t>(vocabulary_size));
     int32_t copied_outputs = 0;
@@ -324,7 +361,49 @@ score_result score_request(
         scores,
         std::chrono::duration_cast<std::chrono::microseconds>(finished - started).count(),
         maximum_sequence_tokens,
+        prefix_reused,
+        cached_prefix.size(),
     };
+}
+
+void initialize_prefix_cache(
+    llama_context * context,
+    llama_batch & batch,
+    const std::vector<llama_token> & prefix_tokens,
+    int32_t batch_size) {
+    if (prefix_tokens.empty()) {
+        return;
+    }
+    if (prefix_tokens.size() >= static_cast<size_t>(llama_n_ctx(context))) {
+        throw std::runtime_error("cached prefix does not fit in the GGUF context");
+    }
+    llama_memory_clear(llama_get_memory(context), true);
+    clear_batch(batch);
+    for (size_t position = 0; position < prefix_tokens.size(); ++position) {
+        add_token(
+            batch,
+            prefix_tokens[position],
+            static_cast<llama_pos>(position),
+            {3},
+            false);
+    }
+    for (int32_t offset = 0; offset < batch.n_tokens; offset += batch_size) {
+        const int32_t token_count = std::min(batch_size, batch.n_tokens - offset);
+        llama_batch view = {
+            token_count,
+            batch.token + offset,
+            nullptr,
+            batch.pos + offset,
+            batch.n_seq_id + offset,
+            batch.seq_id + offset,
+            batch.logits + offset,
+        };
+        const int32_t status = llama_decode(context, view);
+        if (status != 0) {
+            throw std::runtime_error(
+                "failed to initialize prefix cache with status " + std::to_string(status));
+        }
+    }
 }
 
 }  // namespace
@@ -363,8 +442,12 @@ int main(int argc, char ** argv) {
         const int32_t vocabulary_size = llama_vocab_n_tokens(vocab);
         llama_batch batch = llama_batch_init(
             static_cast<int32_t>(context_params.n_ctx), 0, static_cast<int32_t>(context_params.n_seq_max));
+        const std::vector<llama_token> cached_prefix =
+            settings.prefix.empty() ? std::vector<llama_token>{} : tokenize(vocab, settings.prefix);
+        initialize_prefix_cache(context, batch, cached_prefix, settings.batch_size);
 
-        std::cout << "READY\t1\t" << llama_model_size(model) << '\t' << settings.ctx_size << '\n';
+        std::cout << "READY\t2\t" << llama_model_size(model) << '\t' << settings.ctx_size << '\t'
+                  << cached_prefix.size() << '\n';
         std::cout.flush();
 
         std::string line;
@@ -386,13 +469,15 @@ int main(int argc, char ** argv) {
                     vocabulary_size,
                     settings.ctx_size,
                     settings.batch_size,
+                    cached_prefix,
                     question);
                 std::cout << "RESULT\t" << identifier << std::setprecision(12);
                 for (const double score : result.scores) {
                     std::cout << '\t' << score;
                 }
                 std::cout << '\t' << result.elapsed_microseconds << '\t'
-                          << result.maximum_sequence_tokens << '\n';
+                          << result.maximum_sequence_tokens << '\t' << (result.prefix_reused ? 1 : 0)
+                          << '\t' << result.prefix_tokens << '\n';
             } catch (const std::exception & error) {
                 std::cout << "ERROR\t" << identifier << '\t' << error.what() << '\n';
             }

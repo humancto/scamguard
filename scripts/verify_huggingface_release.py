@@ -254,6 +254,13 @@ def _validate_routed_trace(
             ):
                 errors.append(f"routed_trace[{index}].{field} must be finite and non-negative")
                 return
+        if record["escalated"] is True:
+            if record.get("specialist_prefix_reused") is not True:
+                errors.append(f"routed_trace[{index}] must reuse the specialist prefix cache")
+                return
+            if not _positive_number(record.get("specialist_prefix_tokens")):
+                errors.append(f"routed_trace[{index}] specialist prefix tokens must be positive")
+                return
         component_total = (
             float(record["router_ms"])
             + float(record["specialist_ms"])
@@ -405,11 +412,17 @@ def _validate_report_contents(
         errors.append("routed native runner SHA-256 differs from runtime_binary artifact")
     if gguf_path and native_runtime.get("model_sha256") != file_sha256(gguf_path):
         errors.append("routed native model SHA-256 differs from GGUF artifact")
-    if native_runtime.get("protocol_version") != 1:
-        errors.append("routed native runtime protocol_version must equal 1")
+    if native_runtime.get("protocol_version") != 2:
+        errors.append("routed native runtime protocol_version must equal 2")
     for field, expected in expected_shape.items():
         if native_runtime.get(field) != expected:
             errors.append(f"routed native runtime {field} must equal {expected}")
+    if native_runtime.get("prefix_cache_enabled") is not True:
+        errors.append("routed native runtime prefix_cache_enabled must be true")
+    if not _positive_number(native_runtime.get("prefix_tokens")):
+        errors.append("routed native runtime prefix_tokens must be positive")
+    if not SHA256_PATTERN.fullmatch(str(native_runtime.get("prefix_sha256", ""))):
+        errors.append("routed native runtime prefix_sha256 is invalid")
     environment = _mapping(
         routed.get("environment"), "routed_runtime.environment", errors
     )
