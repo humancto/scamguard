@@ -236,6 +236,28 @@ space so candidates exactly continue the ScamGuard JSON prefix, and prints the a
 length-normalized answer log-probabilities. `training/eval_gguf.py` applies the same frozen
 temperature and threshold used by the reference checkpoint.
 
+Build and rerun the pinned upstream 0.8B Q4 runtime controls independently of model training:
+
+```bash
+uv run --no-project --with cmake cmake \
+  -S ../llama.cpp -B ../llama.cpp/build-scamguard-arm64 \
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 \
+  -DLLAMA_OPENSSL=OFF -DLLAMA_BUILD_SERVER=OFF -DLLAMA_BUILD_UI=OFF \
+  -DLLAMA_BUILD_APP=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TESTS=OFF
+uv run --no-project --with cmake cmake \
+  --build ../llama.cpp/build-scamguard-arm64 --config Release --parallel 8 \
+  --target llama-bench llama-perplexity
+
+make qwen-08b-base-gguf
+make qwen-08b-base-gguf-benchmark LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-base-gguf-verdict-benchmark LLAMA_CPP_DIR=../llama.cpp
+```
+
+The fetch step pins the Hugging Face repository revision, byte count, SHA-256, and Apache-2.0
+license before the artifact is used. The generic benchmark records Metal and CPU kernel floors.
+The exact scorer records contexts 256 and 640 separately; its reports contain IDs and hashes but no
+message text. See `reports/QWEN08_Q4_RUNTIME_FLOOR.md` for the measured scope and limitations.
+
 The exporter passes `--no-mtp`. Qwen3.5-4B's text config advertises one MTP layer, while the
 selected Hugging Face checkpoint contains no MTP tensors; including that metadata produces a GGUF
 that asks the runtime for a nonexistent final block. ScamGuard uses only the main 32-layer model.

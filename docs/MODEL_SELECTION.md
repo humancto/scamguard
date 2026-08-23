@@ -92,6 +92,14 @@ the package roughly in half, but changes 19 frozen decisions and reduces develop
 93.19%; it is rejected. Neither result repairs the open dialogue, raw regression-FPR, or macro-F1
 gates, and neither is a physical-mobile result.
 
+The verified upstream Qwen3.5-0.8B Q4_0 control is 563,036,064 bytes. On the 40-GPU-core M4 Max,
+192-token prompt processing measures 33.26 ms p95, already above the strict 20 ms fast-path budget.
+The exact three-candidate verdict scorer reaches a 50.24 ms p95 across ten run means at context 256
+and 53.98 ms at the quality-preserving context 640; process RSS peaks at 1.81 GB and 3.38 GB,
+respectively. Context and thread tuning do not recover the strict target. This freezes 0.8B Qwen as
+a routed specialist rather than the default fast path. It does not pre-judge trained quality or
+replace required physical-phone measurements.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen

@@ -29,7 +29,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
-| Qwen3.5-0.8B, BF16 base / planned 4-bit | schema-v24 full challenger; human audit pending | 1.59 GiB measured BF16 footprint; 563 MB upstream Q4_0 sizing reference | untouched base is 29.98% recall / 2.12% FPR at 188.02 ms p95; 26,104-example SFT preflight has zero truncation; audit is 0/635 |
+| Qwen3.5-0.8B, BF16 base / Q4 control | routed schema-v24 specialist; human audit pending | 537 MiB verified Q4_0 file; 1.81 GB exact-scorer RSS at ctx 256 | base is 29.98% recall / 2.12% FPR; Q4 exact scorer is 50.24 ms run-mean p95, so it cannot own the under-20-ms path; audit is 0/635 |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
 | Qwen3.5-4B, Q4/Q5/Q6 GGUF | deployable escalation candidates | 2.71/3.07/3.46 GB measured | Q4 and Q5 rejected after regression loss; Q6 is frozen on dev only |
@@ -46,6 +46,9 @@ Transformers safetensors checkpoint; GGUF is produced only after the selected ad
 The untouched 0.8B control, including category failures, publisher-held behavior, latency, and
 artifact hashes, is in
 [reports/QWEN08_BASE_SCHEMA24_BASELINE.md](reports/QWEN08_BASE_SCHEMA24_BASELINE.md).
+The verified upstream Q4_0 artifact, Metal/CPU sweep, exact three-verdict scorer, memory results,
+and routed deployment decision are in
+[reports/QWEN08_Q4_RUNTIME_FLOOR.md](reports/QWEN08_Q4_RUNTIME_FLOOR.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).

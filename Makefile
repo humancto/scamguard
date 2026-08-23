@@ -1,4 +1,5 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
+.PHONY: qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -8,6 +9,10 @@ QWEN08_FULL_TOKEN_AUDIT ?= reports/runs/qwen35-08b-schema24-token-audit.json
 QWEN08_FULL_LABEL_AUDIT ?= reports/data/schema24-label-audit-completion.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
+QWEN08_BASE_GGUF ?= artifacts/gguf/Qwen3.5-0.8B-Q4_0.gguf
+LLAMA_CPP_DIR ?= ../llama.cpp
+LLAMA_BENCH ?= $(LLAMA_CPP_DIR)/build-scamguard-arm64/bin/llama-bench
+LLAMA_PERPLEXITY ?= $(LLAMA_CPP_DIR)/build-scamguard-arm64/bin/llama-perplexity
 
 install:
 	uv sync --extra train --extra dev
@@ -606,6 +611,32 @@ forum-learning-data: data
 
 forum-learning-curve: forum-learning-data
 	uv run --extra train python benchmarks/forum_learning_curve.py
+
+qwen-08b-base-gguf:
+	uv run --extra train python scripts/fetch_qwen08_base_gguf.py
+
+qwen-08b-base-gguf-benchmark: qwen-08b-base-gguf
+	$(PYTHON_BIN) benchmarks/benchmark_gguf_runtime.py \
+		--llama-bench "$(LLAMA_BENCH)" --llama-source "$(LLAMA_CPP_DIR)" \
+		--model "$(QWEN08_BASE_GGUF)" \
+		--expected-model-sha256 57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf \
+		--report reports/runs/qwen35-08b-upstream-q4-runtime.json
+
+qwen-08b-base-gguf-verdict-benchmark: qwen-08b-base-gguf
+	uv run --extra train --extra qwen python benchmarks/benchmark_gguf_verdict_latency.py \
+		--llama-perplexity "$(LLAMA_PERPLEXITY)" --model "$(QWEN08_BASE_GGUF)" \
+		--expected-model-sha256 57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf \
+		--data "$(QWEN08_FULL_DATA)" \
+		--processor-revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--ctx-size 256 \
+		--report reports/runs/qwen35-08b-upstream-q4-verdict-latency-ctx256.json
+	uv run --extra train --extra qwen python benchmarks/benchmark_gguf_verdict_latency.py \
+		--llama-perplexity "$(LLAMA_PERPLEXITY)" --model "$(QWEN08_BASE_GGUF)" \
+		--expected-model-sha256 57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf \
+		--data "$(QWEN08_FULL_DATA)" \
+		--processor-revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--ctx-size 640 \
+		--report reports/runs/qwen35-08b-upstream-q4-verdict-latency-ctx640.json
 
 qwen-data: data
 	uv run --extra train python training/build_qwen_sft.py

@@ -7,11 +7,13 @@ the selected adapter, and only then convert and quantize it. The
 [`ggml-org/Qwen3.5-0.8B-GGUF`](https://huggingface.co/ggml-org/Qwen3.5-0.8B-GGUF) repository is an
 Apache-2.0 deployment conversion of that base—not the object to fine-tune.
 
-The upstream GGUF sizes (563 MB Q4_0, 834 MB Q8_0, and 1.56 GB BF16) establish that 0.8B is a
-credible phone/desktop payload. They do not establish ScamGuard accuracy, memory, or latency. The
-ScamGuard release will test `Q4_K_M` and `Q5_K_M` and publish the smallest quantization that retains
-the frozen model's decisions and gates. The under-20-ms target applies to the complete fast path;
-specialist and routed end-to-end latency are reported separately.
+The upstream Q4_0 control is now hash-verified at 563,036,064 bytes and benchmarked through native
+arm64 llama.cpp. Its exact verdict scorer misses both the strict 20 ms fast path and, narrowly, the
+formal 50 ms laptop boundary; this freezes Qwen as a routed specialist. Those control measurements
+do not establish trained ScamGuard accuracy, post-merge memory, or mobile performance. The release
+will test `Q4_K_M` and `Q5_K_M` and publish the smallest quantization that retains the frozen
+model's decisions and gates. Fast-path, specialist, and routed end-to-end latency remain separate
+published measurements.
 
 ## Current evidence, not a release candidate
 
@@ -21,7 +23,8 @@ core test scam recall and fails every core gate, although its publisher-test SAF
 That control is documented in `reports/QWEN08_BASE_SCHEMA24_BASELINE.md`. Historical adapter runs
 remain five-row smoke tests; they prove that loading, adapter training, and scoring execute but are
 explicitly rejected by the publication validator. The full adapted 0.8B challenger starts only
-after schema v24 data and independent label audits are frozen.
+after schema v24 data and independent label audits are frozen. The separate upstream Q4 runtime
+control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNTIME_FLOOR.md`.
 
 ## Release sequence
 
