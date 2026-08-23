@@ -27,6 +27,13 @@ explicitly rejected by the publication validator. The full adapted 0.8B challeng
 after schema v24 data and independent label audits are frozen. The separate upstream Q4 runtime
 control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNTIME_FLOOR.md`.
 
+`make qwen-08b-training-preflight` performs a separate no-update MPS forward/backward probe before
+the human audit is available. It hashes every locally resolved base-model file, requires the exact
+Qwen and Transformers commits, resolves all language-only LoRA targets, rejects visual-tower
+parameters, and requires finite loss and adapter gradients. It never opens schema-v24 fitting or
+audit rows and does not authorize training or publication. The current text-free result is
+[`reports/QWEN08_TRAINING_PREFLIGHT.json`](../reports/QWEN08_TRAINING_PREFLIGHT.json).
+
 ## Release sequence
 
 1. Finish the schema-v24 real-dialogue annotation audit, rebuild immutable family-disjoint data,
@@ -67,8 +74,9 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
    evidence, and zero examples over the frozen 640-token limit. The 640-token ceiling preserves
    decisive long-dialogue actions; it is not the under-20-ms fast-path latency budget. The freeze
    step refuses to overwrite an existing
-   config. The trainer independently rechecks the config, model revision, hyperparameters, LoRA
-   module allowlist, data/report hashes, counts, and output path before loading model weights.
+   config. The trainer independently rechecks the config, resolved model commit, installed
+   Transformers git commit, hyperparameters, LoRA module allowlist, data/report hashes, counts,
+   and output path before loading model weights.
 3. Freeze calibration, routing, and thresholds on development/selection data. Pass every internal
    and independent external-selection gate before opening any prediction-sealed test.
 

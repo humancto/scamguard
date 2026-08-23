@@ -27,6 +27,21 @@ Downloaded data is hash-checked before extraction. Generated and processed rows 
 and rebuilt locally. Compare their hashes with `data/processed/manifest.json` and the immutable
 experiment configuration before training.
 
+## Qwen3.5-0.8B training-runtime preflight
+
+Before the audit-gated full run, verify the actual base weights, framework commit, MPS backward
+path, and language-only LoRA target resolution without opening any fitting or audit rows:
+
+```bash
+make qwen-08b-training-preflight
+```
+
+The command refuses to overwrite its report. It performs no optimizer step, but it does require a
+finite completion-only loss and finite gradients for every resolved adapter tensor. The tracked
+reference result is [`reports/QWEN08_TRAINING_PREFLIGHT.json`](../reports/QWEN08_TRAINING_PREFLIGHT.json).
+It is environment and training-plumbing evidence only—not a quality result, audit substitute, or
+authorization to start the frozen experiment.
+
 ## Schema-v12 encoder
 
 ```bash

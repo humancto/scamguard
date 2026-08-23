@@ -11,7 +11,10 @@ from training.train_qwen_lora import (
     LANGUAGE_LORA_TARGETS,
     completion_token_start,
     experiment_config_errors,
+    require_loaded_revision,
 )
+
+TRANSFORMERS_REVISION = "0c92811846095910816a87aca50050d10c545270"
 
 
 def test_completion_token_start_at_exact_token_boundary() -> None:
@@ -78,6 +81,7 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
         "run_kind": "full",
         "base_model": args.model,
         "base_model_revision": args.revision,
+        "transformers_revision": TRANSFORMERS_REVISION,
         "seed": args.seed,
         "epochs": args.epochs,
         "batch_size": args.batch_size,
@@ -129,7 +133,9 @@ def frozen_experiment(tmp_path: Path) -> tuple[argparse.Namespace, dict[str, obj
 def test_experiment_config_binds_command_data_and_output(tmp_path: Path) -> None:
     args, config = frozen_experiment(tmp_path)
 
-    assert experiment_config_errors(args, config) == []
+    assert experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    ) == []
 
 
 def test_experiment_config_rejects_parameter_and_data_drift(tmp_path: Path) -> None:
@@ -137,7 +143,9 @@ def test_experiment_config_rejects_parameter_and_data_drift(tmp_path: Path) -> N
     args.sampling_strategy = "random"
     (args.data / "train.jsonl").write_text('{"id":"changed"}\n', encoding="utf-8")
 
-    errors = experiment_config_errors(args, config)
+    errors = experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    )
 
     assert any(error.startswith("sampling:") for error in errors)
     assert any(error.startswith("data hash mismatch:") for error in errors)
@@ -148,6 +156,26 @@ def test_full_experiment_rejects_tampered_token_audit(tmp_path: Path) -> None:
     token_audit = Path(str(config["data"]["token_length_audit"]["report_path"]))  # type: ignore[index]
     token_audit.write_text('{"full_over_max_length":1}', encoding="utf-8")
 
-    errors = experiment_config_errors(args, config)
+    errors = experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    )
 
     assert any(error.startswith("token audit hash mismatch:") for error in errors)
+
+
+def test_experiment_config_rejects_transformers_revision_drift(tmp_path: Path) -> None:
+    args, config = frozen_experiment(tmp_path)
+
+    errors = experiment_config_errors(args, config, transformers_revision="f" * 40)
+
+    assert any(error.startswith("transformers_revision:") for error in errors)
+
+
+def test_loaded_base_revision_must_be_present_and_exact() -> None:
+    revision = "a" * 40
+
+    require_loaded_revision(requested=revision, loaded=revision)
+    with pytest.raises(RuntimeError, match="<missing>"):
+        require_loaded_revision(requested=revision, loaded=None)
+    with pytest.raises(RuntimeError, match="differs"):
+        require_loaded_revision(requested=revision, loaded="b" * 40)

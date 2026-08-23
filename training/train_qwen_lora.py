@@ -8,6 +8,7 @@ import hashlib
 import importlib.metadata
 import json
 import platform
+import re
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +37,35 @@ LANGUAGE_LORA_TARGETS = [
     "up_proj",
     "down_proj",
 ]
+GIT_REVISION_PATTERN = re.compile(r"[0-9a-f]{40}")
+
+
+def installed_transformers_revision() -> str | None:
+    """Return the installed VCS commit recorded by direct_url.json, if exact."""
+
+    distribution = importlib.metadata.distribution("transformers")
+    direct_url = distribution.read_text("direct_url.json")
+    if direct_url is None:
+        return None
+    try:
+        record = json.loads(direct_url)
+    except json.JSONDecodeError:
+        return None
+    vcs_info = record.get("vcs_info")
+    if not isinstance(vcs_info, dict):
+        return None
+    commit = str(vcs_info.get("commit_id", ""))
+    return commit if GIT_REVISION_PATTERN.fullmatch(commit) else None
+
+
+def require_loaded_revision(*, requested: str | None, loaded: str | None) -> None:
+    """Fail closed when Transformers cannot prove the requested model revision."""
+
+    if requested is not None and loaded != requested:
+        rendered = loaded if loaded is not None else "<missing>"
+        raise RuntimeError(
+            f"loaded base revision {rendered} differs from requested {requested}"
+        )
 
 
 def sha256(path: Path) -> str:
@@ -51,10 +81,30 @@ def line_count(path: Path) -> int:
         return sum(1 for line in handle if line.strip())
 
 
-def experiment_config_errors(args: argparse.Namespace, config: dict[str, Any]) -> list[str]:
+def experiment_config_errors(
+    args: argparse.Namespace,
+    config: dict[str, Any],
+    *,
+    transformers_revision: str | None = None,
+) -> list[str]:
     """Bind command-line training parameters to a frozen experiment declaration."""
 
     errors: list[str] = []
+    installed_revision = (
+        installed_transformers_revision()
+        if transformers_revision is None
+        else transformers_revision
+    )
+    declared_revision = config.get("transformers_revision")
+    if not isinstance(declared_revision, str) or not GIT_REVISION_PATTERN.fullmatch(
+        declared_revision
+    ):
+        errors.append("transformers_revision: config must declare an exact 40-hex commit")
+    elif installed_revision != declared_revision:
+        errors.append(
+            "transformers_revision: config "
+            f"{declared_revision!r}, environment {installed_revision!r}"
+        )
     expected = {
         "base_model": args.model,
         "base_model_revision": args.revision,
@@ -324,10 +374,7 @@ def main() -> None:
     if args.gradient_checkpointing:
         model.gradient_checkpointing_enable()
     base_model_revision = getattr(model.config, "_commit_hash", None)
-    if args.revision and base_model_revision and args.revision != base_model_revision:
-        raise RuntimeError(
-            f"loaded base revision {base_model_revision} differs from requested {args.revision}"
-        )
+    require_loaded_revision(requested=args.revision, loaded=base_model_revision)
     lora = LoraConfig(
         r=16,
         lora_alpha=32,
@@ -440,6 +487,7 @@ def main() -> None:
                     "python_arch": platform.machine(),
                     "torch": torch.__version__,
                     "transformers": importlib.metadata.version("transformers"),
+                    "transformers_revision": installed_transformers_revision(),
                     "peft": importlib.metadata.version("peft"),
                     "mps_available": mps_available,
                 },
