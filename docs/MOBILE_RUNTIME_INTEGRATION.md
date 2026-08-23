@@ -32,6 +32,35 @@ After committing the exact source revision, create the hash-bound runtime ZIP wi
 make mobile-ios-package
 ```
 
+### iOS Simulator correctness smoke
+
+The simulator smoke is a correctness diagnostic, not mobile latency or release evidence. It runs
+the native C ABI and Swift calibration wrapper against the real upstream-control GGUF, then the
+host verifier repeats the same request through the desktop runner with CPU-only execution and
+requires raw scores and probabilities to match within `1e-9`.
+
+Build the minimal app after building the XCFramework:
+
+```bash
+make mobile-ios-simulator-smoke-build
+```
+
+Run it on a booted Apple-silicon simulator, then verify the returned file:
+
+```bash
+make mobile-ios-simulator-smoke-run IOS_SIMULATOR_UDID=<booted-simulator-UDID>
+make mobile-ios-simulator-smoke-verify \
+  IOS_SIMULATOR_SMOKE_RESULT=reports/runs/qwen35-08b-upstream-q4-ios-simulator-smoke.raw.json
+```
+
+The smoke harness forces `gpuLayers = 0`. On the tested iOS 18.6 simulator, MTLSimDriver aborted
+while creating a mapped llama.cpp prefix-cache buffer; that simulator-driver failure says nothing
+about physical iPhone Metal behavior. The device slice still uses the runtime pack's configured
+Metal offload.
+The verifier emits a text-free, hash-bound diagnostic under `reports/runs/`, and hard-codes
+`diagnostic_only=true`, `physical_device=false`, and `simulator=true` so it cannot satisfy the
+physical-device release gate.
+
 ## Android
 
 Build the arm64 JNI library with the pinned Android NDK r27d (`27.3.13750724`):

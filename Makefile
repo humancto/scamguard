@@ -1,7 +1,7 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-bundle schema24-audit-import schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
 .PHONY: qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
 .PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
-.PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-android-jni mobile-ios-package mobile-android-package
+.PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-ios-package mobile-android-package
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -60,6 +60,12 @@ MOBILE_PREDICTION_LEDGER ?=
 IOS_RUNTIME_PACKAGE ?=
 ANDROID_RUNTIME_PACKAGE ?=
 IOS_XCFRAMEWORK ?= build/ScamGuardGGUF.xcframework
+IOS_SIMULATOR_SMOKE_APP ?= build/ScamGuardSmoke.app
+IOS_SIMULATOR_UDID ?=
+IOS_SIMULATOR_SMOKE_RESULT ?= reports/runs/qwen35-08b-upstream-q4-ios-simulator-smoke.raw.json
+IOS_SIMULATOR_SMOKE_EVIDENCE ?= reports/runs/qwen35-08b-upstream-q4-ios-simulator-smoke.json
+IOS_SIMULATOR_SMOKE_REQUEST ?= mobile/ios/smoke/control-request.json
+IOS_SIMULATOR_RUNTIME_PACK ?= $(QWEN08_BASE_RUNTIME_PACK)
 ANDROID_NDK_DIR ?=
 ANDROID_RUNTIME_BUILD ?= build/android-arm64
 IOS_RUNTIME_PACKAGE_BUILD ?= dist/scamguard-ios-runtime.zip
@@ -91,6 +97,25 @@ mobile-benchmark-check:
 mobile-ios-xcframework:
 	test -n "$(LLAMA_CPP_DIR)"
 	scripts/build_ios_xcframework.sh "$(LLAMA_CPP_DIR)" "$(IOS_XCFRAMEWORK)"
+
+mobile-ios-simulator-smoke-build:
+	test -d "$(IOS_XCFRAMEWORK)"
+	scripts/build_ios_simulator_smoke.sh "$(IOS_XCFRAMEWORK)" \
+		"$(IOS_SIMULATOR_SMOKE_APP)"
+
+mobile-ios-simulator-smoke-run:
+	test -n "$(IOS_SIMULATOR_UDID)"
+	scripts/run_ios_simulator_smoke.sh "$(IOS_SIMULATOR_UDID)" \
+		"$(IOS_SIMULATOR_SMOKE_APP)" "$(IOS_SIMULATOR_RUNTIME_PACK)" \
+		"$(IOS_SIMULATOR_SMOKE_RESULT)"
+
+mobile-ios-simulator-smoke-verify:
+	test -n "$(IOS_SIMULATOR_SMOKE_RESULT)"
+	$(PYTHON_BIN) scripts/verify_ios_simulator_smoke.py \
+		--result "$(IOS_SIMULATOR_SMOKE_RESULT)" \
+		--request "$(IOS_SIMULATOR_SMOKE_REQUEST)" \
+		--runtime-pack "$(IOS_SIMULATOR_RUNTIME_PACK)" \
+		--evidence-output "$(IOS_SIMULATOR_SMOKE_EVIDENCE)"
 
 mobile-android-jni:
 	test -n "$(LLAMA_CPP_DIR)"
