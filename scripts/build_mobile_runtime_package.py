@@ -9,13 +9,101 @@ import json
 import stat
 import subprocess
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from scamguard.metrics import file_sha256
 
 PACKAGE_SCHEMA_VERSION = 1
 ZIP_TIMESTAMP = (2020, 1, 1, 0, 0, 0)
 PINNED_LLAMA_CPP_REVISION = "521a64cd01979bb5b1a466152c576a9d809b068d"
+
+
+def verify_mobile_package(
+    package: Path, *, expected_platform: str | None = None
+) -> dict[str, object]:
+    if not package.is_file():
+        raise FileNotFoundError(package)
+    with zipfile.ZipFile(package) as archive:
+        members: dict[str, zipfile.ZipInfo] = {}
+        for info in archive.infolist():
+            path = PurePosixPath(info.filename)
+            if info.is_dir() or path.is_absolute() or ".." in path.parts:
+                raise ValueError(f"unsafe mobile runtime package member: {info.filename}")
+            if info.filename in members:
+                raise ValueError(f"duplicate mobile runtime package member: {info.filename}")
+            if info.date_time != ZIP_TIMESTAMP:
+                raise ValueError(f"non-deterministic ZIP timestamp: {info.filename}")
+            members[info.filename] = info
+        manifest_name = "scamguard_mobile_runtime.manifest.json"
+        if manifest_name not in members:
+            raise ValueError("mobile runtime package manifest is missing")
+        manifest = json.loads(archive.read(manifest_name))
+        if not isinstance(manifest, dict):
+            raise ValueError("mobile runtime package manifest must be an object")
+        platform = manifest.get("platform")
+        if platform not in {"ios", "android"} or (
+            expected_platform is not None and platform != expected_platform
+        ):
+            raise ValueError("mobile runtime package platform is incompatible")
+        required = {
+            "artifact_schema_version": PACKAGE_SCHEMA_VERSION,
+            "artifact_type": "scamguard_mobile_runtime_package",
+            "publication_authorized": False,
+            "architecture": "arm64",
+            "native_abi_version": 1,
+            "protocol_version": 2,
+        }
+        for key, expected in required.items():
+            if manifest.get(key) != expected:
+                raise ValueError(f"mobile runtime manifest has incompatible {key}")
+        source = manifest.get("source")
+        if (
+            not isinstance(source, dict)
+            or source.get("llama_cpp_revision") != PINNED_LLAMA_CPP_REVISION
+        ):
+            raise ValueError("mobile runtime package has incompatible llama.cpp provenance")
+        records = manifest.get("files")
+        if not isinstance(records, list) or not records:
+            raise ValueError("mobile runtime package has no file records")
+        recorded_names: set[str] = set()
+        for record in records:
+            if not isinstance(record, dict):
+                raise ValueError("mobile runtime file record must be an object")
+            name = record.get("path")
+            if not isinstance(name, str) or name == manifest_name or name in recorded_names:
+                raise ValueError("mobile runtime file record has an invalid path")
+            if name not in members:
+                raise ValueError(f"mobile runtime package member is missing: {name}")
+            payload = archive.read(name)
+            if record.get("bytes") != len(payload):
+                raise ValueError(f"mobile runtime package byte count differs: {name}")
+            if record.get("sha256") != hashlib.sha256(payload).hexdigest():
+                raise ValueError(f"mobile runtime package hash differs: {name}")
+            recorded_names.add(name)
+        if set(members) != recorded_names | {manifest_name}:
+            raise ValueError("mobile runtime package contains an unrecorded member")
+        if platform == "android":
+            required_names = {
+                "runtime/jni/arm64-v8a/libscamguard-jni.so",
+                "runtime/kotlin/com/scamguard/runtime/ScamGuardNative.kt",
+                "LICENSE",
+            }
+        else:
+            required_names = {
+                "runtime/ScamGuardGGUF.xcframework/Info.plist",
+                "runtime/ScamGuardRuntime.swift",
+                "LICENSE",
+            }
+            if not any(name.endswith("/libScamGuardGGUF-ios-device.a") for name in recorded_names):
+                raise ValueError("iOS runtime package lacks the physical-device library")
+            if not any(
+                name.endswith("/libScamGuardGGUF-ios-simulator.a")
+                for name in recorded_names
+            ):
+                raise ValueError("iOS runtime package lacks the simulator library")
+        if not required_names.issubset(recorded_names):
+            raise ValueError(f"{platform} runtime package is incomplete")
+    return manifest
 
 
 def git_revision(repository: Path, *, require_clean: bool) -> str:
@@ -130,6 +218,7 @@ def build_mobile_package(
             archive.writestr(info, data)
         info, data = _zip_entry("scamguard_mobile_runtime.manifest.json", manifest_bytes, 0o644)
         archive.writestr(info, data)
+    verify_mobile_package(output, expected_platform=platform)
     return {
         **manifest,
         "package_path": str(output),

@@ -10,6 +10,7 @@ from scamguard.metrics import file_sha256
 from scripts.build_mobile_runtime_package import (
     PINNED_LLAMA_CPP_REVISION,
     build_mobile_package,
+    verify_mobile_package,
 )
 
 
@@ -53,13 +54,18 @@ def test_android_package_is_deterministic_and_hash_bound(tmp_path: Path) -> None
     assert embedded["platform"] == "android"
     assert embedded["toolchain"]["version"] == "27.3.13750724"
     assert embedded["files"][1]["sha256"] == file_sha256(tmp_path / "ScamGuardNative.kt")
+    assert verify_mobile_package(first, expected_platform="android")["platform"] == "android"
 
 
 def test_ios_package_walks_xcframework_without_symlinks(tmp_path: Path) -> None:
     runtime = tmp_path / "ScamGuardGGUF.xcframework"
     slice_dir = runtime / "ios-arm64"
     slice_dir.mkdir(parents=True)
-    (slice_dir / "libScamGuardGGUF.a").write_bytes(b"ios-runtime")
+    (runtime / "Info.plist").write_text("plist\n", encoding="utf-8")
+    (slice_dir / "libScamGuardGGUF-ios-device.a").write_bytes(b"ios-runtime")
+    simulator = runtime / "ios-arm64-simulator"
+    simulator.mkdir()
+    (simulator / "libScamGuardGGUF-ios-simulator.a").write_bytes(b"simulator-runtime")
     wrapper = tmp_path / "ScamGuardRuntime.swift"
     wrapper.write_text("public final class ScamGuardRuntime {}\n", encoding="utf-8")
     license_path = tmp_path / "LICENSE"
@@ -82,7 +88,7 @@ def test_ios_package_walks_xcframework_without_symlinks(tmp_path: Path) -> None:
     assert manifest["platform"] == "ios"
     with zipfile.ZipFile(output) as archive:
         assert (
-            "runtime/ScamGuardGGUF.xcframework/ios-arm64/libScamGuardGGUF.a"
+            "runtime/ScamGuardGGUF.xcframework/ios-arm64/libScamGuardGGUF-ios-device.a"
             in archive.namelist()
         )
 
@@ -108,3 +114,20 @@ def test_package_refuses_wrong_llama_revision_and_overwrite(tmp_path: Path) -> N
             toolchain_version="27.3.13750724",
             minimum_os_version="28",
         )
+
+
+def test_verifier_rejects_unrecorded_and_duplicate_members(tmp_path: Path) -> None:
+    package, _ = build_android_fixture(tmp_path, "runtime.zip")
+    with zipfile.ZipFile(package, "a") as archive:
+        info = zipfile.ZipInfo("unrecorded.txt", (2020, 1, 1, 0, 0, 0))
+        archive.writestr(info, "not in manifest")
+    with pytest.raises(ValueError, match="unrecorded member"):
+        verify_mobile_package(package)
+
+    duplicate, _ = build_android_fixture(tmp_path, "duplicate.zip")
+    with pytest.warns(UserWarning, match="Duplicate name"):
+        with zipfile.ZipFile(duplicate, "a") as archive:
+            info = zipfile.ZipInfo("LICENSE", (2020, 1, 1, 0, 0, 0))
+            archive.writestr(info, "duplicate")
+    with pytest.raises(ValueError, match="duplicate"):
+        verify_mobile_package(duplicate)
