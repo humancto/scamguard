@@ -93,4 +93,7 @@ not relabel the encoder's 20-ms number as end-to-end latency.
 
 No mobile claim is allowed until a physical-device run records the model pack, binary/runtime,
 hardware, benchmark corpus hashes, and raw timing samples. Simulator, desktop MPS, and upstream
-artifact sizes establish feasibility only.
+artifact sizes establish feasibility only. The exact two-platform raw-trace schema and fail-closed
+verifier are defined in [`MOBILE_BENCHMARK_PROTOCOL.md`](MOBILE_BENCHMARK_PROTOCOL.md). A release
+must bind separate iOS and Android runtime packages; a placeholder or summary-only mobile report
+cannot satisfy Hugging Face authorization.

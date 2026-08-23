@@ -25,10 +25,18 @@ from scamguard.prompts import SYSTEM_PROMPT
 
 try:
     from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
+    from scripts.verify_mobile_benchmark import (
+        load_reference_predictions,
+        validate_mobile_benchmark,
+    )
 except ModuleNotFoundError:  # Direct execution places scripts/ rather than repo on sys.path.
     from audit_protocol import (  # type: ignore[no-redef]
         AUDIT_PROTOCOL_VERSION,
         audit_protocol_sha256,
+    )
+    from verify_mobile_benchmark import (  # type: ignore[no-redef]
+        load_reference_predictions,
+        validate_mobile_benchmark,
     )
 
 BASE_MODEL = "Qwen/Qwen3.5-0.8B"
@@ -38,8 +46,10 @@ ALLOWED_QUANTIZATIONS = {"Q4_K_M", "Q5_K_M", "Q8_0"}
 ALLOWED_ROLES = {"fast_path", "routed_specialist"}
 REQUIRED_INTERNAL_GATES = 39
 REQUIRED_ARTIFACT_ROLES = {
+    "android_runtime_package",
     "merged_model",
     "gguf_model",
+    "ios_runtime_package",
     "runtime_calibration",
     "runtime_binary",
     "runtime_pack_manifest",
@@ -53,6 +63,7 @@ REQUIRED_REPORT_ROLES = {
     "model_card",
     "quality_gates",
     "quantized_quality",
+    "quantized_prediction_ledger",
     "routed_trace",
     "routed_runtime",
     "runtime_source",
@@ -341,6 +352,7 @@ def _validate_report_contents(
     quantized = _json_report(
         report_paths.get("quantized_quality"), "quantized_quality", errors
     )
+    mobile = _json_report(report_paths.get("mobile_benchmark"), "mobile_benchmark", errors)
     routed = _json_report(report_paths.get("routed_runtime"), "routed_runtime", errors)
     label_audit = _json_report(report_paths.get("label_audit"), "label_audit", errors)
     if label_audit.get("release_gate_passed") is not True:
@@ -422,6 +434,60 @@ def _validate_report_contents(
     gguf_path = artifact_paths.get("gguf_model")
     if gguf_path and quantized.get("model_sha256") != file_sha256(gguf_path):
         errors.append("quantized quality model SHA-256 differs from the GGUF artifact")
+
+    quantized_ledger = _mapping(
+        quantized.get("prediction_ledger"), "quantized_quality.prediction_ledger", errors
+    )
+    quantized_ledger_sha256 = str(quantized_ledger.get("sha256", ""))
+    if not SHA256_PATTERN.fullmatch(quantized_ledger_sha256):
+        errors.append("quantized_quality prediction ledger SHA-256 is invalid")
+    quantized_ledger_path = report_paths.get("quantized_prediction_ledger")
+    reference_verdicts: dict[str, str] | None = None
+    if quantized_ledger_path is not None:
+        if quantized_ledger_sha256 != file_sha256(quantized_ledger_path):
+            errors.append("quantized quality prediction ledger differs from release evidence")
+        reference_verdicts, reference_errors = load_reference_predictions(quantized_ledger_path)
+        errors.extend(f"quantized prediction ledger: {error}" for error in reference_errors)
+        if quantized_ledger.get("examples") != len(reference_verdicts):
+            errors.append("quantized quality prediction ledger row count differs")
+        if quantized_ledger.get("contains_message_text") is not False:
+            errors.append("quantized quality prediction ledger must be text-free")
+    calibration_path = artifact_paths.get("runtime_calibration")
+    quantized_path = report_paths.get("quantized_quality")
+    mobile_errors, mobile_summary = validate_mobile_benchmark(
+        mobile,
+        model_sha256=file_sha256(gguf_path) if gguf_path else None,
+        calibration_sha256=file_sha256(calibration_path) if calibration_path else None,
+        quantized_quality_sha256=file_sha256(quantized_path) if quantized_path else None,
+        source_prediction_ledger_sha256=quantized_ledger_sha256 or None,
+        runtime_package_sha256={
+            platform_name: file_sha256(path)
+            for platform_name, path in (
+                ("iOS", artifact_paths.get("ios_runtime_package")),
+                ("Android", artifact_paths.get("android_runtime_package")),
+            )
+            if path is not None
+        },
+        reference_verdicts=reference_verdicts,
+    )
+    errors.extend(f"mobile benchmark: {error}" for error in mobile_errors)
+    mobile_manifest = _mapping(
+        _mapping(manifest.get("runtime"), "runtime", errors).get("mobile"),
+        "runtime.mobile",
+        errors,
+    )
+    mobile_bindings = {
+        "device": mobile_summary.get("device_matrix"),
+        "p50_ms": mobile_summary.get("p50_ms"),
+        "p95_ms": mobile_summary.get("p95_ms"),
+        "p99_ms": mobile_summary.get("p99_ms"),
+        "maximum_ms": mobile_summary.get("maximum_ms"),
+        "peak_memory_bytes": mobile_summary.get("peak_memory_bytes"),
+        "samples": mobile_summary.get("samples"),
+    }
+    for field, evidence_value in mobile_bindings.items():
+        if evidence_value is not None and mobile_manifest.get(field) != evidence_value:
+            errors.append(f"runtime.mobile.{field} differs from mobile benchmark evidence")
 
     specialist = _mapping(routed.get("specialist"), "routed_runtime.specialist", errors)
     quantization = _mapping(manifest.get("quantization"), "quantization", errors)

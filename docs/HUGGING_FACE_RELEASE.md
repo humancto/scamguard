@@ -117,13 +117,19 @@ control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNT
     Upload only when it returns `"publication_authorized": true`.
 
     The manifest must hash and size the merged model, selected GGUF, tokenizer, native desktop
-    runtime binary, runtime calibration, self-contained runtime-pack manifest, and runtime source.
+    runtime binary, separate iOS and Android runtime packages, runtime calibration,
+    self-contained runtime-pack manifest, and runtime source.
     The pack must bind the selected model/binary/calibration plus the frozen Qwen prompt and may not
     self-authorize publication. The release must also include the BF16 quality
-    report, 39-gate report, quantized quality report, routed runtime report, its text-free routed
+    report, 39-gate report, quantized quality report and prediction ledger, routed runtime report,
+    its text-free routed
     trace, data manifest, hash-bound 635-row label-audit completion report, physical-mobile
     benchmark, and model card. The checker cross-links these artifacts, rejects an outdated review
-    rubric or incomplete audit, and recomputes routed latency percentiles from the trace.
+    rubric or incomplete audit, and recomputes routed and physical-mobile latency percentiles from
+    raw text-free traces. Mobile authorization requires the same sample identities on a physical
+    iPhone and a physical Android device, exact reference-verdict parity, offline execution,
+    prefix-cache reuse, and platform-package hashes. See
+    [`MOBILE_BENCHMARK_PROTOCOL.md`](MOBILE_BENCHMARK_PROTOCOL.md).
 
 ## Hugging Face package boundary
 

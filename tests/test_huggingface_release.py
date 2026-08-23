@@ -15,6 +15,12 @@ from scamguard.gguf_runtime import (
 from scamguard.prompts import SYSTEM_PROMPT
 from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
 from scripts.verify_huggingface_release import validate_release_manifest
+from scripts.verify_mobile_benchmark import (
+    mobile_sample_id,
+    sampled_reference_sha256,
+    selected_ids_sha256,
+    summarize,
+)
 
 
 def evidence(path: Path, role: str, root: Path) -> dict[str, object]:
@@ -26,12 +32,118 @@ def evidence(path: Path, role: str, root: Path) -> dict[str, object]:
     }
 
 
+def physical_mobile_report(
+    artifact_paths: dict[str, Path], quantized_quality: Path
+) -> dict[str, object]:
+    identifiers = [mobile_sample_id(f"quantized-row-{index:03d}") for index in range(100)]
+    reference = {
+        identifier: ("SAFE" if index % 2 == 0 else "SCAM")
+        for index, identifier in enumerate(identifiers)
+    }
+    runs: list[dict[str, object]] = []
+    for platform_index, platform_name in enumerate(("iOS", "Android")):
+        samples = [
+            {
+                "id": identifier,
+                "repetition": repetition,
+                "elapsed_ms": 60.0 + platform_index * 20 + index / 10,
+                "verdict": reference[identifier],
+                "reference_verdict": reference[identifier],
+                "escalated": index % 10 == 0,
+                "specialist_prefix_reused": index % 10 == 0,
+            }
+            for repetition in range(1)
+            for index, identifier in enumerate(identifiers)
+        ]
+        timing_summary = summarize([float(sample["elapsed_ms"]) for sample in samples])
+        runs.append(
+            {
+                "platform": platform_name,
+                "physical_device": True,
+                "simulator": False,
+                "measured_at_utc": "2026-08-22T23:00:00Z",
+                "device": {
+                    "manufacturer": "Apple" if platform_name == "iOS" else "Google",
+                    "model": "iPhone 16 Pro" if platform_name == "iOS" else "Pixel 9",
+                    "hardware_identifier": "iPhone17,1" if platform_name == "iOS" else "tokay",
+                    "architecture": "arm64",
+                    "form_factor": "phone",
+                    "os_name": platform_name,
+                    "os_version": "18.6" if platform_name == "iOS" else "16",
+                    "thermal_state_before": "nominal",
+                    "thermal_state_after": "fair",
+                },
+                "runtime": {
+                    "backend": "llama.cpp",
+                    "runtime_revision": "521a64cd01979bb5b1a466152c576a9d809b068d",
+                    "accelerator": "Metal" if platform_name == "iOS" else "CPU",
+                    "runtime_package_sha256": hashlib.sha256(
+                        artifact_paths[
+                            "ios_runtime_package"
+                            if platform_name == "iOS"
+                            else "android_runtime_package"
+                        ].read_bytes()
+                    ).hexdigest(),
+                    "offline": True,
+                    "protocol_version": 2,
+                    "prefix_cache_enabled": True,
+                    "threads": 4,
+                },
+                "latency_unit": "ms",
+                "measurement_scope": "complete_local_tokenization_to_verdict",
+                "monotonic_clock": "continuous monotonic nanoseconds",
+                "warmup_requests": 5,
+                "startup_ms": 500.0,
+                "peak_memory_bytes": 800_000_000 + platform_index * 100_000_000,
+                "sampled_reference_ledger_sha256": sampled_reference_sha256(reference),
+                "samples": samples,
+                "summary": {"requests": len(samples), **timing_summary},
+            }
+        )
+    quantized = json.loads(quantized_quality.read_text(encoding="utf-8"))
+    android_summary = runs[1]["summary"]
+    assert isinstance(android_summary, dict)
+    return {
+        "artifact_schema_version": 1,
+        "measurement_kind": "physical_mobile_device_matrix",
+        "contains_message_text": False,
+        "model_sha256": hashlib.sha256(artifact_paths["gguf_model"].read_bytes()).hexdigest(),
+        "calibration_sha256": hashlib.sha256(
+            artifact_paths["runtime_calibration"].read_bytes()
+        ).hexdigest(),
+        "quantized_quality_report_sha256": hashlib.sha256(
+            quantized_quality.read_bytes()
+        ).hexdigest(),
+        "source_prediction_ledger_sha256": quantized["prediction_ledger"]["sha256"],
+        "corpus": {
+            "rows": len(identifiers),
+            "repetitions": 1,
+            "selected_ids_sha256": selected_ids_sha256(set(identifiers)),
+            "contains_message_text": False,
+        },
+        "runs": runs,
+        "summary": {
+            "device_matrix": "iOS iPhone 16 Pro; Android Pixel 9",
+            "devices": 2,
+            "samples": 200,
+            "p50_ms": android_summary["p50_ms"],
+            "p95_ms": android_summary["p95_ms"],
+            "p99_ms": android_summary["p99_ms"],
+            "maximum_ms": android_summary["maximum_ms"],
+            "peak_memory_bytes": 900_000_000,
+        },
+        "release_gate_passed": True,
+    }
+
+
 def valid_manifest(tmp_path: Path) -> dict[str, object]:
     artifacts = []
     artifact_paths: dict[str, Path] = {}
     for role in (
+        "android_runtime_package",
         "merged_model",
         "gguf_model",
+        "ios_runtime_package",
         "runtime_binary",
         "runtime_calibration",
         "tokenizer",
@@ -97,7 +209,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
     artifacts.append(evidence(runtime_pack, "runtime_pack_manifest", tmp_path))
 
     report_paths: dict[str, Path] = {}
-    for role in ("data_manifest", "mobile_benchmark", "model_card", "runtime_source"):
+    for role in ("data_manifest", "model_card", "runtime_source"):
         path = tmp_path / f"{role}.json"
         path.write_text(f'{{"report":"{role}"}}', encoding="utf-8")
         report_paths[role] = path
@@ -183,6 +295,19 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
         encoding="utf-8",
     )
     report_paths["quality_gates"] = quality_gates
+    quantized_predictions = tmp_path / "quantized_quality.predictions.jsonl"
+    quantized_prediction_records = [
+        {
+            "id": f"quantized-row-{index:03d}",
+            "calibrated_verdict": "SAFE" if index % 2 == 0 else "SCAM",
+        }
+        for index in range(100)
+    ]
+    quantized_predictions.write_text(
+        "".join(json.dumps(record) + "\n" for record in quantized_prediction_records),
+        encoding="utf-8",
+    )
+    report_paths["quantized_prediction_ledger"] = quantized_predictions
     quantized = tmp_path / "quantized_quality.json"
     quantized.write_text(
         json.dumps(
@@ -201,11 +326,21 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                     "exact_calibrated_verdict_parity": True,
                     "release_gate_passed": True,
                 },
+                "prediction_ledger": {
+                    "path": str(quantized_predictions.relative_to(tmp_path)),
+                    "sha256": hashlib.sha256(quantized_predictions.read_bytes()).hexdigest(),
+                    "examples": len(quantized_prediction_records),
+                    "contains_message_text": False,
+                },
             }
         ),
         encoding="utf-8",
     )
     report_paths["quantized_quality"] = quantized
+    mobile_benchmark = tmp_path / "mobile_benchmark.json"
+    mobile_record = physical_mobile_report(artifact_paths, quantized)
+    mobile_benchmark.write_text(json.dumps(mobile_record), encoding="utf-8")
+    report_paths["mobile_benchmark"] = mobile_benchmark
     routed_runtime = tmp_path / "routed_runtime.json"
     routed_runtime.write_text(
         json.dumps(
@@ -340,13 +475,15 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
             },
             "mobile": {
                 "measured": True,
-                "device": "physical iPhone",
-                "p50_ms": 70.0,
-                "p95_ms": 100.0,
-                "p99_ms": 120.0,
-                "maximum_ms": 150.0,
-                "peak_memory_bytes": 900_000_000,
-                "samples": 1_000,
+                "device": mobile_record["summary"]["device_matrix"],  # type: ignore[index]
+                "p50_ms": mobile_record["summary"]["p50_ms"],  # type: ignore[index]
+                "p95_ms": mobile_record["summary"]["p95_ms"],  # type: ignore[index]
+                "p99_ms": mobile_record["summary"]["p99_ms"],  # type: ignore[index]
+                "maximum_ms": mobile_record["summary"]["maximum_ms"],  # type: ignore[index]
+                "peak_memory_bytes": mobile_record["summary"][  # type: ignore[index]
+                    "peak_memory_bytes"
+                ],
+                "samples": mobile_record["summary"]["samples"],  # type: ignore[index]
             },
             "routed": {
                 "measured": True,
@@ -398,6 +535,31 @@ def test_missing_physical_mobile_evidence_is_rejected(tmp_path: Path) -> None:
 
     assert "measured must be true" in errors
     assert "runtime.mobile.device must be recorded" in errors
+
+
+def test_placeholder_mobile_report_cannot_authorize_release(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    report_path = tmp_path / "mobile_benchmark.json"
+    report_path.write_text('{"report":"mobile_benchmark"}', encoding="utf-8")
+    for entry in manifest["reports"]:  # type: ignore[union-attr]
+        if entry["role"] == "mobile_benchmark":
+            entry["sha256"] = hashlib.sha256(report_path.read_bytes()).hexdigest()
+            entry["size_bytes"] = report_path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "mobile benchmark: artifact_schema_version must equal 1" in errors
+    assert any("physical iOS and one physical Android" in error for error in errors)
+    assert "mobile benchmark: release_gate_passed must be true" in errors
+
+
+def test_mobile_manifest_summary_must_match_raw_device_traces(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    manifest["runtime"]["mobile"]["p95_ms"] += 1  # type: ignore[index,operator]
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert "runtime.mobile.p95_ms differs from mobile benchmark evidence" in errors
 
 
 def test_incomplete_or_unbound_label_audit_is_rejected(tmp_path: Path) -> None:

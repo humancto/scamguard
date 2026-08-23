@@ -163,6 +163,8 @@ Exact training, native arm64 llama.cpp, merge, Q4_K_M export, and post-quantizat
 commands are in [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
 The measured ONNX/Core ML/Android export gates are in
 [docs/DEPLOYMENT_PLAN.md](docs/DEPLOYMENT_PLAN.md).
+The physical iOS/Android raw-trace receipt and verifier are in
+[docs/MOBILE_BENCHMARK_PROTOCOL.md](docs/MOBILE_BENCHMARK_PROTOCOL.md).
 
 ## ScamBench gates
 
