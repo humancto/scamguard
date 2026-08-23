@@ -19,6 +19,17 @@ class Scanner:
             load_backend(model_path) if model_path else ConservativeHeuristicBackend()
         )
 
+    def close(self) -> None:
+        close = getattr(self.backend, "close", None)
+        if callable(close):
+            close()
+
+    def __enter__(self) -> Scanner:
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        self.close()
+
     def scan(self, message: str) -> ScanResult:
         text = message.strip()
         if not text:
@@ -72,4 +83,5 @@ class Scanner:
 def scan(message: str, *, model_path: str | None = None) -> ScanResult:
     """Classify one message. Supply a trusted local model artifact for benchmarked output."""
 
-    return Scanner(model_path=model_path).scan(message)
+    with Scanner(model_path=model_path) as scanner:
+        return scanner.scan(message)

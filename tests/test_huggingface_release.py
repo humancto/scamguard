@@ -4,6 +4,15 @@ import hashlib
 import json
 from pathlib import Path
 
+from scamguard.gguf_runtime import (
+    FROZEN_PROMPT_PREFIX,
+    FROZEN_PROMPT_PREFIX_SHA256,
+    FROZEN_PROMPT_SUFFIX,
+    FROZEN_PROMPT_SUFFIX_SHA256,
+    QWEN35_08B_PROCESSOR,
+    QWEN35_08B_PROCESSOR_REVISION,
+)
+from scamguard.prompts import SYSTEM_PROMPT
 from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
 from scripts.verify_huggingface_release import validate_release_manifest
 
@@ -20,11 +29,72 @@ def evidence(path: Path, role: str, root: Path) -> dict[str, object]:
 def valid_manifest(tmp_path: Path) -> dict[str, object]:
     artifacts = []
     artifact_paths: dict[str, Path] = {}
-    for role in ("merged_model", "gguf_model", "runtime_binary", "tokenizer"):
+    for role in (
+        "merged_model",
+        "gguf_model",
+        "runtime_binary",
+        "runtime_calibration",
+        "tokenizer",
+    ):
         path = tmp_path / f"{role}.bin"
         path.write_bytes(f"artifact:{role}".encode())
         artifact_paths[role] = path
         artifacts.append(evidence(path, role, tmp_path))
+    runtime_pack = tmp_path / "scamguard_gguf_pack.json"
+    runtime_pack.write_text(
+        json.dumps(
+            {
+                "artifact_schema_version": 1,
+                "backend_type": "qwen_gguf_verdict_likelihood",
+                "purpose": "release_candidate",
+                "publication_authorized": False,
+                "model": {
+                    "path": artifact_paths["gguf_model"].name,
+                    "sha256": hashlib.sha256(
+                        artifact_paths["gguf_model"].read_bytes()
+                    ).hexdigest(),
+                    "bytes": artifact_paths["gguf_model"].stat().st_size,
+                },
+                "runner": {
+                    "path": artifact_paths["runtime_binary"].name,
+                    "sha256": hashlib.sha256(
+                        artifact_paths["runtime_binary"].read_bytes()
+                    ).hexdigest(),
+                    "bytes": artifact_paths["runtime_binary"].stat().st_size,
+                    "portable_system_dependencies_only": True,
+                },
+                "calibration": {
+                    "path": artifact_paths["runtime_calibration"].name,
+                    "sha256": hashlib.sha256(
+                        artifact_paths["runtime_calibration"].read_bytes()
+                    ).hexdigest(),
+                    "bytes": artifact_paths["runtime_calibration"].stat().st_size,
+                },
+                "prompt": {
+                    "prefix": FROZEN_PROMPT_PREFIX,
+                    "message_open": "<message>",
+                    "suffix": FROZEN_PROMPT_SUFFIX,
+                    "prefix_sha256": FROZEN_PROMPT_PREFIX_SHA256,
+                    "suffix_sha256": FROZEN_PROMPT_SUFFIX_SHA256,
+                    "system_prompt_sha256": hashlib.sha256(
+                        SYSTEM_PROMPT.encode()
+                    ).hexdigest(),
+                    "processor_repository": QWEN35_08B_PROCESSOR,
+                    "processor_revision": QWEN35_08B_PROCESSOR_REVISION,
+                },
+                "runtime": {
+                    "protocol_version": 2,
+                    "message_batch_size": 1,
+                    "candidate_batch_size": 3,
+                    "sequence_bucket_size": 64,
+                    "prefix_cache_enabled": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    artifact_paths["runtime_pack_manifest"] = runtime_pack
+    artifacts.append(evidence(runtime_pack, "runtime_pack_manifest", tmp_path))
 
     report_paths: dict[str, Path] = {}
     for role in ("data_manifest", "mobile_benchmark", "model_card", "runtime_source"):
@@ -350,6 +420,24 @@ def test_incomplete_or_unbound_label_audit_is_rejected(tmp_path: Path) -> None:
     assert "label_audit complete_rows must equal rows" in errors
     assert "label_audit incomplete_rows must equal zero" in errors
     assert any("protocol SHA-256" in error for error in errors)
+
+
+def test_runtime_pack_must_bind_deployable_artifacts(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    pack_path = tmp_path / "scamguard_gguf_pack.json"
+    pack = json.loads(pack_path.read_text(encoding="utf-8"))
+    pack["model"]["sha256"] = "0" * 64
+    pack["prompt"]["prefix"] += "tampered"
+    pack_path.write_text(json.dumps(pack), encoding="utf-8")
+    for entry in manifest["artifacts"]:  # type: ignore[union-attr]
+        if entry["role"] == "runtime_pack_manifest":
+            entry["sha256"] = hashlib.sha256(pack_path.read_bytes()).hexdigest()
+            entry["size_bytes"] = pack_path.stat().st_size
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert any("model SHA-256" in error for error in errors)
+    assert "runtime pack prompt mismatch: prefix" in errors
 
 
 def test_tampered_artifact_is_rejected(tmp_path: Path) -> None:

@@ -313,6 +313,8 @@ make qwen-08b-base-gguf
 make qwen-08b-base-gguf-benchmark LLAMA_CPP_DIR=../llama.cpp
 make qwen-08b-base-gguf-verdict-benchmark LLAMA_CPP_DIR=../llama.cpp
 make qwen-08b-base-native-gguf-prefix-benchmark LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-base-runtime-pack LLAMA_CPP_DIR=../llama.cpp
+make qwen-08b-base-runtime-pack-benchmark
 ```
 
 The fetch step pins the Hugging Face repository revision, byte count, SHA-256, and Apache-2.0
@@ -321,6 +323,14 @@ The exact scorer records contexts 256 and 640 separately. The native prefix cont
 uncached and cached round-trip timing samples, pinned identities, parity drift, and release gates;
 its report contains hashes but no message text. See `reports/QWEN08_Q4_RUNTIME_FLOOR.md` for the
 measured scope and limitations.
+
+The runtime-pack target rebuilds the scorer with static llama.cpp/ggml linkage, verifies that the
+result has only operating-system dependencies, copies the GGUF and normalized calibration into a
+self-contained ignored directory, and freezes the exact Qwen prompt fragments. The pack benchmark
+runs the public `Scanner` API, verifies prefix reuse on every request, records all text-free timing
+samples, and confirms that loading/scanning does not import Transformers. The upstream control pack
+always records `publication_authorized: false`; only the separate release manifest can authorize a
+trained artifact.
 
 The exporter passes `--no-mtp`. Qwen3.5-4B's text config advertises one MTP layer, while the
 selected Hugging Face checkpoint contains no MTP tensors; including that metadata produces a GGUF

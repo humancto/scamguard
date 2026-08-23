@@ -13,6 +13,7 @@ cmake_args=(
   -DCMAKE_BUILD_TYPE=Release
   -DGGML_NATIVE=OFF
   -DLLAMA_OPENSSL=OFF
+  -DBUILD_SHARED_LIBS=OFF
 )
 if [[ $(uname -s) == Darwin ]]; then
   cmake_args+=(

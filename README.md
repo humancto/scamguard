@@ -29,7 +29,7 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
-| Qwen3.5-0.8B, BF16 base / Q4 control | routed schema-v24 specialist; human audit pending | 537 MiB verified Q4_0 file; 1.81 GB exact-scorer RSS at ctx 256 | product-shaped BF16 base is 30.32% recall / 2.52% FPR / 0.4295 macro F1; Q4 exact scorer is 50.24 ms run-mean p95; audit is 0/635 |
+| Qwen3.5-0.8B, BF16 base / Q4 control | routed schema-v24 specialist; human audit pending | 537 MiB verified Q4_0 plus 5.27 MB portable arm64 runner | product-shaped BF16 base is 30.32% recall / 2.52% FPR / 0.4295 macro F1; hash-verified public SDK path is 39.60 ms p95 with no Transformers runtime; audit is 0/635 |
 | ModernBERT schema v23 + Qwen 0.8B base | rejected routed control | 4.68% test escalation; 1.13 GB process peak RSS | exact product-shape parity; fast-path p95 10.71 ms and routed p95 17.26 ms, but p99 190.79 ms, escalated p95 216.66 ms, and macro F1 0.7730; rejected |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
@@ -134,6 +134,27 @@ from scamguard import scan
 result = scan("Paste a suspicious message here", model_path="artifacts/sg-linear-v0.3.joblib")
 print(result.to_dict())
 ```
+
+The GGUF path uses the same API. A runtime pack contains the quantized model, statically linked
+native runner, calibration, and frozen prompt framing; every component is hash-checked before the
+model is loaded. Keep a `Scanner` open to reuse the model and prefix cache across messages:
+
+```bash
+make qwen-08b-base-runtime-pack
+make qwen-08b-base-runtime-pack-benchmark
+```
+
+```python
+from scamguard import Scanner
+
+with Scanner(model_path="artifacts/runtime-packs/qwen35-08b-upstream-q4-control") as guard:
+    result = guard.scan("Paste a suspicious message here")
+    print(result.to_dict())
+```
+
+That packaged artifact is the untouched upstream runtime control, not a trained ScamGuard release.
+It is deliberately marked `publication_authorized: false`; the final trained Q4/Q5 pack must repeat
+all quality, parity, desktop, and physical-mobile gates.
 
 The built-in heuristic exists only for SDK smoke tests. It is visibly identified as
 `heuristic-unbenchmarked-v0` and must not be presented as a trained model.

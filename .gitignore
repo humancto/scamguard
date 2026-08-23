@@ -23,6 +23,7 @@ artifacts/merged/
 artifacts/gguf/
 artifacts/onnx/
 artifacts/coreml/
+artifacts/runtime-packs/
 artifacts/*.joblib
 *.gguf
 reports/runs/

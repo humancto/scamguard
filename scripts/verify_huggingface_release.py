@@ -4,13 +4,24 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
 from pathlib import Path
 from typing import Any
 
+from scamguard.gguf_runtime import (
+    FROZEN_PROMPT_PREFIX,
+    FROZEN_PROMPT_PREFIX_SHA256,
+    FROZEN_PROMPT_SUFFIX,
+    FROZEN_PROMPT_SUFFIX_SHA256,
+    PACK_MANIFEST_NAME,
+    QWEN35_08B_PROCESSOR,
+    QWEN35_08B_PROCESSOR_REVISION,
+)
 from scamguard.metrics import file_sha256
+from scamguard.prompts import SYSTEM_PROMPT
 
 try:
     from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
@@ -29,7 +40,9 @@ REQUIRED_INTERNAL_GATES = 39
 REQUIRED_ARTIFACT_ROLES = {
     "merged_model",
     "gguf_model",
+    "runtime_calibration",
     "runtime_binary",
+    "runtime_pack_manifest",
     "tokenizer",
 }
 REQUIRED_REPORT_ROLES = {
@@ -494,6 +507,73 @@ def _validate_report_contents(
             errors.append(f"runtime.routed.{field} differs from routed runtime evidence")
 
 
+def _validate_runtime_pack(artifact_paths: dict[str, Path], errors: list[str]) -> None:
+    manifest_path = artifact_paths.get("runtime_pack_manifest")
+    if manifest_path is None:
+        return
+    if manifest_path.name != PACK_MANIFEST_NAME:
+        errors.append(f"runtime_pack_manifest must be named {PACK_MANIFEST_NAME}")
+    record = _json_report(manifest_path, "runtime_pack_manifest", errors)
+    if (
+        record.get("artifact_schema_version") != 1
+        or record.get("backend_type") != "qwen_gguf_verdict_likelihood"
+    ):
+        errors.append("runtime pack has an incompatible schema or backend")
+    if record.get("purpose") != "release_candidate":
+        errors.append("runtime pack purpose must equal release_candidate")
+    if record.get("publication_authorized") is not False:
+        errors.append("runtime pack must not self-authorize publication")
+
+    root = manifest_path.parent.resolve()
+    bindings = {
+        "model": "gguf_model",
+        "runner": "runtime_binary",
+        "calibration": "runtime_calibration",
+    }
+    for section_name, role in bindings.items():
+        section = _mapping(record.get(section_name), f"runtime pack {section_name}", errors)
+        artifact = artifact_paths.get(role)
+        relative = Path(str(section.get("path", "")))
+        if artifact is None or relative.is_absolute() or ".." in relative.parts:
+            errors.append(f"runtime pack {section_name} path is invalid")
+            continue
+        if (root / relative).resolve() != artifact.resolve():
+            errors.append(f"runtime pack {section_name} path differs from {role} artifact")
+        if section.get("sha256") != file_sha256(artifact):
+            errors.append(f"runtime pack {section_name} SHA-256 differs from {role} artifact")
+        if section.get("bytes") != artifact.stat().st_size:
+            errors.append(f"runtime pack {section_name} byte count differs from {role} artifact")
+
+    runner = _mapping(record.get("runner"), "runtime pack runner", errors)
+    if runner.get("portable_system_dependencies_only") is not True:
+        errors.append("runtime pack runner must have only verified system dependencies")
+    prompt = _mapping(record.get("prompt"), "runtime pack prompt", errors)
+    expected_prompt = {
+        "prefix": FROZEN_PROMPT_PREFIX,
+        "message_open": "<message>",
+        "suffix": FROZEN_PROMPT_SUFFIX,
+        "prefix_sha256": FROZEN_PROMPT_PREFIX_SHA256,
+        "suffix_sha256": FROZEN_PROMPT_SUFFIX_SHA256,
+        "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+        "processor_repository": QWEN35_08B_PROCESSOR,
+        "processor_revision": QWEN35_08B_PROCESSOR_REVISION,
+    }
+    for field, expected in expected_prompt.items():
+        if prompt.get(field) != expected:
+            errors.append(f"runtime pack prompt mismatch: {field}")
+    runtime = _mapping(record.get("runtime"), "runtime pack runtime", errors)
+    expected_runtime = {
+        "protocol_version": 2,
+        "message_batch_size": 1,
+        "candidate_batch_size": 3,
+        "sequence_bucket_size": 64,
+        "prefix_cache_enabled": True,
+    }
+    for field, expected in expected_runtime.items():
+        if runtime.get(field) != expected:
+            errors.append(f"runtime pack contract mismatch: {field}")
+
+
 def validate_release_manifest(manifest: dict[str, Any], repo_root: Path) -> list[str]:
     """Return every release-blocking error in deterministic order."""
 
@@ -655,6 +735,7 @@ def validate_release_manifest(manifest: dict[str, Any], repo_root: Path) -> list
     report_paths = _validate_evidence_files(
         manifest.get("reports"), "reports", REQUIRED_REPORT_ROLES, repo_root, errors
     )
+    _validate_runtime_pack(artifact_paths, errors)
     _validate_report_contents(manifest, artifact_paths, report_paths, errors)
     return errors
 

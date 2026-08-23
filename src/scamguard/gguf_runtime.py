@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import platform
 import re
 import selectors
 import subprocess
@@ -19,6 +20,22 @@ from .model import ModelScores
 from .prompts import SYSTEM_PROMPT
 
 LABELS = ("SAFE", "UNCERTAIN", "SCAM")
+PACK_MANIFEST_NAME = "scamguard_gguf_pack.json"
+QWEN35_08B_PROCESSOR = "Qwen/Qwen3.5-0.8B"
+QWEN35_08B_PROCESSOR_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
+FROZEN_PROMPT_PREFIX = (
+    f"<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n"
+    "<|im_start|>user\nClassify this message:\n"
+)
+FROZEN_PROMPT_SUFFIX = (
+    '</message><|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n{"verdict":"'
+)
+FROZEN_PROMPT_PREFIX_SHA256 = (
+    "7066a03d24a7859f93c168ef17f19570ddd2fecf031e5273bfd3c30e40380510"
+)
+FROZEN_PROMPT_SUFFIX_SHA256 = (
+    "ae2e9c4a85d503db999767cb61481bca25528d4026e857db041d086fd7ded47f"
+)
 READY = re.compile(r"^READY\t(\d+)\t(\d+)\t(\d+)\t(\d+)$")
 RESULT = re.compile(
     r"^RESULT\t([^\t]+)\t(-?[0-9.eE+]+)\t(-?[0-9.eE+]+)\t"
@@ -243,7 +260,9 @@ class QwenGGUFVerdictBackend:
         *,
         runner: Path,
         model: Path,
-        processor: Path,
+        processor: Path | None = None,
+        prompt_prefix: str | None = None,
+        prompt_suffix: str | None = None,
         calibration: Path,
         expected_model_sha256: str,
         expected_runner_sha256: str,
@@ -253,8 +272,6 @@ class QwenGGUFVerdictBackend:
         threads: int = 4,
         n_gpu_layers: int = 99,
     ) -> None:
-        from transformers import AutoProcessor
-
         if file_sha256(model) != expected_model_sha256:
             raise ValueError("GGUF model SHA-256 differs from the selected artifact")
         if file_sha256(runner) != expected_runner_sha256:
@@ -283,29 +300,46 @@ class QwenGGUFVerdictBackend:
         self.safe_max_scam_probability = None
         self.sequence_bucket_size = 64
         self.labels = LABELS
-        self.processor_path = processor.expanduser().resolve()
-        self.processor = AutoProcessor.from_pretrained(
-            self.processor_path, local_files_only=True
-        )
-        sentinel = "SCAMGUARD_RUNTIME_MESSAGE_SENTINEL"
-        sentinel_prompt = self.processor.apply_chat_template(
-            [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        "Classify this message:\n"
-                        f"<message>{sentinel}</message>"
-                    ),
-                },
-            ],
-            tokenize=False,
-            add_generation_prompt=True,
-        )
-        marker = f"<message>{sentinel}"
-        if sentinel_prompt.count(marker) != 1:
-            raise ValueError("Qwen chat template does not preserve the runtime message marker")
-        self.cached_prefix = sentinel_prompt.split(marker, maxsplit=1)[0]
+        if processor is not None and (prompt_prefix is not None or prompt_suffix is not None):
+            raise ValueError("provide a processor or frozen prompt fragments, not both")
+        if processor is None and (not prompt_prefix or not prompt_suffix):
+            raise ValueError("GGUF runtime requires a processor or frozen prompt fragments")
+        self.processor_path: Path | None = None
+        self.processor: Any | None = None
+        if processor is not None:
+            from transformers import AutoProcessor
+
+            self.processor_path = processor.expanduser().resolve()
+            self.processor = AutoProcessor.from_pretrained(
+                self.processor_path, local_files_only=True
+            )
+            sentinel = "SCAMGUARD_RUNTIME_MESSAGE_SENTINEL"
+            rendered = self.processor.apply_chat_template(
+                [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Classify this message:\n"
+                            f"<message>{sentinel}</message>"
+                        ),
+                    },
+                ],
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+            question = rendered + '{"verdict":"'
+            marker = f"<message>{sentinel}"
+            if question.count(marker) != 1:
+                raise ValueError(
+                    "Qwen chat template does not preserve the runtime message marker"
+                )
+            prompt_prefix, prompt_suffix = question.split(marker, maxsplit=1)
+        assert prompt_prefix is not None and prompt_suffix is not None
+        if not prompt_prefix or not prompt_suffix.startswith("</message>"):
+            raise ValueError("GGUF frozen prompt fragments have incompatible message boundaries")
+        self.cached_prefix = prompt_prefix
+        self.prompt_suffix = prompt_suffix
         self.scorer = PersistentGGUFScorer(
             runner=runner,
             model=model,
@@ -328,17 +362,7 @@ class QwenGGUFVerdictBackend:
         self.last_prefix_tokens = 0
 
     def predict(self, text: str) -> ModelScores:
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"Classify this message:\n<message>{text}</message>",
-            },
-        ]
-        question = self.processor.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-        question += '{"verdict":"'
+        question = self.cached_prefix + "<message>" + text + self.prompt_suffix
         identifier = f"request-{self._request_count}"
         self._request_count += 1
         result = self.scorer.score(identifier, question)
@@ -366,7 +390,11 @@ class QwenGGUFVerdictBackend:
             "model_sha256": self.model_sha256,
             "artifact_bytes": self.scorer.model.stat().st_size,
             "loaded_model_tensor_bytes": self.scorer.loaded_model_bytes,
-            "processor": str(self.processor_path),
+            "prompt_source": (
+                str(self.processor_path)
+                if self.processor_path is not None
+                else "hash-bound runtime pack fragments"
+            ),
             "calibration_sha256": self.calibration_sha256,
             "ctx_size_per_sequence": self.scorer.ctx_size,
             "batch_size": self.scorer.batch_size,
@@ -380,3 +408,140 @@ class QwenGGUFVerdictBackend:
             "prefix_tokens": self.scorer.loaded_prefix_tokens,
             "prefix_sha256": hashlib.sha256(self.cached_prefix.encode()).hexdigest(),
         }
+
+
+def _pack_member(root: Path, section: dict[str, Any], role: str) -> Path:
+    relative = Path(str(section.get("path", "")))
+    if not relative.parts or relative.is_absolute() or ".." in relative.parts:
+        raise ValueError(f"GGUF pack {role} path must stay inside the pack")
+    resolved = (root / relative).resolve()
+    if not resolved.is_relative_to(root) or not resolved.is_file():
+        raise FileNotFoundError(f"GGUF pack {role} is missing or escapes the pack: {relative}")
+    expected_hash = str(section.get("sha256", ""))
+    if not re.fullmatch(r"[0-9a-f]{64}", expected_hash):
+        raise ValueError(f"GGUF pack {role} SHA-256 is invalid")
+    if file_sha256(resolved) != expected_hash:
+        raise ValueError(f"GGUF pack {role} hash differs from its manifest")
+    expected_bytes = section.get("bytes")
+    if expected_bytes is not None and expected_bytes != resolved.stat().st_size:
+        raise ValueError(f"GGUF pack {role} byte count differs from its manifest")
+    return resolved
+
+
+def load_gguf_runtime_pack(path: str | Path) -> QwenGGUFVerdictBackend:
+    """Load a self-contained GGUF pack without a Transformers runtime dependency."""
+
+    requested = Path(path).expanduser().resolve()
+    manifest_path = requested / PACK_MANIFEST_NAME if requested.is_dir() else requested
+    if manifest_path.name != PACK_MANIFEST_NAME or not manifest_path.is_file():
+        raise FileNotFoundError(f"missing GGUF runtime-pack manifest: {manifest_path}")
+    root = manifest_path.parent.resolve()
+    record: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (
+        record.get("artifact_schema_version") != 1
+        or record.get("backend_type") != "qwen_gguf_verdict_likelihood"
+    ):
+        raise ValueError("GGUF runtime-pack manifest has an incompatible schema or backend")
+    if record.get("publication_authorized") is not False:
+        raise ValueError(
+            "runtime packs cannot self-authorize publication; use the release verifier"
+        )
+    if record.get("purpose") not in {"release_candidate", "upstream_base_control"}:
+        raise ValueError("GGUF runtime-pack purpose is invalid")
+    model_record = record.get("model")
+    runner_record = record.get("runner")
+    calibration_record = record.get("calibration")
+    prompt_record = record.get("prompt")
+    runtime = record.get("runtime")
+    if not all(
+        isinstance(item, dict)
+        for item in (
+            model_record,
+            runner_record,
+            calibration_record,
+            prompt_record,
+            runtime,
+        )
+    ):
+        raise ValueError("GGUF runtime-pack manifest is missing required sections")
+    assert isinstance(model_record, dict)
+    assert isinstance(runner_record, dict)
+    assert isinstance(calibration_record, dict)
+    assert isinstance(prompt_record, dict)
+    assert isinstance(runtime, dict)
+    if (
+        runner_record.get("portable_system_dependencies_only") is not True
+        or runner_record.get("system") != platform.system()
+        or runner_record.get("machine") != platform.machine()
+    ):
+        raise ValueError("GGUF runtime-pack runner is not portable for this machine")
+    expected_runtime = {
+        "protocol_version": 2,
+        "message_batch_size": 1,
+        "candidate_batch_size": 3,
+        "sequence_bucket_size": 64,
+        "prefix_cache_enabled": True,
+    }
+    for field, expected in expected_runtime.items():
+        if runtime.get(field) != expected:
+            raise ValueError(f"GGUF runtime-pack contract mismatch: {field}")
+    integer_runtime = {
+        field: runtime.get(field)
+        for field in (
+            "ctx_size",
+            "batch_size",
+            "ubatch_size",
+            "threads",
+            "n_gpu_layers",
+        )
+    }
+    if any(
+        not isinstance(value, int) or isinstance(value, bool)
+        for value in integer_runtime.values()
+    ):
+        raise ValueError("GGUF runtime-pack numeric settings must be integers")
+
+    prefix = str(prompt_record.get("prefix", ""))
+    suffix = str(prompt_record.get("suffix", ""))
+    prompt_hashes = {
+        "prefix_sha256": FROZEN_PROMPT_PREFIX_SHA256,
+        "suffix_sha256": FROZEN_PROMPT_SUFFIX_SHA256,
+        "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+    }
+    if (
+        prefix != FROZEN_PROMPT_PREFIX
+        or suffix != FROZEN_PROMPT_SUFFIX
+        or hashlib.sha256(prefix.encode()).hexdigest() != FROZEN_PROMPT_PREFIX_SHA256
+        or hashlib.sha256(suffix.encode()).hexdigest() != FROZEN_PROMPT_SUFFIX_SHA256
+        or prompt_record.get("message_open") != "<message>"
+        or prompt_record.get("processor_repository") != QWEN35_08B_PROCESSOR
+        or prompt_record.get("processor_revision") != QWEN35_08B_PROCESSOR_REVISION
+    ):
+        raise ValueError("GGUF runtime-pack prompt differs from the frozen Qwen template")
+    for field, expected in prompt_hashes.items():
+        if prompt_record.get(field) != expected:
+            raise ValueError(f"GGUF runtime-pack prompt binding mismatch: {field}")
+
+    model = _pack_member(root, model_record, "model")
+    if model.suffix.casefold() != ".gguf":
+        raise ValueError("GGUF runtime-pack model must use the .gguf extension")
+    runner = _pack_member(root, runner_record, "runner")
+    calibration = _pack_member(root, calibration_record, "calibration")
+    backend = QwenGGUFVerdictBackend(
+        runner=runner,
+        model=model,
+        prompt_prefix=prefix,
+        prompt_suffix=suffix,
+        calibration=calibration,
+        expected_model_sha256=str(model_record["sha256"]),
+        expected_runner_sha256=str(runner_record["sha256"]),
+        ctx_size=integer_runtime["ctx_size"],
+        batch_size=integer_runtime["batch_size"],
+        ubatch_size=integer_runtime["ubatch_size"],
+        threads=integer_runtime["threads"],
+        n_gpu_layers=integer_runtime["n_gpu_layers"],
+    )
+    backend.pack_manifest_path = manifest_path
+    backend.pack_manifest_sha256 = file_sha256(manifest_path)
+    backend.pack_purpose = str(record.get("purpose", ""))
+    return backend

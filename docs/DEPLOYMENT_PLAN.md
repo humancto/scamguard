@@ -29,6 +29,15 @@ size, accuracy, operator coverage, or latency.
    FP16, weight-only INT8, and supported weight-plus-activation INT8 paths.
 6. Package tokenizer assets, calibration, labels, and model hash as one versioned model pack.
 
+For the Qwen escalation path, `make qwen-08b-base-runtime-pack` exercises that final packaging
+shape today. The pack embeds the exact Qwen3.5-0.8B prompt prefix/suffix instead of importing
+Transformers at runtime, statically links llama.cpp/ggml into one arm64 executable, and binds the
+GGUF, executable, calibration, platform, machine, prompt, and runtime settings by SHA-256. The
+public `Scanner` API keeps that process and its 141-token prefix cache alive across calls. The
+upstream control pack measures 39.60 ms p95 across 150 Scanner requests on the reference Mac. This
+is desktop deployment evidence only; its manifest is non-publishable and carries no trained-model
+quality claim.
+
 Primary references:
 
 - [ModernBERT-base ONNX artifacts](https://huggingface.co/answerdotai/ModernBERT-base/tree/main/onnx)

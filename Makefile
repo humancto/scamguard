@@ -1,6 +1,6 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
 .PHONY: qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
-.PHONY: gguf-verdict-runner qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
+.PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -28,6 +28,14 @@ LLAMA_BENCH ?= $(LLAMA_CPP_DIR)/build-scamguard-arm64/bin/llama-bench
 LLAMA_PERPLEXITY ?= $(LLAMA_CPP_DIR)/build-scamguard-arm64/bin/llama-perplexity
 GGUF_VERDICT_RUNNER_BUILD ?= build/native-gguf-verdict
 GGUF_VERDICT_RUNNER ?= $(GGUF_VERDICT_RUNNER_BUILD)/scamguard-gguf-verdict
+PORTABLE_GGUF_RUNNER_BUILD ?= build/native-gguf-verdict-portable
+PORTABLE_GGUF_RUNNER ?= $(PORTABLE_GGUF_RUNNER_BUILD)/scamguard-gguf-verdict
+GGUF_RUNTIME_PACK_MODEL ?=
+GGUF_RUNTIME_PACK_CALIBRATION_SOURCE ?=
+GGUF_RUNTIME_PACK_PURPOSE ?= release_candidate
+GGUF_RUNTIME_PACK_OUTPUT ?= artifacts/runtime-packs/scamguard-qwen35-08b
+QWEN08_BASE_RUNTIME_PACK ?= artifacts/runtime-packs/qwen35-08b-upstream-q4-control
+QWEN08_BASE_RUNTIME_PACK_REPORT ?= reports/runs/qwen35-08b-upstream-q4-runtime-pack.json
 ENCODER23_OUTPUT ?= artifacts/checkpoints/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right
 ENCODER23_ROUTER_REPORT ?= reports/runs/sg-modernbert-schema23-router-source.json
 ENCODER23_ROUTER_PREDICTIONS ?= reports/runs/sg-modernbert-schema23-router-source.predictions.jsonl
@@ -859,6 +867,36 @@ gguf-verdict-runner:
 	test -n "$(LLAMA_CPP_DIR)"
 	scripts/build_gguf_verdict_runner.sh "$(LLAMA_CPP_DIR)" "$(GGUF_VERDICT_RUNNER_BUILD)"
 	test -x "$(GGUF_VERDICT_RUNNER)"
+
+portable-gguf-verdict-runner:
+	test -n "$(LLAMA_CPP_DIR)"
+	scripts/build_gguf_verdict_runner.sh "$(LLAMA_CPP_DIR)" "$(PORTABLE_GGUF_RUNNER_BUILD)"
+	test -x "$(PORTABLE_GGUF_RUNNER)"
+
+gguf-runtime-pack: portable-gguf-verdict-runner
+	test -n "$(GGUF_RUNTIME_PACK_MODEL)"
+	test -n "$(GGUF_RUNTIME_PACK_CALIBRATION_SOURCE)"
+	uv run --extra train --extra qwen python scripts/build_gguf_runtime_pack.py \
+		--model "$(GGUF_RUNTIME_PACK_MODEL)" --runner "$(PORTABLE_GGUF_RUNNER)" \
+		--calibration-source "$(GGUF_RUNTIME_PACK_CALIBRATION_SOURCE)" \
+		--purpose "$(GGUF_RUNTIME_PACK_PURPOSE)" --output "$(GGUF_RUNTIME_PACK_OUTPUT)"
+
+qwen-08b-base-runtime-pack:
+	@if [ -f "$(QWEN08_BASE_RUNTIME_PACK)/scamguard_gguf_pack.json" ]; then \
+		echo "Reusing immutable upstream runtime control pack"; \
+	else \
+		$(MAKE) gguf-runtime-pack \
+			GGUF_RUNTIME_PACK_MODEL="$(QWEN08_BASE_GGUF)" \
+			GGUF_RUNTIME_PACK_CALIBRATION_SOURCE="$(QWEN08_BASE_REPORT)" \
+			GGUF_RUNTIME_PACK_PURPOSE=upstream_base_control \
+			GGUF_RUNTIME_PACK_OUTPUT="$(QWEN08_BASE_RUNTIME_PACK)"; \
+	fi
+
+qwen-08b-base-runtime-pack-benchmark: qwen-08b-base-runtime-pack
+	uv run python benchmarks/benchmark_gguf_runtime_pack.py \
+		--pack "$(QWEN08_BASE_RUNTIME_PACK)" --data "$(QWEN08_FULL_DATA)" \
+		--split test --rows 50 --repetitions 3 \
+		--report "$(QWEN08_BASE_RUNTIME_PACK_REPORT)"
 
 qwen-08b-full-gguf-routed-diagnostic-q4: qwen-08b-full-gguf-eval-q4
 	$(MAKE) routed-eval \

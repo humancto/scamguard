@@ -26,12 +26,12 @@ def _parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = _parser().parse_args()
-    scanner = Scanner(model_path=args.model)
-    if args.command == "scan":
-        message = args.message if args.message is not None else sys.stdin.read()
-        print(json.dumps(scanner.scan(message).to_dict(), ensure_ascii=False, indent=2))
-    elif args.command == "demo":
-        serve(scanner, port=args.port)
+    with Scanner(model_path=args.model) as scanner:
+        if args.command == "scan":
+            message = args.message if args.message is not None else sys.stdin.read()
+            print(json.dumps(scanner.scan(message).to_dict(), ensure_ascii=False, indent=2))
+        elif args.command == "demo":
+            serve(scanner, port=args.port)
 
 
 if __name__ == "__main__":

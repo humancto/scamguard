@@ -110,6 +110,13 @@ calibrated-verdict mismatches are zero. Prefix reuse is verified on every escala
 cannot silently fall back during release measurement. These numbers apply to the untouched upstream
 Q4_0 control, not to the future trained Q4_K_M or Q5_K_M candidates.
 
+The same control is now assembled as a self-contained desktop runtime pack: the 563,036,064-byte
+GGUF, a 5,267,976-byte statically linked arm64 Metal/Accelerate runner, normalized calibration, and
+the frozen prompt fragments. The public `Scanner` path ran 150 requests at 35.86 ms mean, 35.38 ms
+p50, **39.60 ms p95**, 39.93 ms p99, and 40.14 ms maximum. Every request reused the 141-token
+prefix, and the runtime imported no Transformers package. The pack manifest remains explicitly
+non-publishable because this is the untouched base-model control.
+
 ## Deployment contract
 
 1. Keep the 640-token training ceiling and reject truncation. At runtime, allocate the smallest
@@ -137,6 +144,12 @@ Q4_0 control, not to the future trained Q4_K_M or Q5_K_M candidates.
   `bc6940df5c40c6ccb8df18f1505aec16048a54423294bdc533bafcdef5c310e9`
 - Persistent fixed-prefix control report SHA-256:
   `26beda09e2d66372d667e078c1e5bcb8fe002698c1684b1ffadb8968eae2c144`
+- Portable runtime-pack manifest SHA-256:
+  `d9a8dfa44bcf5268bf2ce8ad16bd33d406df3cfd892963e40697b332aa159d3f`
+- Portable public-SDK benchmark report SHA-256:
+  `040add6f0b4f3a88b315fb8a283491af9b6a89881f07a3a8e2797fead27680ef`
+- Portable static runner binary SHA-256:
+  `a715ccdebe50041d13265532230a154d9a7dec4729113ceca8f09fda188799fd`
 - llama-bench binary SHA-256:
   `9e88febf53bd7c64aad81af1ccd2c73726bf04d5f32d99aa543b32b48d904534`
 - Patched llama-perplexity binary SHA-256:
@@ -144,7 +157,7 @@ Q4_0 control, not to the future trained Q4_K_M or Q5_K_M candidates.
 - Persistent runner source SHA-256:
   `36ce1cf425a97b763d23308525a9bb156d4f34541f228e88c50bdcbb47a31884`
 - Persistent runner build script SHA-256:
-  `489a58ee8189b98b8f3c13c708311e05ef77e75a85cc9540b15af051956b3a05`
+  `b9dbf5f95968d075ec99e7ebfac8e7c849439ac9c656dadcc214fac4407b960a`
 - Local persistent runner binary SHA-256:
   `9c3b2525b72a0f56684a9c6ba63b14366c59d0a5a16b09f02f898afba267f8c3`
 

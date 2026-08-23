@@ -434,6 +434,11 @@ class QwenBaseVerdictBackend(QwenVerdictBackend):
 
 def load_backend(path: str | Path) -> ModelBackend:
     resolved = Path(path).expanduser().resolve()
+    pack_manifest = resolved / "scamguard_gguf_pack.json" if resolved.is_dir() else resolved
+    if pack_manifest.name == "scamguard_gguf_pack.json" and pack_manifest.is_file():
+        from .gguf_runtime import load_gguf_runtime_pack
+
+        return load_gguf_runtime_pack(pack_manifest)
     if resolved.suffix == ".onnx":
         return ONNXBackend(resolved)
     if resolved.is_dir():
