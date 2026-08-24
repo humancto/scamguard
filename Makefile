@@ -430,6 +430,8 @@ qwen-08b-call-robustness-primary-v8-freeze: qwen-08b-call-robustness-product-gat
 		--model "$(QWEN08_ROBUST_Q4_GGUF)" --runner "$(GGUF_VERDICT_RUNNER)" \
 		--regression-report "$(QWEN08_ROBUST_NATIVE_Q4_REPORT)" \
 		--gate-report "$(QWEN08_ROBUST_NATIVE_Q4_GATE_REPORT)" \
+		--product-contract-report "$(QWEN08_ROBUST_PRODUCT_REPORT)" \
+		--product-contract-gate-report "$(QWEN08_ROBUST_PRODUCT_GATE_REPORT)" \
 		--primary-test-v8 data/processed/primary_test_v8.jsonl \
 		--quantization Q4_K_M --output "$(QWEN08_ROBUST_PRIMARY_DECLARATION)"
 

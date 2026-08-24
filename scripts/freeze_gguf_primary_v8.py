@@ -22,17 +22,33 @@ def freeze(
     runner: Path,
     regression_report_path: Path,
     gate_report_path: Path,
+    product_contract_report_path: Path,
+    product_contract_gate_report_path: Path,
     primary_test: Path,
     quantization: str,
     output: Path,
 ) -> dict[str, object]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite final artifact declaration: {output}")
-    for path in (model, runner, regression_report_path, gate_report_path, primary_test):
+    for path in (
+        model,
+        runner,
+        regression_report_path,
+        gate_report_path,
+        product_contract_report_path,
+        product_contract_gate_report_path,
+        primary_test,
+    ):
         if not path.is_file():
             raise FileNotFoundError(path)
     regression = json.loads(regression_report_path.read_text(encoding="utf-8"))
     gates = json.loads(gate_report_path.read_text(encoding="utf-8"))
+    product_contract = json.loads(
+        product_contract_report_path.read_text(encoding="utf-8")
+    )
+    product_gates = json.loads(
+        product_contract_gate_report_path.read_text(encoding="utf-8")
+    )
     validate_primary_test_v8(primary_test)
     model_sha256 = file_sha256(model)
     runner_sha256 = file_sha256(runner)
@@ -52,6 +68,22 @@ def freeze(
         or gates.get("passed_gates") != gates.get("total_gates")
     ):
         raise ValueError("quantized candidate has not passed every pre-sealed quality gate")
+    if (
+        product_contract.get("artifact_schema_version") != 1
+        or product_contract.get("contains_message_text") is not False
+        or product_contract.get("semantic_correctness_established") is not False
+        or product_contract.get("prediction_ledger", {}).get("sha256")
+        != regression.get("prediction_ledger", {}).get("sha256")
+    ):
+        raise ValueError("product-contract audit is not bound to the quantized prediction ledger")
+    if (
+        product_gates.get("quality_status") != "passed"
+        or product_gates.get("sealed_primary_authorized") is not True
+        or product_gates.get("passed_gates") != product_gates.get("total_gates")
+        or product_gates.get("product_contract_report", {}).get("sha256")
+        != file_sha256(product_contract_report_path)
+    ):
+        raise ValueError("quantized candidate has not passed every product-contract gate")
     if quantization not in {"Q4_K_M", "Q5_K_M", "Q6_K"}:
         raise ValueError("unsupported frozen quantization")
 
@@ -68,6 +100,12 @@ def freeze(
         "calibration_report_sha256": file_sha256(regression_report_path),
         "gate_report": str(gate_report_path),
         "gate_report_sha256": file_sha256(gate_report_path),
+        "product_contract_report": str(product_contract_report_path),
+        "product_contract_report_sha256": file_sha256(product_contract_report_path),
+        "product_contract_gate_report": str(product_contract_gate_report_path),
+        "product_contract_gate_report_sha256": file_sha256(
+            product_contract_gate_report_path
+        ),
         "primary_test_v8": str(primary_test),
         "primary_test_v8_sha256": file_sha256(primary_test),
         "protocol_version": 3,
@@ -86,6 +124,8 @@ def main() -> None:
     parser.add_argument("--runner", type=Path, required=True)
     parser.add_argument("--regression-report", type=Path, required=True)
     parser.add_argument("--gate-report", type=Path, required=True)
+    parser.add_argument("--product-contract-report", type=Path, required=True)
+    parser.add_argument("--product-contract-gate-report", type=Path, required=True)
     parser.add_argument("--primary-test-v8", type=Path, required=True)
     parser.add_argument("--quantization", required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -97,6 +137,8 @@ def main() -> None:
                 runner=args.runner,
                 regression_report_path=args.regression_report,
                 gate_report_path=args.gate_report,
+                product_contract_report_path=args.product_contract_report,
+                product_contract_gate_report_path=args.product_contract_gate_report,
                 primary_test=args.primary_test_v8,
                 quantization=args.quantization,
                 output=args.output,

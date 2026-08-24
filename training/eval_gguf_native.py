@@ -180,6 +180,12 @@ def validate_final_declaration(
     primary_test: Path,
 ) -> dict[str, Any]:
     record = json.loads(path.read_text(encoding="utf-8"))
+    product_contract_path = Path(str(record.get("product_contract_report", "")))
+    product_gate_path = Path(str(record.get("product_contract_gate_report", "")))
+    if not product_contract_path.is_file() or not product_gate_path.is_file():
+        raise ValueError("final artifact declaration lacks product-contract evidence")
+    product_contract = json.loads(product_contract_path.read_text(encoding="utf-8"))
+    product_gates = json.loads(product_gate_path.read_text(encoding="utf-8"))
     expected = {
         "artifact_schema_version": 1,
         "state": "FINAL_QUANTIZED_CANDIDATE_FROZEN",
@@ -188,12 +194,25 @@ def validate_final_declaration(
         "runner_sha256": file_sha256(runner),
         "calibration_report_sha256": file_sha256(calibration_report),
         "primary_test_v8_sha256": file_sha256(primary_test),
+        "product_contract_report_sha256": file_sha256(product_contract_path),
+        "product_contract_gate_report_sha256": file_sha256(product_gate_path),
         "protocol_version": PROTOCOL_VERSION,
         "scoring_version": GGUF_SCORING_VERSION,
     }
     actual = {field: record.get(field) for field in expected}
     if actual != expected:
         raise ValueError("final artifact declaration differs from the sealed evaluation inputs")
+    if (
+        product_contract.get("artifact_schema_version") != 1
+        or product_contract.get("contains_message_text") is not False
+        or product_contract.get("semantic_correctness_established") is not False
+        or product_gates.get("quality_status") != "passed"
+        or product_gates.get("sealed_primary_authorized") is not True
+        or product_gates.get("passed_gates") != product_gates.get("total_gates")
+        or product_gates.get("product_contract_report", {}).get("sha256")
+        != file_sha256(product_contract_path)
+    ):
+        raise ValueError("final artifact declaration has invalid product-contract evidence")
     return record
 
 

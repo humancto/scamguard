@@ -96,6 +96,8 @@ def test_final_declaration_binds_every_sealed_input(tmp_path: Path) -> None:
     runner = tmp_path / "runner"
     calibration = tmp_path / "calibration.json"
     primary = tmp_path / "primary_test_v8.jsonl"
+    product_contract = tmp_path / "product-contract.json"
+    product_gates = tmp_path / "product-gates.json"
     for path, content in (
         (model, b"model"),
         (runner, b"runner"),
@@ -103,6 +105,30 @@ def test_final_declaration_binds_every_sealed_input(tmp_path: Path) -> None:
         (primary, b"primary"),
     ):
         path.write_bytes(content)
+    product_contract.write_text(
+        json.dumps(
+            {
+                "artifact_schema_version": 1,
+                "contains_message_text": False,
+                "semantic_correctness_established": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    product_gates.write_text(
+        json.dumps(
+            {
+                "quality_status": "passed",
+                "sealed_primary_authorized": True,
+                "passed_gates": 12,
+                "total_gates": 12,
+                "product_contract_report": {
+                    "sha256": file_sha256(product_contract)
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     declaration = tmp_path / "declaration.json"
     record = {
         "artifact_schema_version": 1,
@@ -112,6 +138,10 @@ def test_final_declaration_binds_every_sealed_input(tmp_path: Path) -> None:
         "runner_sha256": file_sha256(runner),
         "calibration_report_sha256": file_sha256(calibration),
         "primary_test_v8_sha256": file_sha256(primary),
+        "product_contract_report": str(product_contract),
+        "product_contract_report_sha256": file_sha256(product_contract),
+        "product_contract_gate_report": str(product_gates),
+        "product_contract_gate_report_sha256": file_sha256(product_gates),
         "protocol_version": 3,
         "scoring_version": GGUF_SCORING_VERSION,
     }
