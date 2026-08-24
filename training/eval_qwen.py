@@ -72,7 +72,6 @@ def score_cache_identity(
 ) -> dict[str, Any]:
     return {
         "scoring_version": scoring_version(scoring_mode),
-        "scoring_mode": scoring_mode,
         "model": model,
         "revision": revision,
         "adapter_sha256": adapter_sha256,

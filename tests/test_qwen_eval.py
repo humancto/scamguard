@@ -153,7 +153,6 @@ def test_score_cache_requires_exact_experiment_identity(tmp_path) -> None:
     changed_bucket = identity | {"sequence_bucket_size": 64}
     assert load_score_cache(tmp_path, "dev", changed_bucket) is None
     changed_scoring = identity | {
-        "scoring_mode": "branch_token",
         "scoring_version": "qwen-verdict-branch-token-v1",
     }
     assert load_score_cache(tmp_path, "dev", changed_scoring) is None
