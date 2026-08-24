@@ -699,6 +699,7 @@ def main() -> None:
         "requested_revision": args.revision,
         "base_model_revision": resolved_revision or args.revision,
         "adapter": str(args.adapter) if args.adapter else None,
+        "adapter_sha256": adapter_sha256,
         "scoring": "length-normalized teacher-forced verdict likelihood",
         "temperature": temperature,
         "scam_threshold": threshold,
@@ -818,6 +819,7 @@ def main() -> None:
         calibration = {
             "backend_type": "qwen_verdict_likelihood",
             "model_id": args.adapter.name,
+            "adapter_sha256": adapter_sha256,
             "base_model": args.model,
             "base_model_revision": result["base_model_revision"],
             "labels": list(LABELS),
