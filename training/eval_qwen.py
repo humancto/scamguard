@@ -419,6 +419,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
     parser.add_argument("--revision")
+    parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument("--adapter", type=Path)
     parser.add_argument("--data", type=Path, default=Path("data/processed"))
     parser.add_argument("--external-data", type=Path, default=Path("data/external"))
@@ -473,12 +474,17 @@ def main() -> None:
         )
     device = torch.device("mps" if mps_available else "cpu")
     print(f"evaluation accelerator: {device}")
-    processor = AutoProcessor.from_pretrained(args.model, revision=args.revision)
+    processor = AutoProcessor.from_pretrained(
+        args.model,
+        revision=args.revision,
+        local_files_only=args.local_files_only,
+    )
     model = AutoModelForImageTextToText.from_pretrained(
         args.model,
         revision=args.revision,
         dtype=torch.bfloat16 if device.type == "mps" else torch.float32,
         low_cpu_mem_usage=True,
+        local_files_only=args.local_files_only,
     )
     resolved_revision = getattr(model.config, "_commit_hash", None)
     if args.revision and resolved_revision and args.revision != resolved_revision:
@@ -638,6 +644,7 @@ def main() -> None:
             "torch": torch.__version__,
             "device": str(device),
             "mps_available": mps_available,
+            "local_files_only": args.local_files_only,
         },
         "data_manifest": json.loads((args.data / "manifest.json").read_text()),
         "external_data_manifests": external_data_manifests,

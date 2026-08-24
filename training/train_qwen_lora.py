@@ -384,6 +384,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
     parser.add_argument("--revision")
+    parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument(
         "--experiment-config",
         type=Path,
@@ -439,12 +440,17 @@ def main() -> None:
         )
     print(f"training accelerator: {'mps' if mps_available else 'cpu'}")
 
-    processor = AutoProcessor.from_pretrained(args.model, revision=args.revision)
+    processor = AutoProcessor.from_pretrained(
+        args.model,
+        revision=args.revision,
+        local_files_only=args.local_files_only,
+    )
     model = AutoModelForImageTextToText.from_pretrained(
         args.model,
         revision=args.revision,
         dtype=torch.bfloat16 if mps_available else torch.float32,
         low_cpu_mem_usage=True,
+        local_files_only=args.local_files_only,
     )
     model.config.use_cache = False
     if args.gradient_checkpointing:
@@ -546,6 +552,7 @@ def main() -> None:
                     else "dedicated frozen-slice evaluation after training"
                 ),
                 "mps_required": args.require_mps,
+                "local_files_only": args.local_files_only,
                 "train_examples": len(train),
                 "dev_examples": len(dev),
                 "data": {
