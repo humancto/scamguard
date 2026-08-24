@@ -1,5 +1,5 @@
-.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-bundle schema24-audit-import schema24-audit-check encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
-.PHONY: schema24-audit-handoff-preflight qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
+.PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-bundle schema24-audit-import schema24-audit-check schema24-ai-internal-audit encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
+.PHONY: schema24-audit-handoff-preflight schema24-ai-internal-overlay qwen-08b-ai-internal-token-audit qwen-08b-ai-internal-freeze qwen-08b-ai-internal qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
 .PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
@@ -13,6 +13,12 @@ SCHEMA24_AUDIT_BUNDLE ?= dist/scamguard-schema24-blind-audit.zip
 SCHEMA24_AUDIT_HANDOFF_REPORT ?= reports/SCHEMA24_AUDIT_HANDOFF_PREFLIGHT.json
 SCHEMA24_RETURNED_AUDIT ?= data/audit/returned/scamguard_blind_audit.csv
 SCHEMA24_REVIEWED_AUDIT ?= data/audit/schema24-label-audit.reviewed.csv
+SCHEMA24_AI_AUDIT ?= data/audit/internal-ai/scamguard_blind_audit.csv
+SCHEMA24_AI_AUDIT_REPORT ?= reports/data/schema24-ai-internal-audit.json
+SCHEMA24_AI_OVERLAY ?= data/experiments/schema24-ai-internal-overlay/processed
+QWEN08_AI_TOKEN_AUDIT ?= reports/runs/qwen35-08b-schema24-ai-internal-token-audit.json
+QWEN08_AI_CONFIG ?= configs/qwen35-08b-schema24-ai-internal-exploratory.json
+QWEN08_AI_OUTPUT ?= artifacts/checkpoints/qwen35-08b-schema24-ai-internal-lora
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -213,6 +219,66 @@ audit: data
 
 audit-check:
 	uv run python scripts/check_audit_completion.py
+
+schema24-ai-internal-audit:
+	$(PYTHON_BIN) scripts/analyze_internal_ai_audit.py \
+		--decisions "$(SCHEMA24_AI_AUDIT)" \
+		--bundle "$(SCHEMA24_AUDIT_BUNDLE)" \
+		--canonical-audit data/audit/schema24-label-audit.csv \
+		--canonical-manifest data/audit/schema24-label-audit.manifest.json \
+		--output "$(SCHEMA24_AI_AUDIT_REPORT)"
+
+schema24-ai-internal-overlay: schema24-ai-internal-audit
+	@if [ -f "$(SCHEMA24_AI_OVERLAY)/manifest.json" ]; then \
+		echo "Reusing AI-internal overlay: $(SCHEMA24_AI_OVERLAY)"; \
+	else \
+		$(PYTHON_BIN) scripts/build_ai_internal_overlay.py \
+			--source "$(QWEN08_FULL_DATA)" --output "$(SCHEMA24_AI_OVERLAY)" \
+			--decisions "$(SCHEMA24_AI_AUDIT)" \
+			--canonical-audit data/audit/schema24-label-audit.csv \
+			--internal-report "$(SCHEMA24_AI_AUDIT_REPORT)"; \
+	fi
+	$(PYTHON_BIN) training/build_qwen_sft.py \
+		--data "$(SCHEMA24_AI_OVERLAY)" --output "$(SCHEMA24_AI_OVERLAY)/qwen_sft"
+
+qwen-08b-ai-internal-token-audit: schema24-ai-internal-overlay
+	$(PYTHON_BIN) scripts/audit_qwen_tokens.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--data "$(SCHEMA24_AI_OVERLAY)/qwen_sft" --max-length 640 \
+		--local-files-only \
+		--output "$(QWEN08_AI_TOKEN_AUDIT)"
+
+qwen-08b-ai-internal-freeze: qwen-08b-ai-internal-token-audit
+	@if [ -f "$(QWEN08_AI_CONFIG)" ]; then \
+		echo "Reusing immutable exploratory config: $(QWEN08_AI_CONFIG)"; \
+	else \
+		$(PYTHON_BIN) scripts/freeze_qwen08_ai_exploratory.py \
+			--processed "$(SCHEMA24_AI_OVERLAY)" \
+			--token-audit "$(QWEN08_AI_TOKEN_AUDIT)" \
+			--internal-audit "$(SCHEMA24_AI_AUDIT_REPORT)" \
+			--batch-selection reports/QWEN08_BATCH_GEOMETRY_SELECTION.json \
+			--output "$(QWEN08_AI_CONFIG)" \
+			--checkpoint-output "$(QWEN08_AI_OUTPUT)" \
+			--experiment-id sg-qwen35-08b-schema24-ai-internal-v1; \
+	fi
+
+qwen-08b-ai-internal: qwen-08b-ai-internal-freeze
+	$(PYTHON_BIN) scripts/verify_experiment_config.py \
+		--config "$(QWEN08_AI_CONFIG)" --data "$(SCHEMA24_AI_OVERLAY)"
+	@if [ -f "$(QWEN08_AI_OUTPUT)/adapter_model.safetensors" ]; then \
+		echo "Reusing exploratory adapter: $(QWEN08_AI_OUTPUT)"; \
+	else \
+		$(PYTHON_BIN) training/train_qwen_lora.py \
+			--experiment-config "$(QWEN08_AI_CONFIG)" \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--data "$(SCHEMA24_AI_OVERLAY)/qwen_sft" \
+			--batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --gradient-checkpointing \
+			--max-length 640 --sampling-strategy group_by_length --require-mps \
+			--output "$(QWEN08_AI_OUTPUT)"; \
+	fi
 
 baseline: data
 	uv run --extra train python training/train_linear.py

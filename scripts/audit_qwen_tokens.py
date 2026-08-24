@@ -36,11 +36,16 @@ def main() -> None:
     parser.add_argument("--data", type=Path, default=Path("data/processed/qwen_sft"))
     parser.add_argument("--max-length", type=int, default=512)
     parser.add_argument("--comparison-length", type=int, default=384)
+    parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument(
         "--output", type=Path, default=Path("reports/runs/qwen-token-audit-v0.3.json")
     )
     args = parser.parse_args()
-    processor = AutoProcessor.from_pretrained(args.model, revision=args.revision)
+    processor = AutoProcessor.from_pretrained(
+        args.model,
+        revision=args.revision,
+        local_files_only=args.local_files_only,
+    )
 
     full_lengths: list[int] = []
     prompt_lengths: list[int] = []

@@ -1,0 +1,279 @@
+{
+  "rows": 635,
+  "complete_rows": 635,
+  "incomplete_rows": 0,
+  "agreement": 0.8346456692913385,
+  "agreement_wilson_95_lower": 0.8037553740220641,
+  "cohen_kappa": 0.6549359554923017,
+  "incorrect_label_rows": 105,
+  "sensitive_data_rows": 22,
+  "auditor_labels": {
+    "SAFE": 468,
+    "UNCERTAIN": 70,
+    "SCAM": 97
+  },
+  "project_labels": {
+    "SAFE": 407,
+    "SCAM": 132,
+    "UNCERTAIN": 96
+  },
+  "agreement_by_project_label": {
+    "SAFE": {
+      "rows": 407,
+      "agreements": 403,
+      "agreement": 0.9901719901719902,
+      "agreement_wilson_95_lower": 0.9750059185418788
+    },
+    "SCAM": {
+      "rows": 132,
+      "agreements": 90,
+      "agreement": 0.6818181818181818,
+      "agreement_wilson_95_lower": 0.5981823406757425
+    },
+    "UNCERTAIN": {
+      "rows": 96,
+      "agreements": 37,
+      "agreement": 0.3854166666666667,
+      "agreement_wilson_95_lower": 0.29425768590940465
+    }
+  },
+  "agreement_by_source": {
+    "imc25_public_forum_smishing": {
+      "rows": 36,
+      "agreements": 17,
+      "agreement": 0.4722222222222222,
+      "agreement_wilson_95_lower": 0.3198604151517906
+    },
+    "mendeley_financial_scam": {
+      "rows": 24,
+      "agreements": 16,
+      "agreement": 0.6666666666666666,
+      "agreement_wilson_95_lower": 0.4670631683813174
+    },
+    "mendeley_sms_phishing": {
+      "rows": 36,
+      "agreements": 23,
+      "agreement": 0.6388888888888888,
+      "agreement_wilson_95_lower": 0.47575075485558044
+    },
+    "multidogo_human_service_dialogues": {
+      "rows": 275,
+      "agreements": 275,
+      "agreement": 1.0,
+      "agreement_wilson_95_lower": 0.9862235019249258
+    },
+    "scamguard_ftc_pattern_action_states_v1": {
+      "rows": 36,
+      "agreements": 34,
+      "agreement": 0.9444444444444444,
+      "agreement_wilson_95_lower": 0.8185534279135275
+    },
+    "scamguard_multidogo_grounded_evidence_states_v1": {
+      "rows": 36,
+      "agreements": 23,
+      "agreement": 0.6388888888888888,
+      "agreement_wilson_95_lower": 0.47575075485558044
+    },
+    "scamguard_synthetic_counterfactual_v1": {
+      "rows": 24,
+      "agreements": 24,
+      "agreement": 1.0,
+      "agreement_wilson_95_lower": 0.8620237953250198
+    },
+    "scamguard_synthetic_dialogue_v2": {
+      "rows": 24,
+      "agreements": 24,
+      "agreement": 1.0,
+      "agreement_wilson_95_lower": 0.8620237953250198
+    },
+    "scamguard_synthetic_long_call_action_states_v1": {
+      "rows": 36,
+      "agreements": 24,
+      "agreement": 0.6666666666666666,
+      "agreement_wilson_95_lower": 0.5033399787115652
+    },
+    "scamguard_synthetic_v5": {
+      "rows": 36,
+      "agreements": 24,
+      "agreement": 0.6666666666666666,
+      "agreement_wilson_95_lower": 0.5033399787115652
+    },
+    "taskmaster1_woz_dialogues": {
+      "rows": 12,
+      "agreements": 12,
+      "agreement": 1.0,
+      "agreement_wilson_95_lower": 0.7575059933447591
+    },
+    "uci_sms_spam": {
+      "rows": 24,
+      "agreements": 21,
+      "agreement": 0.875,
+      "agreement_wilson_95_lower": 0.6899611872949993
+    },
+    "wspr_sms_phishing": {
+      "rows": 24,
+      "agreements": 11,
+      "agreement": 0.4583333333333333,
+      "agreement_wilson_95_lower": 0.27891333731210977
+    },
+    "youtube_scam_calls_cc0": {
+      "rows": 12,
+      "agreements": 2,
+      "agreement": 0.16666666666666666,
+      "agreement_wilson_95_lower": 0.04696514218385382
+    }
+  },
+  "confusion_matrix": {
+    "SAFE": {
+      "SAFE": 403,
+      "UNCERTAIN": 3,
+      "SCAM": 1
+    },
+    "UNCERTAIN": {
+      "SAFE": 53,
+      "UNCERTAIN": 37,
+      "SCAM": 6
+    },
+    "SCAM": {
+      "SAFE": 12,
+      "UNCERTAIN": 30,
+      "SCAM": 90
+    }
+  },
+  "disagreement_ids": [
+    "imc25_public_forum_smishing-55f061ee801bfadb",
+    "imc25_public_forum_smishing-0ff11457fb76160b",
+    "imc25_public_forum_smishing-2dc3ed84d870dfed",
+    "imc25_public_forum_smishing-2f89f6602e119718",
+    "imc25_public_forum_smishing-31754d03c627f9a6",
+    "imc25_public_forum_smishing-31ecba8b043136eb",
+    "imc25_public_forum_smishing-3583f24e7a2eb6a2",
+    "imc25_public_forum_smishing-70ef86b8543cb970",
+    "imc25_public_forum_smishing-986c9299fcb77ede",
+    "imc25_public_forum_smishing-bc0e6734b3f0092d",
+    "imc25_public_forum_smishing-008e07d0351b1e2a",
+    "imc25_public_forum_smishing-22ee7f470c1c9c1d",
+    "imc25_public_forum_smishing-434f1e29bfde2949",
+    "imc25_public_forum_smishing-b0dcf7eaeb0e8394",
+    "imc25_public_forum_smishing-b595aec8425dfa8a",
+    "imc25_public_forum_smishing-ccf17e2879b4ba82",
+    "imc25_public_forum_smishing-d50a898f7d9861a0",
+    "imc25_public_forum_smishing-f3e535133f2cacce",
+    "imc25_public_forum_smishing-f92f6bd7337a2d2d",
+    "mendeley_financial_scam-4c9a9338827a5304",
+    "mendeley_financial_scam-56c6ecdc1e43e37c",
+    "mendeley_financial_scam-5a7850ad9bd277ba",
+    "mendeley_financial_scam-658f45c7d208639e",
+    "mendeley_financial_scam-9061209f6070b82b",
+    "mendeley_financial_scam-acc26ea8dcd65a75",
+    "mendeley_financial_scam-ba8488e0fe828a6f",
+    "mendeley_financial_scam-f4fab57f423ff78e",
+    "mendeley_sms_phishing-319df98f01b67efd",
+    "mendeley_sms_phishing-75df8b7d2a6d0a44",
+    "mendeley_sms_phishing-7c06d89f16203171",
+    "mendeley_sms_phishing-a338abfc64f6f280",
+    "mendeley_sms_phishing-bc4b68aeadfd2b67",
+    "mendeley_sms_phishing-ddbc6cf3c771f969",
+    "mendeley_sms_phishing-e7b8484260e65739",
+    "mendeley_sms_phishing-4675f752a2a198bc",
+    "mendeley_sms_phishing-5a8c08d7ee973300",
+    "mendeley_sms_phishing-7925f48c67e63f4c",
+    "mendeley_sms_phishing-a29b4cacbae62916",
+    "mendeley_sms_phishing-bcf7d268d2f03963",
+    "mendeley_sms_phishing-efba615c117ee20b",
+    "ftc-pattern-state-1efc967029dab8e6-routine_safe",
+    "ftc-pattern-state-6819333769dca440-routine_safe",
+    "multidogo-evidence-state-beb733c202ffd697-verified_safe",
+    "multidogo-evidence-state-00cacf723b365913-unresolved",
+    "multidogo-evidence-state-03223dc656c7541b-unresolved",
+    "multidogo-evidence-state-3c939cc6b50b7972-unresolved",
+    "multidogo-evidence-state-53fa281a009814bf-unresolved",
+    "multidogo-evidence-state-7e757e051a803cac-unresolved",
+    "multidogo-evidence-state-833f26eff56dc622-unresolved",
+    "multidogo-evidence-state-8c2499f2bd72a4cd-unresolved",
+    "multidogo-evidence-state-949447be270a8909-unresolved",
+    "multidogo-evidence-state-97d3e09ff7869341-unresolved",
+    "multidogo-evidence-state-b9e8e0bef5af0be3-unresolved",
+    "multidogo-evidence-state-c2d170700b297e4c-unresolved",
+    "multidogo-evidence-state-d960e5e445706395-unresolved",
+    "long-call-action-state-011fe789e2563858-harmful_scam",
+    "long-call-action-state-320959ae065382e7-harmful_scam",
+    "long-call-action-state-3964a11627672e4e-harmful_scam",
+    "long-call-action-state-6141e7329a7434b8-harmful_scam",
+    "long-call-action-state-94dd778c27556eba-harmful_scam",
+    "long-call-action-state-dab37d6e40e0d833-harmful_scam",
+    "long-call-action-state-172875bd7103d7c2-unresolved",
+    "long-call-action-state-1b5dd3862bbbfc9e-unresolved",
+    "long-call-action-state-30bb9a7a710d88b0-unresolved",
+    "long-call-action-state-73dab492014ce9bd-unresolved",
+    "long-call-action-state-7ff83c5d2a0827a3-unresolved",
+    "long-call-action-state-f351a7d9951e2382-unresolved",
+    "syn-1584bcce0139ab17",
+    "syn-1d695379cc088415",
+    "syn-477fdae5ce35906a",
+    "syn-49b219f2cd343ad7",
+    "syn-5261a728996f84fc",
+    "syn-5aced4a1d74bdc83",
+    "syn-7cc00f543eced27e",
+    "syn-7d60351f5da2ce9f",
+    "syn-8368bfc783004205",
+    "syn-8b565e57c88a75cb",
+    "syn-e110e2d8e5286499",
+    "syn-f104d30c89edbe22",
+    "uci_sms_spam-2077f2b03bf7f0ae",
+    "uci_sms_spam-48231d4b57d045cc",
+    "uci_sms_spam-c4aa762b4a667027",
+    "wspr_sms_phishing-5daa181caca91912",
+    "wspr_sms_phishing-f0695ea5df624d94",
+    "wspr_sms_phishing-0c226f444ecad753",
+    "wspr_sms_phishing-0e96b2c5727ef79a",
+    "wspr_sms_phishing-1b78645fcffa01e7",
+    "wspr_sms_phishing-1f4067c6aeac959a",
+    "wspr_sms_phishing-255865da35ad6976",
+    "wspr_sms_phishing-6fd59e8540a815e0",
+    "wspr_sms_phishing-80907ce8c1a2c0bd",
+    "wspr_sms_phishing-9c516d5b6e9e855d",
+    "wspr_sms_phishing-9f543def3d53de54",
+    "wspr_sms_phishing-a379aeb75d3ae642",
+    "wspr_sms_phishing-ebd814ba9c4db890",
+    "youtube_scam_calls_cc0-01cb62e17eca941c",
+    "youtube_scam_calls_cc0-050b88360f6de244",
+    "youtube_scam_calls_cc0-0d088a14998c9e9d",
+    "youtube_scam_calls_cc0-57e6eb2f880c6e98",
+    "youtube_scam_calls_cc0-588c5a1728e57130",
+    "youtube_scam_calls_cc0-89fcf8fc479eb5f8",
+    "youtube_scam_calls_cc0-e5c75006b60f3b4d",
+    "youtube_scam_calls_cc0-e8a92ece9ce2318a",
+    "youtube_scam_calls_cc0-efb9a5e385f9b927",
+    "youtube_scam_calls_cc0-f828e8a3a28a7d8a"
+  ],
+  "release_gate_passed": false,
+  "audit_sha256": "5c4464dd821dff06a3caf9c57f285a476d706968b7508b0d8cad0d223ea91d7f",
+  "audit_manifest_path": "data/audit/schema24-label-audit.manifest.json",
+  "audit_manifest_sha256": "bcbd4db2d26917832cae99a018919fa861cb9db4ee9bb95b6afa075490fd4131",
+  "audit_protocol_version": 1,
+  "audit_protocol_sha256": "d9dcc931447ce5229ca5e07398b20944759dfe0f0224369c14c2729be10cbb59",
+  "data_manifest_path": "data/experiments/schema24-annotated-hard-negatives/processed/manifest.json",
+  "data_manifest_sha256": "c69c1606bde9db87539b6e3b6f690d09e769e06994a2c2d181e9e5f012f3eeda",
+  "errors": [],
+  "blind_bundle_path": "dist/scamguard-schema24-blind-audit.zip",
+  "blind_bundle_sha256": "dd0c99d97894ace0e3868f947b08b5eab6ccfb6d03b7930e726c91ec1bbf6691",
+  "returned_blind_audit_path": "data/audit/internal-ai/scamguard_blind_audit.csv",
+  "returned_blind_audit_sha256": "54eb6ea1f3d652b147d26cd1e749f7480981c4b5849b7158bb6743f4829021cc",
+  "imported_from_blind_bundle": false,
+  "artifact_schema_version": 1,
+  "review_kind": "ai_internal_blind",
+  "reviewer_type": "ai_assistant",
+  "independent_human_review": false,
+  "decision_artifact_path": "data/audit/internal-ai/scamguard_blind_audit.csv",
+  "canonical_comparison_path": "data/audit/schema24-label-audit.csv",
+  "verified_against_blind_bundle": true,
+  "joined_audit_artifact_persisted": false,
+  "metric_gate_would_pass_if_review_were_independent_human": false,
+  "publication_authorized": false,
+  "limitations": [
+    "The reviewer is the same AI system assisting with model development.",
+    "This result is useful for label diagnostics and exploratory training only.",
+    "A separate independent human review remains required for release publication."
+  ]
+}
