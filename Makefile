@@ -306,7 +306,8 @@ qwen-08b-ai-internal-branch-eval: qwen-08b-ai-internal
 		--local-files-only --adapter "$(QWEN08_AI_OUTPUT)" \
 		--data "$(SCHEMA24_AI_OVERLAY)" --external-data data/external \
 		--splits $(QWEN08_FULL_EVAL_SPLITS) \
-		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token --require-mps \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps \
 		--report "$(QWEN08_AI_BRANCH_REPORT)"
 
 qwen-08b-ai-internal-branch-gates: qwen-08b-ai-internal-branch-eval

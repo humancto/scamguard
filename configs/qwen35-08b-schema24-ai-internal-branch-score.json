@@ -40,7 +40,12 @@
     "fit_split": "dev",
     "maximum_safe_fpr": 0.02,
     "scam_recall_gate": 0.97,
-    "test_macro_f1_gate": 0.94
+    "test_macro_f1_gate": 0.94,
+    "selection": "highest scam threshold meeting both dev recall and FPR gates",
+    "observed_dev_scam_threshold": 0.07872150797977383,
+    "observed_dev_scam_recall": 0.9708171206225681,
+    "observed_dev_safe_fpr": 0.006944444444444444,
+    "observed_dev_calibrated_macro_f1": 0.7399494248231898
   },
   "comparison_policy": "Freeze branch-token scoring before reading previous-mode test metrics; run unchanged test and OOD rows; do not tune this scorer from those results.",
   "release_eligible": false,

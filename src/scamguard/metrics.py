@@ -93,3 +93,23 @@ def choose_threshold(y_true: np.ndarray, probabilities: np.ndarray, max_fpr: flo
     if not feasible:
         return 1.0
     return max(feasible)[2]
+
+
+def choose_threshold_for_gates(
+    y_true: np.ndarray,
+    probabilities: np.ndarray,
+    *,
+    min_recall: float,
+    max_fpr: float = 0.02,
+) -> float | None:
+    """Choose the most conservative threshold that still meets both safety gates."""
+
+    candidates = sorted({float(value) for value in probabilities}, reverse=True)
+    for threshold in candidates:
+        metrics = binary_safety_metrics(y_true, probabilities, threshold)
+        if (
+            metrics["scam_recall"] >= min_recall
+            and metrics["false_positive_rate"] <= max_fpr
+        ):
+            return threshold
+    return None

@@ -19,7 +19,13 @@ from scipy.optimize import minimize_scalar
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 from transformers import AutoModelForImageTextToText, AutoProcessor
 
-from scamguard.metrics import binary_safety_metrics, choose_threshold, file_sha256, wilson_interval
+from scamguard.metrics import (
+    binary_safety_metrics,
+    choose_threshold,
+    choose_threshold_for_gates,
+    file_sha256,
+    wilson_interval,
+)
 from scamguard.prompts import SYSTEM_PROMPT
 from scamguard.qwen_scoring import bucketed_sequence_length, candidate_token_sequences
 
@@ -570,6 +576,14 @@ def main() -> None:
         help="ignored per-example ledger; defaults beside --report",
     )
     parser.add_argument("--max-fpr", type=float, default=0.02)
+    parser.add_argument(
+        "--min-recall-for-threshold",
+        type=float,
+        help=(
+            "Choose the highest dev threshold meeting this recall and --max-fpr. If the "
+            "joint contract is infeasible, fall back to maximum recall under --max-fpr."
+        ),
+    )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument(
@@ -614,6 +628,10 @@ def main() -> None:
         parser.error("--batch-size must be positive")
     if args.sequence_bucket_size < 0:
         parser.error("--sequence-bucket-size cannot be negative")
+    if args.min_recall_for_threshold is not None and not (
+        0.0 <= args.min_recall_for_threshold <= 1.0
+    ):
+        parser.error("--min-recall-for-threshold must be between zero and one")
 
     mps_available = torch.backends.mps.is_available()
     if args.require_mps and not mps_available:
@@ -766,8 +784,21 @@ def main() -> None:
     dev_probabilities = softmax(all_scores["dev"], temperature)
     binary_mask = np.array([row["label"] in {"SAFE", "SCAM"} for row in rows["dev"]])
     binary_truth = np.array([int(row["label"] == "SCAM") for row in rows["dev"]])[binary_mask]
-    threshold = choose_threshold(
-        binary_truth, dev_probabilities[binary_mask, LABELS.index("SCAM")], args.max_fpr
+    dev_scam_probabilities = dev_probabilities[binary_mask, LABELS.index("SCAM")]
+    gate_threshold = (
+        choose_threshold_for_gates(
+            binary_truth,
+            dev_scam_probabilities,
+            min_recall=args.min_recall_for_threshold,
+            max_fpr=args.max_fpr,
+        )
+        if args.min_recall_for_threshold is not None
+        else None
+    )
+    threshold = (
+        gate_threshold
+        if gate_threshold is not None
+        else choose_threshold(binary_truth, dev_scam_probabilities, args.max_fpr)
     )
     safe_threshold = choose_safe_threshold(dev_truth, dev_probabilities, threshold)
     external_data_manifests = {}
@@ -787,6 +818,20 @@ def main() -> None:
         "scam_threshold": threshold,
         "safe_threshold": safe_threshold,
         "safe_threshold_semantics": "minimum_safe_probability",
+        "threshold_policy": {
+            "maximum_safe_fpr": args.max_fpr,
+            "minimum_dev_recall": args.min_recall_for_threshold,
+            "joint_dev_contract_satisfied": (
+                gate_threshold is not None
+                if args.min_recall_for_threshold is not None
+                else None
+            ),
+            "selection": (
+                "highest threshold meeting recall and FPR gates"
+                if gate_threshold is not None
+                else "maximum recall under FPR cap"
+            ),
+        },
         "memory_footprint_bytes": model.get_memory_footprint(),
         "memory": memory_telemetry
         | {
@@ -919,9 +964,11 @@ def main() -> None:
             "safe_threshold": safe_threshold,
             "safe_threshold_semantics": "minimum_safe_probability",
             "threshold_source": (
-                "ScamBench dev: SCAM threshold from SAFE/SCAM subset under max FPR; "
-                "SAFE threshold maximizes three-way macro F1 after freezing SCAM policy"
+                "ScamBench dev: SCAM threshold from SAFE/SCAM subset under the recorded "
+                "recall/FPR policy; SAFE threshold maximizes three-way macro F1 after "
+                "freezing SCAM policy"
             ),
+            "threshold_policy": result["threshold_policy"],
             "scoring": result["scoring"],
             "scoring_mode": args.scoring_mode,
             "scoring_version": scoring_version(args.scoring_mode),
