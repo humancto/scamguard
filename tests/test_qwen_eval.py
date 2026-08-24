@@ -54,6 +54,7 @@ class FakeProcessor:
 class FakeModel:
     def __init__(self) -> None:
         self.kept_values: list[int] = []
+        self.batch_sizes: list[int] = []
 
     def __call__(
         self,
@@ -68,6 +69,7 @@ class FakeModel:
         logits = positions * 0.03 + tokens * 0.07
         logits = logits.expand(input_ids.shape[0], -1, -1)
         self.kept_values.append(logits_to_keep)
+        self.batch_sizes.append(input_ids.shape[0])
         if logits_to_keep:
             logits = logits[:, -logits_to_keep:, :]
         return SimpleNamespace(logits=logits)
@@ -123,7 +125,8 @@ def test_branch_token_scores_match_unbatched_reference() -> None:
     )
 
     np.testing.assert_allclose(batched, reference, rtol=1e-6, atol=2e-7)
-    assert model.kept_values[0] == 2
+    assert model.kept_values[0] == 1
+    assert model.batch_sizes[0] == len(texts)
 
 
 def test_sequence_length_bucketing_is_bounded_and_explicit() -> None:

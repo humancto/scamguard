@@ -32,7 +32,8 @@
     "version": "qwen-verdict-branch-token-v1",
     "definition": "teacher-forced likelihood of the first token where SAFE, UNCERTAIN, and SCAM diverge",
     "message_batch_size": 1,
-    "candidate_batch_size": 3,
+    "model_sequences_per_message": 1,
+    "class_logits_per_message": 3,
     "sequence_bucket_size": 64
   },
   "threshold_policy": {

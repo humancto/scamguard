@@ -298,6 +298,7 @@ def score_messages(
         batch = texts[start : start + batch_size]
         sequences: list[list[int]] = []
         metadata: list[tuple[int, list[int]]] = []
+        branch_tokens: list[list[int]] = []
         for text in batch:
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -310,11 +311,14 @@ def score_messages(
             candidates, common_prefix = candidate_token_sequences(
                 processor.tokenizer, prompt, LABELS
             )
-            for candidate in candidates:
-                if scoring_mode == "branch_token":
-                    sequences.append(candidate[: common_prefix + 1])
-                    metadata.append((common_prefix, [candidate[common_prefix]]))
-                else:
+            if scoring_mode == "branch_token":
+                # The candidates share the complete prompt and differ first at
+                # common_prefix. One prompt forward exposes the three class
+                # logits; evaluating three duplicate sequences is unnecessary.
+                sequences.append(candidates[0][:common_prefix])
+                branch_tokens.append([candidate[common_prefix] for candidate in candidates])
+            else:
+                for candidate in candidates:
                     sequences.append(candidate)
                     metadata.append((common_prefix, candidate[common_prefix:]))
         maximum = bucketed_sequence_length(sequences, sequence_bucket_size)
@@ -323,7 +327,11 @@ def score_messages(
         # 248k_vocab] tensor when only the positions predicting the verdict
         # suffix are required. Include one preceding position for the first
         # suffix token.
-        kept_logits = max(len(tokens) + 1 for _, tokens in metadata)
+        kept_logits = (
+            1
+            if scoring_mode == "branch_token"
+            else max(len(tokens) + 1 for _, tokens in metadata)
+        )
         pad = processor.tokenizer.pad_token_id
         input_ids = torch.tensor(
             [[pad] * (maximum - len(sequence)) + sequence for sequence in sequences],
@@ -340,16 +348,29 @@ def score_messages(
                 logits_to_keep=kept_logits,
             ).logits
             log_probabilities = torch.log_softmax(logits.float(), dim=-1)
-        flat_scores = []
-        for row, (_prompt_length, tokens) in enumerate(metadata):
-            token_scores = [
-                log_probabilities[row, kept_logits - len(tokens) + offset - 1, token].item()
-                for offset, token in enumerate(tokens)
-            ]
-            flat_scores.append(sum(token_scores) / len(token_scores))
-        all_scores.extend(
-            np.asarray(flat_scores, dtype=np.float64).reshape(len(batch), len(LABELS))
-        )
+        if scoring_mode == "branch_token":
+            all_scores.extend(
+                np.asarray(
+                    [
+                        [log_probabilities[row, -1, token].item() for token in tokens]
+                        for row, tokens in enumerate(branch_tokens)
+                    ],
+                    dtype=np.float64,
+                )
+            )
+        else:
+            flat_scores = []
+            for row, (_prompt_length, tokens) in enumerate(metadata):
+                token_scores = [
+                    log_probabilities[
+                        row, kept_logits - len(tokens) + offset - 1, token
+                    ].item()
+                    for offset, token in enumerate(tokens)
+                ]
+                flat_scores.append(sum(token_scores) / len(token_scores))
+            all_scores.extend(
+                np.asarray(flat_scores, dtype=np.float64).reshape(len(batch), len(LABELS))
+            )
         sample_mps_memory(device, memory_telemetry)
         completed_batches = start // batch_size + 1
         if progress_label and (
@@ -381,9 +402,17 @@ def score_message_unbatched(
     prompt += '{"verdict":"'
     sequences, common_prefix = candidate_token_sequences(processor.tokenizer, prompt, LABELS)
     if scoring_mode == "branch_token":
-        sequences = [sequence[: common_prefix + 1] for sequence in sequences]
-    else:
-        scoring_version(scoring_mode)
+        branch_tokens = [sequence[common_prefix] for sequence in sequences]
+        prefix = sequences[0][:common_prefix]
+        input_ids = torch.tensor([prefix], device=device)
+        attention = torch.ones_like(input_ids)
+        with torch.inference_mode():
+            logits = model(input_ids=input_ids, attention_mask=attention).logits
+            log_probabilities = torch.log_softmax(logits.float(), dim=-1)
+        return np.array(
+            [log_probabilities[0, -1, token].item() for token in branch_tokens]
+        )
+    scoring_version(scoring_mode)
     maximum = max(len(sequence) for sequence in sequences)
     pad = processor.tokenizer.pad_token_id
     input_ids = torch.tensor(
@@ -715,7 +744,7 @@ def main() -> None:
         prompt += '{"verdict":"'
         candidates, common_prefix = candidate_token_sequences(processor.tokenizer, prompt, LABELS)
         latency_input_tokens.append(
-            common_prefix + 1
+            common_prefix
             if args.scoring_mode == "branch_token"
             else max(len(candidate) for candidate in candidates)
         )
@@ -785,6 +814,11 @@ def main() -> None:
             "message_batch_size": args.batch_size,
             "candidate_sequences_per_message": len(LABELS),
             "candidate_batch_size": args.batch_size * len(LABELS),
+            "model_sequence_batch_size": (
+                args.batch_size
+                if args.scoring_mode == "branch_token"
+                else args.batch_size * len(LABELS)
+            ),
             "sequence_bucket_size": args.sequence_bucket_size,
             "scoring_version": scoring_version(args.scoring_mode),
         },
@@ -794,6 +828,9 @@ def main() -> None:
             "samples": len(all_latencies),
             "product_batch_size": 1,
             "internal_candidate_batch_size": len(LABELS),
+            "internal_model_sequence_batch_size": (
+                1 if args.scoring_mode == "branch_token" else len(LABELS)
+            ),
             "sequence_bucket_size": args.sequence_bucket_size,
             "warmup": "all benchmark slices scored before timed loop",
             "quantization": runtime_artifact_description(args.adapter),
