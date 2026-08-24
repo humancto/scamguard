@@ -140,6 +140,73 @@ def fit_temperature(scores: np.ndarray, truth: np.ndarray) -> float:
     return float(math.exp(result.x))
 
 
+def multiclass_calibration_metrics(
+    truth: np.ndarray, probabilities: np.ndarray, *, n_bins: int = 15
+) -> dict[str, Any]:
+    """Return reproducible multiclass calibration metrics.
+
+    ECE is top-label expected calibration error with equal-width confidence
+    bins over [0, 1]. Brier is the unscaled multiclass Brier score: the mean
+    sum of squared probability error across all labels.
+    """
+
+    if n_bins <= 0:
+        raise ValueError("n_bins must be positive")
+    if probabilities.ndim != 2 or len(probabilities) != len(truth):
+        raise ValueError("probabilities must be a row per truth label")
+    if not len(truth):
+        raise ValueError("calibration metrics require at least one example")
+
+    one_hot = np.eye(probabilities.shape[1], dtype=np.float64)[truth]
+    brier = float(np.mean(np.sum((probabilities - one_hot) ** 2, axis=1)))
+    selected = np.clip(probabilities[np.arange(len(truth)), truth], 1e-9, 1.0)
+    negative_log_likelihood = float(-np.log(selected).mean())
+
+    confidence = probabilities.max(axis=1)
+    correct = (probabilities.argmax(axis=1) == truth).astype(np.float64)
+    # A confidence of exactly 1.0 belongs in the last bin.
+    bin_indices = np.minimum((confidence * n_bins).astype(np.int64), n_bins - 1)
+    ece = 0.0
+    maximum_calibration_error = 0.0
+    bins: list[dict[str, Any]] = []
+    for index in range(n_bins):
+        mask = bin_indices == index
+        count = int(mask.sum())
+        lower = index / n_bins
+        upper = (index + 1) / n_bins
+        if count:
+            mean_confidence = float(confidence[mask].mean())
+            accuracy = float(correct[mask].mean())
+            gap = abs(accuracy - mean_confidence)
+            ece += count / len(truth) * gap
+            maximum_calibration_error = max(maximum_calibration_error, gap)
+        else:
+            mean_confidence = None
+            accuracy = None
+            gap = None
+        bins.append(
+            {
+                "index": index,
+                "lower_inclusive": lower,
+                "upper_inclusive": index == n_bins - 1,
+                "upper": upper,
+                "examples": count,
+                "mean_confidence": mean_confidence,
+                "accuracy": accuracy,
+                "absolute_gap": gap,
+            }
+        )
+    return {
+        "definition": "top_label_equal_width",
+        "bins": n_bins,
+        "expected_calibration_error": float(ece),
+        "maximum_calibration_error": float(maximum_calibration_error),
+        "multiclass_brier_score": brier,
+        "negative_log_likelihood": negative_log_likelihood,
+        "bin_details": bins,
+    }
+
+
 def predict_with_abstention(
     probabilities: np.ndarray, scam_threshold: float, safe_threshold: float
 ) -> np.ndarray:
@@ -314,6 +381,7 @@ def evaluate_slice(
     include_sources: bool = True,
 ) -> dict[str, Any]:
     probabilities = softmax(scores, temperature)
+    uncalibrated_probabilities = softmax(scores)
     truth = np.array([LABELS.index(str(row["label"])) for row in rows])
     predicted = probabilities.argmax(axis=1)
     binary_mask = np.array([row["label"] in {"SAFE", "SCAM"} for row in rows])
@@ -325,6 +393,13 @@ def evaluate_slice(
         "accuracy_argmax": float(accuracy_score(truth, predicted)),
         "macro_f1_argmax": float(f1_score(truth, predicted, average="macro", zero_division=0)),
         "confusion_argmax": confusion_matrix(truth, predicted, labels=[0, 1, 2]).tolist(),
+        "calibration": {
+            "temperature": float(temperature),
+            "before_temperature": multiclass_calibration_metrics(
+                truth, uncalibrated_probabilities
+            ),
+            "after_temperature": multiclass_calibration_metrics(truth, probabilities),
+        },
         "binary_safety": (
             binary_safety_metrics(binary_truth, scam_probabilities, threshold)
             if len(binary_truth)

@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 import torch
 
 from scamguard.qwen_scoring import bucketed_sequence_length
@@ -12,6 +13,7 @@ from training.eval_qwen import (
     choose_safe_threshold,
     evaluate_slice,
     load_score_cache,
+    multiclass_calibration_metrics,
     predict_with_abstention,
     runtime_artifact_description,
     save_score_cache,
@@ -186,6 +188,27 @@ def test_safe_threshold_is_fit_after_scam_threshold_is_frozen() -> None:
     assert predicted.tolist() == truth.tolist()
 
 
+def test_multiclass_calibration_metrics_are_reproducible() -> None:
+    truth = np.array([0, 1])
+    probabilities = np.array([[0.8, 0.1, 0.1], [0.2, 0.7, 0.1]])
+
+    report = multiclass_calibration_metrics(truth, probabilities, n_bins=2)
+
+    assert report["definition"] == "top_label_equal_width"
+    assert report["expected_calibration_error"] == pytest.approx(0.25)
+    assert report["maximum_calibration_error"] == pytest.approx(0.25)
+    assert report["multiclass_brier_score"] == pytest.approx(0.10)
+    assert report["negative_log_likelihood"] == pytest.approx(
+        -0.5 * (np.log(0.8) + np.log(0.7))
+    )
+    assert sum(item["examples"] for item in report["bin_details"]) == 2
+
+
+def test_multiclass_calibration_metrics_reject_empty_input() -> None:
+    with pytest.raises(ValueError, match="at least one"):
+        multiclass_calibration_metrics(np.array([], dtype=int), np.empty((0, 3)))
+
+
 def test_qwen_evaluation_reports_source_domains() -> None:
     rows = [
         {
@@ -206,3 +229,5 @@ def test_qwen_evaluation_reports_source_domains() -> None:
     report = evaluate_slice(rows, scores, temperature=1.0, threshold=0.5)
 
     assert set(report["by_source_domain"]) == {"finance", "media"}
+    assert "expected_calibration_error" in report["calibration"]["before_temperature"]
+    assert "multiclass_brier_score" in report["calibration"]["after_temperature"]
