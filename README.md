@@ -8,6 +8,10 @@ textual evidence it actually found, and recommends a reversible next action.
 The experiment is quality-first. Model size is minimized only after candidates clear the same
 contamination-controlled benchmark.
 
+The requirement-by-requirement status, including the still-unproven SOTA, physical-mobile,
+independent-audit, and Hugging Face gates, is tracked in
+[docs/PRD_TRACEABILITY.md](docs/PRD_TRACEABILITY.md).
+
 ## Current model ladder
 
 | Track | Role | Approximate mobile package | Decision |
