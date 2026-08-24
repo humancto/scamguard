@@ -22,7 +22,7 @@ def valid_result() -> dict[str, object]:
         "prefix_reused": True,
         "prefix_tokens": 141,
         "model_tensor_bytes": 552_074_496,
-        "protocol_version": 2,
+        "protocol_version": 3,
     }
 
 
@@ -32,7 +32,7 @@ def validate(result: dict[str, object]) -> list[str]:
         raw_scores=(-3.0, -2.0, -3.0),
         probabilities=(0.3, 0.4, 0.3),
         verdict="SAFE",
-        protocol_version=2,
+        protocol_version=3,
         model_tensor_bytes=552_074_496,
         prefix_tokens=141,
     )
@@ -65,7 +65,7 @@ def test_timing_prefix_and_protocol_are_required() -> None:
 
     assert "native_elapsed_ms must be finite and positive" in errors
     assert "prefix_reused must equal True" in errors
-    assert "protocol_version must equal 2" in errors
+    assert "protocol_version must equal 3" in errors
 
 
 def test_unexpected_message_text_field_is_rejected() -> None:

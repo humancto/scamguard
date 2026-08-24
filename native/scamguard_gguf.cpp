@@ -173,18 +173,18 @@ namespace {
 internal_score_result score_request(sg_gguf_runtime & runtime, std::string_view question) {
     const auto started = std::chrono::steady_clock::now();
     std::array<std::vector<llama_token>, 3> sequences;
-    size_t maximum_sequence_tokens = 0;
+    size_t maximum_candidate_tokens = 0;
     for (size_t answer = 0; answer < k_answers.size(); ++answer) {
         std::string candidate(question);
         candidate.append(k_answers[answer]);
         sequences[answer] = tokenize(runtime.vocab, candidate);
-        maximum_sequence_tokens = std::max(maximum_sequence_tokens, sequences[answer].size());
+        maximum_candidate_tokens = std::max(maximum_candidate_tokens, sequences[answer].size());
         if (sequences[answer].size() > static_cast<size_t>(runtime.configured_context_size)) {
             throw std::runtime_error("request exceeds the configured per-sequence context");
         }
     }
 
-    size_t common_prefix = maximum_sequence_tokens;
+    size_t common_prefix = maximum_candidate_tokens;
     for (const auto & sequence : sequences) common_prefix = std::min(common_prefix, sequence.size());
 
     const bool prefix_reused = !runtime.cached_prefix.empty();
@@ -212,9 +212,7 @@ internal_score_result score_request(sg_gguf_runtime & runtime, std::string_view 
         }
     }
 
-    size_t required_tokens = common_prefix;
-    for (const auto & sequence : sequences) required_tokens += sequence.size() - common_prefix;
-    if (required_tokens > static_cast<size_t>(llama_n_ctx(runtime.context))) {
+    if (common_prefix > static_cast<size_t>(llama_n_ctx(runtime.context))) {
         throw std::runtime_error("request does not fit in the shared GGUF context");
     }
 
@@ -237,20 +235,8 @@ internal_score_result score_request(sg_gguf_runtime & runtime, std::string_view 
         add_token(runtime.batch, sequences[0][position], static_cast<llama_pos>(position), all_sequences, false);
     }
     runtime.batch.logits[runtime.batch.n_tokens - 1] = 1;
-    std::array<std::vector<int32_t>, 3> continuation_output_indices;
-    int32_t next_output_index = 1;
-    for (size_t answer = 0; answer < sequences.size(); ++answer) {
-        for (size_t position = common_prefix; position < sequences[answer].size(); ++position) {
-            const bool needs_output = position + 1 < sequences[answer].size();
-            add_token(
-                runtime.batch, sequences[answer][position], static_cast<llama_pos>(position),
-                {static_cast<llama_seq_id>(answer)}, needs_output);
-            if (needs_output) continuation_output_indices[answer].push_back(next_output_index++);
-        }
-    }
-
     std::vector<float> copied_logits(
-        static_cast<size_t>(next_output_index) * static_cast<size_t>(runtime.vocabulary_size));
+        static_cast<size_t>(runtime.vocabulary_size));
     int32_t copied_outputs = 0;
     for (int32_t offset = 0; offset < runtime.batch.n_tokens; offset += runtime.batch_size) {
         const int32_t token_count = std::min(runtime.batch_size, runtime.batch.n_tokens - offset);
@@ -271,33 +257,21 @@ internal_score_result score_request(sg_gguf_runtime & runtime, std::string_view 
             static_cast<size_t>(outputs) * static_cast<size_t>(runtime.vocabulary_size) * sizeof(float));
         copied_outputs += outputs;
     }
-    if (copied_outputs != next_output_index) {
+    if (copied_outputs != 1) {
         throw std::runtime_error("llama_decode returned an unexpected output count");
     }
 
     std::array<double, 3> scores{};
     const float * all_logits = copied_logits.data();
     for (size_t answer = 0; answer < sequences.size(); ++answer) {
-        double log_probability = token_log_probability(
+        scores[answer] = token_log_probability(
             all_logits, runtime.vocabulary_size, sequences[answer][common_prefix]);
-        size_t count = 1;
-        for (size_t offset = 0; offset < continuation_output_indices[answer].size(); ++offset) {
-            const size_t target_position = common_prefix + offset + 1;
-            log_probability += token_log_probability(
-                all_logits
-                    + static_cast<size_t>(continuation_output_indices[answer][offset])
-                        * static_cast<size_t>(runtime.vocabulary_size),
-                runtime.vocabulary_size,
-                sequences[answer][target_position]);
-            ++count;
-        }
-        scores[answer] = log_probability / static_cast<double>(count);
     }
     const auto finished = std::chrono::steady_clock::now();
     return {
         scores,
         std::chrono::duration_cast<std::chrono::microseconds>(finished - started).count(),
-        maximum_sequence_tokens,
+        common_prefix + 1,
         prefix_reused,
         runtime.cached_prefix.size(),
     };

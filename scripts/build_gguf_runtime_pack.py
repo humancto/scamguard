@@ -15,6 +15,8 @@ from typing import Any
 from scamguard.gguf_runtime import (
     FROZEN_PROMPT_PREFIX,
     FROZEN_PROMPT_SUFFIX,
+    GGUF_BACKEND_TYPE,
+    GGUF_SCORING_VERSION,
     LABELS,
     PACK_MANIFEST_NAME,
     QWEN35_08B_PROCESSOR,
@@ -58,13 +60,15 @@ def normalized_calibration(source: dict[str, Any], source_sha256: str) -> dict[s
     )
     record = {
         "artifact_schema_version": 1,
-        "backend_type": "qwen_gguf_verdict_likelihood",
+        "backend_type": GGUF_BACKEND_TYPE,
         "labels": list(source.get("labels") or LABELS),
         "temperature": source.get("temperature"),
         "scam_threshold": source.get("scam_threshold"),
         "safe_threshold": source.get("safe_threshold"),
         "safe_threshold_semantics": source.get("safe_threshold_semantics"),
         "sequence_bucket_size": sequence_bucket_size,
+        "scoring_mode": source.get("scoring_mode"),
+        "scoring_version": source.get("scoring_version", score_cache.get("scoring_version")),
         "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
         "source_report_sha256": source_sha256,
     }
@@ -74,6 +78,11 @@ def normalized_calibration(source: dict[str, Any], source_sha256: str) -> dict[s
         raise ValueError("calibration source has incompatible SAFE-threshold semantics")
     if record["sequence_bucket_size"] != 64:
         raise ValueError("calibration source must bind the frozen 64-token bucket")
+    if (
+        record["scoring_mode"] != "branch_token"
+        or record["scoring_version"] != GGUF_SCORING_VERSION
+    ):
+        raise ValueError("calibration source must use the frozen branch-token scorer")
     for field in ("temperature", "scam_threshold", "safe_threshold"):
         if not isinstance(record[field], (int, float)):
             raise ValueError(f"calibration source lacks numeric {field}")
@@ -193,7 +202,7 @@ def build_pack(
 
     manifest: dict[str, Any] = {
         "artifact_schema_version": PACK_SCHEMA_VERSION,
-        "backend_type": "qwen_gguf_verdict_likelihood",
+        "backend_type": GGUF_BACKEND_TYPE,
         "purpose": purpose,
         "publication_authorized": False,
         "model": {
@@ -228,7 +237,7 @@ def build_pack(
             "processor_revision": processor_revision,
         },
         "runtime": {
-            "protocol_version": 2,
+            "protocol_version": 3,
             "ctx_size": 640,
             "batch_size": 640,
             "ubatch_size": 128,
@@ -236,6 +245,8 @@ def build_pack(
             "n_gpu_layers": 99,
             "message_batch_size": 1,
             "candidate_batch_size": 3,
+            "scoring_mode": "branch_token",
+            "scoring_version": GGUF_SCORING_VERSION,
             "sequence_bucket_size": 64,
             "prefix_cache_enabled": True,
         },

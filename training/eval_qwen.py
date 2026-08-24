@@ -51,6 +51,82 @@ def scoring_description(mode: str) -> str:
     raise ValueError(f"unsupported scoring mode: {mode}")
 
 
+def load_frozen_calibration(
+    path: Path,
+    *,
+    adapter_sha256: str | None,
+    revision: str | None,
+    dev_sha256: str,
+    scoring_mode: str,
+    sequence_bucket_size: int,
+    max_fpr: float,
+    min_recall: float | None,
+) -> tuple[float, float, float, dict[str, Any]]:
+    """Load an exact development calibration without silently refitting it."""
+
+    report = json.loads(path.read_text(encoding="utf-8"))
+    expected = {
+        "adapter_sha256": adapter_sha256,
+        "base_model_revision": revision,
+        "dev_sha256": dev_sha256,
+        "scoring_mode": scoring_mode,
+        "sequence_bucket_size": sequence_bucket_size,
+        "maximum_safe_fpr": max_fpr,
+        "minimum_dev_recall": min_recall,
+    }
+    actual = {
+        "adapter_sha256": report.get("adapter_sha256"),
+        "base_model_revision": report.get("base_model_revision"),
+        "dev_sha256": report.get("data_sha256", {}).get("dev"),
+        "scoring_mode": report.get("scoring_mode"),
+        "sequence_bucket_size": report.get("score_cache", {}).get(
+            "sequence_bucket_size"
+        ),
+        "maximum_safe_fpr": report.get("threshold_policy", {}).get(
+            "maximum_safe_fpr"
+        ),
+        "minimum_dev_recall": report.get("threshold_policy", {}).get(
+            "minimum_dev_recall"
+        ),
+    }
+    if actual != expected:
+        raise ValueError(
+            "frozen calibration report differs from the adapter, development data, "
+            "scorer, or threshold policy"
+        )
+    values = (
+        report.get("temperature"),
+        report.get("scam_threshold"),
+        report.get("safe_threshold"),
+    )
+    if any(
+        not isinstance(value, (int, float)) or isinstance(value, bool)
+        for value in values
+    ):
+        raise ValueError("frozen calibration report lacks numeric calibration values")
+    threshold_policy = report.get("threshold_policy")
+    if not isinstance(threshold_policy, dict):
+        raise ValueError("frozen calibration report lacks a threshold policy")
+    return float(values[0]), float(values[1]), float(values[2]), threshold_policy
+
+
+def validate_primary_test_v8(path: Path) -> dict[str, Any]:
+    """Verify the sealed local-only holdout identity before its first scoring run."""
+
+    manifest_path = path.with_name(f"{path.stem}.manifest.json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (
+        manifest.get("schema_version") != 8
+        or manifest.get("benchmark_state") != "SEALED_MODEL_PREDICTIONS_NOT_RUN"
+        or manifest.get("source", {}).get("local_evaluation_only") is not True
+        or manifest.get("source", {}).get("training_allowed_by_project") is not False
+        or manifest.get("artifact", {}).get("sha256") != file_sha256(path)
+        or manifest.get("counts", {}).get("final_rows") != len(read_jsonl(path))
+    ):
+        raise ValueError("primary_test_v8 differs from its sealed local-only contract")
+    return manifest
+
+
 def artifact_size(path: Path) -> int:
     return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
 
@@ -569,6 +645,19 @@ def main() -> None:
     parser.add_argument("--adapter", type=Path)
     parser.add_argument("--data", type=Path, default=Path("data/processed"))
     parser.add_argument("--external-data", type=Path, default=Path("data/external"))
+    parser.add_argument(
+        "--primary-test-v8",
+        type=Path,
+        help=(
+            "Explicitly open the sealed local-only primary_test_v8 artifact. Requires "
+            "--frozen-calibration-report so thresholds cannot change after seeing it."
+        ),
+    )
+    parser.add_argument(
+        "--frozen-calibration-report",
+        type=Path,
+        help="Reuse exact development temperature and thresholds from a bound prior report.",
+    )
     parser.add_argument("--report", type=Path, default=Path("reports/runs/qwen35-08b.json"))
     parser.add_argument(
         "--predictions",
@@ -632,6 +721,8 @@ def main() -> None:
         0.0 <= args.min_recall_for_threshold <= 1.0
     ):
         parser.error("--min-recall-for-threshold must be between zero and one")
+    if args.primary_test_v8 is not None and args.frozen_calibration_report is None:
+        parser.error("--primary-test-v8 requires --frozen-calibration-report")
 
     mps_available = torch.backends.mps.is_available()
     if args.require_mps and not mps_available:
@@ -701,6 +792,10 @@ def main() -> None:
     taskmaster_path = args.external_data / "taskmaster" / "taskmaster_validation.jsonl"
     if taskmaster_path.exists():
         split_paths["taskmaster_validation"] = taskmaster_path
+    primary_test_v8_manifest = None
+    if args.primary_test_v8 is not None:
+        primary_test_v8_manifest = validate_primary_test_v8(args.primary_test_v8)
+        split_paths["primary_test_v8"] = args.primary_test_v8
     available_splits = list(split_paths)
     splits = args.splits or available_splits
     unknown_splits = sorted(set(splits) - set(available_splits))
@@ -780,45 +875,47 @@ def main() -> None:
         all_latencies.append((time.perf_counter_ns() - started) / 1_000_000)
 
     dev_truth = np.array([LABELS.index(str(row["label"])) for row in rows["dev"]])
-    temperature = fit_temperature(all_scores["dev"], dev_truth)
+    frozen_calibration_source = None
+    if args.frozen_calibration_report is not None:
+        temperature, threshold, safe_threshold, threshold_policy = load_frozen_calibration(
+            args.frozen_calibration_report,
+            adapter_sha256=adapter_sha256,
+            revision=resolved_revision or args.revision,
+            dev_sha256=data_sha256["dev"],
+            scoring_mode=args.scoring_mode,
+            sequence_bucket_size=args.sequence_bucket_size,
+            max_fpr=args.max_fpr,
+            min_recall=args.min_recall_for_threshold,
+        )
+        frozen_calibration_source = {
+            "path": str(args.frozen_calibration_report),
+            "sha256": file_sha256(args.frozen_calibration_report),
+            "refit": False,
+        }
+    else:
+        temperature = fit_temperature(all_scores["dev"], dev_truth)
     dev_probabilities = softmax(all_scores["dev"], temperature)
     binary_mask = np.array([row["label"] in {"SAFE", "SCAM"} for row in rows["dev"]])
     binary_truth = np.array([int(row["label"] == "SCAM") for row in rows["dev"]])[binary_mask]
     dev_scam_probabilities = dev_probabilities[binary_mask, LABELS.index("SCAM")]
-    gate_threshold = (
-        choose_threshold_for_gates(
-            binary_truth,
-            dev_scam_probabilities,
-            min_recall=args.min_recall_for_threshold,
-            max_fpr=args.max_fpr,
+    if args.frozen_calibration_report is None:
+        gate_threshold = (
+            choose_threshold_for_gates(
+                binary_truth,
+                dev_scam_probabilities,
+                min_recall=args.min_recall_for_threshold,
+                max_fpr=args.max_fpr,
+            )
+            if args.min_recall_for_threshold is not None
+            else None
         )
-        if args.min_recall_for_threshold is not None
-        else None
-    )
-    threshold = (
-        gate_threshold
-        if gate_threshold is not None
-        else choose_threshold(binary_truth, dev_scam_probabilities, args.max_fpr)
-    )
-    safe_threshold = choose_safe_threshold(dev_truth, dev_probabilities, threshold)
-    external_data_manifests = {}
-    for diagnostic in ("chichewa", "scam_dialogue", "taskmaster"):
-        manifest_path = args.external_data / diagnostic / "manifest.json"
-        if manifest_path.exists():
-            external_data_manifests[diagnostic] = json.loads(manifest_path.read_text())
-    result = {
-        "model": args.model,
-        "requested_revision": args.revision,
-        "base_model_revision": resolved_revision or args.revision,
-        "adapter": str(args.adapter) if args.adapter else None,
-        "adapter_sha256": adapter_sha256,
-        "scoring": scoring_description(args.scoring_mode),
-        "scoring_mode": args.scoring_mode,
-        "temperature": temperature,
-        "scam_threshold": threshold,
-        "safe_threshold": safe_threshold,
-        "safe_threshold_semantics": "minimum_safe_probability",
-        "threshold_policy": {
+        threshold = (
+            gate_threshold
+            if gate_threshold is not None
+            else choose_threshold(binary_truth, dev_scam_probabilities, args.max_fpr)
+        )
+        safe_threshold = choose_safe_threshold(dev_truth, dev_probabilities, threshold)
+        threshold_policy = {
             "maximum_safe_fpr": args.max_fpr,
             "minimum_dev_recall": args.min_recall_for_threshold,
             "joint_dev_contract_satisfied": (
@@ -831,7 +928,28 @@ def main() -> None:
                 if gate_threshold is not None
                 else "maximum recall under FPR cap"
             ),
-        },
+        }
+    external_data_manifests = {}
+    for diagnostic in ("chichewa", "scam_dialogue", "taskmaster"):
+        manifest_path = args.external_data / diagnostic / "manifest.json"
+        if manifest_path.exists():
+            external_data_manifests[diagnostic] = json.loads(manifest_path.read_text())
+    if primary_test_v8_manifest is not None:
+        external_data_manifests["primary_test_v8"] = primary_test_v8_manifest
+    result = {
+        "model": args.model,
+        "requested_revision": args.revision,
+        "base_model_revision": resolved_revision or args.revision,
+        "adapter": str(args.adapter) if args.adapter else None,
+        "adapter_sha256": adapter_sha256,
+        "scoring": scoring_description(args.scoring_mode),
+        "scoring_mode": args.scoring_mode,
+        "temperature": temperature,
+        "scam_threshold": threshold,
+        "safe_threshold": safe_threshold,
+        "safe_threshold_semantics": "minimum_safe_probability",
+        "threshold_policy": threshold_policy,
+        "frozen_calibration_source": frozen_calibration_source,
         "memory_footprint_bytes": model.get_memory_footprint(),
         "memory": memory_telemetry
         | {
@@ -909,6 +1027,14 @@ def main() -> None:
         "core_categories_evaluated": sorted(core_categories),
         "macro_f1_stretch": result["test"]["calibrated_decision"]["macro_f1"] >= 0.94,
     }
+    if "primary_test_v8" in result:
+        primary_binary = result["primary_test_v8"]["binary_safety"]
+        result["primary_test_v8_gates"] = {
+            "reported_separately_from_english_regression": True,
+            "recall": primary_binary["scam_recall"] >= 0.97,
+            "fpr": primary_binary["false_positive_rate"] <= args.max_fpr,
+            "local_evaluation_only": True,
+        }
     args.report.parent.mkdir(parents=True, exist_ok=True)
     prediction_path = args.predictions or args.report.with_suffix(".predictions.jsonl")
     prediction_path.parent.mkdir(parents=True, exist_ok=True)

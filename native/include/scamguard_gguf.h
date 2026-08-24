@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 #define SG_GGUF_ABI_VERSION 1u
-#define SG_GGUF_PROTOCOL_VERSION 2u
+#define SG_GGUF_PROTOCOL_VERSION 3u
 
 typedef struct sg_gguf_runtime sg_gguf_runtime;
 

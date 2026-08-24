@@ -30,7 +30,7 @@ def fake_runner(path: Path) -> None:
             import sys
 
             prefix_tokens = 141 if "--prefix-hex" in sys.argv else 0
-            print(f"READY\t2\t563036064\t640\t{prefix_tokens}", flush=True)
+            print(f"READY\t3\t563036064\t640\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
@@ -65,7 +65,11 @@ def runtime_pack(tmp_path: Path) -> Path:
                 "scam_threshold": 0.8,
                 "safe_threshold": 0.6,
                 "safe_threshold_semantics": "minimum_safe_probability",
-                "score_cache": {"sequence_bucket_size": 64},
+                "scoring_mode": "branch_token",
+                "score_cache": {
+                    "sequence_bucket_size": 64,
+                    "scoring_version": "qwen-verdict-branch-token-v1",
+                },
             }
         ),
         encoding="utf-8",

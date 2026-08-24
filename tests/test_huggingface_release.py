@@ -85,7 +85,9 @@ def physical_mobile_report(
                         ].read_bytes()
                     ).hexdigest(),
                     "offline": True,
-                    "protocol_version": 2,
+                    "protocol_version": 3,
+                    "scoring_mode": "branch_token",
+                    "scoring_version": "qwen-verdict-branch-token-v1",
                     "prefix_cache_enabled": True,
                     "threads": 4,
                 },
@@ -157,7 +159,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
         json.dumps(
             {
                 "artifact_schema_version": 1,
-                "backend_type": "qwen_gguf_verdict_likelihood",
+                "backend_type": "qwen_gguf_verdict_branch_token",
                 "purpose": "release_candidate",
                 "publication_authorized": False,
                 "model": {
@@ -195,9 +197,11 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                     "processor_revision": QWEN35_08B_PROCESSOR_REVISION,
                 },
                 "runtime": {
-                    "protocol_version": 2,
+                    "protocol_version": 3,
                     "message_batch_size": 1,
                     "candidate_batch_size": 3,
+                    "scoring_mode": "branch_token",
+                    "scoring_version": "qwen-verdict-branch-token-v1",
                     "sequence_bucket_size": 64,
                     "prefix_cache_enabled": True,
                 },
@@ -401,9 +405,11 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                         "model_sha256": hashlib.sha256(
                             artifact_paths["gguf_model"].read_bytes()
                         ).hexdigest(),
-                        "protocol_version": 2,
+                        "protocol_version": 3,
                         "message_batch_size": 1,
                         "candidate_batch_size": 3,
+                        "scoring_mode": "branch_token",
+                        "scoring_version": "qwen-verdict-branch-token-v1",
                         "sequence_bucket_size": 64,
                         "prefix_cache_enabled": True,
                         "prefix_tokens": 100,

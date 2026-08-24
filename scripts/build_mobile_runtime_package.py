@@ -51,7 +51,9 @@ def verify_mobile_package(
             "publication_authorized": False,
             "architecture": "arm64",
             "native_abi_version": 1,
-            "protocol_version": 2,
+            "protocol_version": 3,
+            "scoring_mode": "branch_token",
+            "scoring_version": "qwen-verdict-branch-token-v1",
         }
         for key, expected in required.items():
             if manifest.get(key) != expected:
@@ -202,7 +204,9 @@ def build_mobile_package(
         "architecture": "arm64",
         "minimum_os_version": minimum_os_version,
         "native_abi_version": 1,
-        "protocol_version": 2,
+        "protocol_version": 3,
+        "scoring_mode": "branch_token",
+        "scoring_version": "qwen-verdict-branch-token-v1",
         "source": {
             "scamguard_revision": scamguard_revision,
             "llama_cpp_revision": llama_cpp_revision,

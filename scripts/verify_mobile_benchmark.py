@@ -190,8 +190,15 @@ def _validate_run(
         errors.append(f"{prefix}.runtime.accelerator must be recorded")
     if runtime.get("offline") is not True:
         errors.append(f"{prefix}.runtime.offline must be true")
-    if runtime.get("protocol_version") != 2:
-        errors.append(f"{prefix}.runtime.protocol_version must equal 2")
+    if runtime.get("protocol_version") != 3:
+        errors.append(f"{prefix}.runtime.protocol_version must equal 3")
+    if runtime.get("scoring_mode") != "branch_token":
+        errors.append(f"{prefix}.runtime.scoring_mode must equal branch_token")
+    if runtime.get("scoring_version") != "qwen-verdict-branch-token-v1":
+        errors.append(
+            f"{prefix}.runtime.scoring_version must equal "
+            "qwen-verdict-branch-token-v1"
+        )
     if runtime.get("prefix_cache_enabled") is not True:
         errors.append(f"{prefix}.runtime.prefix_cache_enabled must be true")
     if (

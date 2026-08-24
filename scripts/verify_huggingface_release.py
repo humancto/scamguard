@@ -581,8 +581,15 @@ def _validate_report_contents(
         errors.append("routed native runner SHA-256 differs from runtime_binary artifact")
     if gguf_path and native_runtime.get("model_sha256") != file_sha256(gguf_path):
         errors.append("routed native model SHA-256 differs from GGUF artifact")
-    if native_runtime.get("protocol_version") != 2:
-        errors.append("routed native runtime protocol_version must equal 2")
+    if native_runtime.get("protocol_version") != 3:
+        errors.append("routed native runtime protocol_version must equal 3")
+    if native_runtime.get("scoring_mode") != "branch_token":
+        errors.append("routed native runtime scoring_mode must equal branch_token")
+    if native_runtime.get("scoring_version") != "qwen-verdict-branch-token-v1":
+        errors.append(
+            "routed native runtime scoring_version must equal "
+            "qwen-verdict-branch-token-v1"
+        )
     for field, expected in expected_shape.items():
         if native_runtime.get(field) != expected:
             errors.append(f"routed native runtime {field} must equal {expected}")
@@ -636,7 +643,7 @@ def _validate_runtime_pack(artifact_paths: dict[str, Path], errors: list[str]) -
     record = _json_report(manifest_path, "runtime_pack_manifest", errors)
     if (
         record.get("artifact_schema_version") != 1
-        or record.get("backend_type") != "qwen_gguf_verdict_likelihood"
+        or record.get("backend_type") != "qwen_gguf_verdict_branch_token"
     ):
         errors.append("runtime pack has an incompatible schema or backend")
     if record.get("purpose") != "release_candidate":
@@ -683,9 +690,11 @@ def _validate_runtime_pack(artifact_paths: dict[str, Path], errors: list[str]) -
             errors.append(f"runtime pack prompt mismatch: {field}")
     runtime = _mapping(record.get("runtime"), "runtime pack runtime", errors)
     expected_runtime = {
-        "protocol_version": 2,
+        "protocol_version": 3,
         "message_batch_size": 1,
         "candidate_batch_size": 3,
+        "scoring_mode": "branch_token",
+        "scoring_version": "qwen-verdict-branch-token-v1",
         "sequence_bucket_size": 64,
         "prefix_cache_enabled": True,
     }

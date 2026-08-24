@@ -57,12 +57,16 @@ The 192-token Metal prompt floor passes 50 ms but fails 20 ms before candidate s
 thread sweep covered 4, 8, and 12 threads; eight is the stable short-prompt winner. The whole
 llama-bench process peaks at 728,973,312 bytes RSS on Metal and 1,302,986,752 bytes on CPU.
 
-## Exact ScamGuard verdict scorer
+## Historical protocol-v2 verdict scorer
 
-The exact scorer uses the frozen prompt and length-normalized teacher-forced likelihoods for
+This measured control used the frozen prompt and length-normalized teacher-forced likelihoods for
 `SAFE`, `UNCERTAIN`, and `SCAM`. It runs product batch one (`parallel=1`) over the same first 50
 test messages used by the BF16 latency protocol. Candidate-inclusive input length is 153 minimum,
 167 p50, 194.55 p95, and 196 maximum tokens.
+
+Protocol v3 supersedes these scorer semantics with one shared forward pass and first-divergent-token
+logits. The table remains immutable historical runtime-floor evidence and must not be presented as a
+protocol-v3 latency measurement.
 
 | Context / threads | Repetitions | Mean ms/message | Median | p95 of run means | Peak process RSS |
 |---|---:|---:|---:|---:|---:|

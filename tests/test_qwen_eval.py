@@ -1,5 +1,6 @@
 """The batched Qwen scorer must match its simple reference implementation."""
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -7,11 +8,13 @@ import numpy as np
 import pytest
 import torch
 
+from scamguard.metrics import file_sha256
 from scamguard.qwen_scoring import bucketed_sequence_length
 from training.eval_qwen import (
     LABELS,
     choose_safe_threshold,
     evaluate_slice,
+    load_frozen_calibration,
     load_score_cache,
     multiclass_calibration_metrics,
     predict_with_abstention,
@@ -20,6 +23,7 @@ from training.eval_qwen import (
     score_cache_identity,
     score_message_unbatched,
     score_messages,
+    validate_primary_test_v8,
 )
 
 
@@ -175,6 +179,73 @@ def test_score_cache_rejects_partial_or_invalid_arrays(tmp_path) -> None:
         np.save(handle, np.zeros((1, 3)), allow_pickle=False)
 
     assert load_score_cache(tmp_path, "test", identity) is None
+
+
+def test_frozen_calibration_is_bound_to_model_data_and_policy(tmp_path: Path) -> None:
+    report_path = tmp_path / "report.json"
+    report = {
+        "adapter_sha256": "adapter",
+        "base_model_revision": "revision",
+        "data_sha256": {"dev": "dev"},
+        "scoring_mode": "branch_token",
+        "score_cache": {"sequence_bucket_size": 64},
+        "threshold_policy": {
+            "maximum_safe_fpr": 0.02,
+            "minimum_dev_recall": 0.97,
+            "joint_dev_contract_satisfied": True,
+            "selection": "highest threshold meeting recall and FPR gates",
+        },
+        "temperature": 1.1,
+        "scam_threshold": 0.2,
+        "safe_threshold": 0.7,
+    }
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+
+    values = load_frozen_calibration(
+        report_path,
+        adapter_sha256="adapter",
+        revision="revision",
+        dev_sha256="dev",
+        scoring_mode="branch_token",
+        sequence_bucket_size=64,
+        max_fpr=0.02,
+        min_recall=0.97,
+    )
+
+    assert values[:3] == (1.1, 0.2, 0.7)
+    with pytest.raises(ValueError, match="differs"):
+        load_frozen_calibration(
+            report_path,
+            adapter_sha256="changed",
+            revision="revision",
+            dev_sha256="dev",
+            scoring_mode="branch_token",
+            sequence_bucket_size=64,
+            max_fpr=0.02,
+            min_recall=0.97,
+        )
+
+
+def test_primary_test_v8_requires_exact_sealed_local_artifact(tmp_path: Path) -> None:
+    path = tmp_path / "primary_test_v8.jsonl"
+    path.write_text('{"id":"one"}\n', encoding="utf-8")
+    manifest_path = tmp_path / "primary_test_v8.manifest.json"
+    manifest = {
+        "schema_version": 8,
+        "benchmark_state": "SEALED_MODEL_PREDICTIONS_NOT_RUN",
+        "source": {
+            "local_evaluation_only": True,
+            "training_allowed_by_project": False,
+        },
+        "artifact": {"sha256": file_sha256(path)},
+        "counts": {"final_rows": 1},
+    }
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert validate_primary_test_v8(path) == manifest
+    path.write_text('{"id":"changed"}\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="sealed local-only"):
+        validate_primary_test_v8(path)
 
 
 def test_abstention_rule_prioritizes_scam_then_safe() -> None:

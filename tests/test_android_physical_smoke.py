@@ -25,7 +25,7 @@ def valid_result() -> dict[str, object]:
         "platform": "Android",
         "prefix_reused": True,
         "prefix_tokens": 141,
-        "protocol_version": 2,
+        "protocol_version": 3,
         "raw_safe_score": -3.0,
         "raw_scam_score": -3.0,
         "raw_uncertain_score": -2.0,
@@ -44,7 +44,7 @@ def validate(result: dict[str, object]) -> list[str]:
         raw_scores=(-3.0, -2.0, -3.0),
         probabilities=(0.3, 0.4, 0.3),
         verdict="SAFE",
-        protocol_version=2,
+        protocol_version=3,
         model_tensor_bytes=552_074_496,
         prefix_tokens=141,
     )

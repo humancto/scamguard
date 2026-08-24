@@ -94,9 +94,10 @@ gates, and neither is a physical-mobile result.
 
 The verified upstream Qwen3.5-0.8B Q4_0 control is 563,036,064 bytes. On the 40-GPU-core M4 Max,
 192-token prompt processing measures 33.26 ms p95, already above the strict 20 ms fast-path budget.
-The exact three-candidate verdict scorer reaches a 50.24 ms p95 across ten run means at context 256
-and 53.98 ms at the quality-preserving context 640; process RSS peaks at 1.81 GB and 3.38 GB,
-respectively. Context and thread tuning do not recover the strict target. This freezes 0.8B Qwen as
+The historical protocol-v2 three-candidate verdict scorer reaches a 50.24 ms p95 across ten run
+means at context 256 and 53.98 ms at the quality-preserving context 640; process RSS peaks at 1.81
+GB and 3.38 GB, respectively. Protocol v3's one-pass branch-token scorer requires a new benchmark;
+the older figures are not reused. This freezes 0.8B Qwen as
 a routed specialist rather than the default fast path. It does not pre-judge trained quality or
 replace required physical-phone measurements.
 

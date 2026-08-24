@@ -21,6 +21,8 @@ from .prompts import SYSTEM_PROMPT
 
 LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 PACK_MANIFEST_NAME = "scamguard_gguf_pack.json"
+GGUF_BACKEND_TYPE = "qwen_gguf_verdict_branch_token"
+GGUF_SCORING_VERSION = "qwen-verdict-branch-token-v1"
 QWEN35_08B_PROCESSOR = "Qwen/Qwen3.5-0.8B"
 QWEN35_08B_PROCESSOR_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
 FROZEN_PROMPT_PREFIX = (
@@ -140,7 +142,7 @@ class PersistentGGUFScorer:
         try:
             ready_line = self._readline(startup_timeout_seconds)
             match = READY.fullmatch(ready_line.rstrip("\n"))
-            if match is None or int(match.group(1)) != 2:
+            if match is None or int(match.group(1)) != 3:
                 raise RuntimeError(f"invalid GGUF runner readiness record: {ready_line!r}")
             self.protocol_version = int(match.group(1))
             self.loaded_model_bytes = int(match.group(2))
@@ -283,6 +285,11 @@ class QwenGGUFVerdictBackend:
             raise ValueError("GGUF calibration SAFE-threshold semantics are incompatible")
         if record.get("sequence_bucket_size") != 64:
             raise ValueError("GGUF calibration must bind the frozen 64-token bucket")
+        if (
+            record.get("scoring_mode") != "branch_token"
+            or record.get("scoring_version") != GGUF_SCORING_VERSION
+        ):
+            raise ValueError("GGUF calibration must bind the branch-token scorer")
         if record.get("system_prompt_sha256") != hashlib.sha256(
             SYSTEM_PROMPT.encode()
         ).hexdigest():
@@ -403,6 +410,8 @@ class QwenGGUFVerdictBackend:
             "n_gpu_layers": self.scorer.n_gpu_layers,
             "message_batch_size": 1,
             "candidate_batch_size": 3,
+            "scoring_mode": "branch_token",
+            "scoring_version": GGUF_SCORING_VERSION,
             "sequence_bucket_size": self.sequence_bucket_size,
             "prefix_cache_enabled": self.scorer.prefix is not None,
             "prefix_tokens": self.scorer.loaded_prefix_tokens,
@@ -439,7 +448,7 @@ def load_gguf_runtime_pack(path: str | Path) -> QwenGGUFVerdictBackend:
     record: dict[str, Any] = json.loads(manifest_path.read_text(encoding="utf-8"))
     if (
         record.get("artifact_schema_version") != 1
-        or record.get("backend_type") != "qwen_gguf_verdict_likelihood"
+        or record.get("backend_type") != GGUF_BACKEND_TYPE
     ):
         raise ValueError("GGUF runtime-pack manifest has an incompatible schema or backend")
     if record.get("publication_authorized") is not False:
@@ -476,9 +485,11 @@ def load_gguf_runtime_pack(path: str | Path) -> QwenGGUFVerdictBackend:
     ):
         raise ValueError("GGUF runtime-pack runner is not portable for this machine")
     expected_runtime = {
-        "protocol_version": 2,
+        "protocol_version": 3,
         "message_batch_size": 1,
         "candidate_batch_size": 3,
+        "scoring_mode": "branch_token",
+        "scoring_version": GGUF_SCORING_VERSION,
         "sequence_bucket_size": 64,
         "prefix_cache_enabled": True,
     }

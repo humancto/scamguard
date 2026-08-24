@@ -326,16 +326,18 @@ The runner builds directly against pinned llama.cpp revision
 `521a64cd01979bb5b1a466152c576a9d809b068d`. Its startup protocol, executable, model, source, and
 per-request trace are hash-bound in the report. A warmup request absorbs lazy Metal kernel
 compilation before measured repetitions. The frozen quantized prediction ledger remains
-authoritative: every routed runtime decision must match it exactly. Protocol v2 also precomputes
+authoritative: every routed runtime decision must match it exactly. Protocol v3 precomputes
 the invariant system/user framing once, copies its native KV/recurrent state into each request, and
 records `specialist_prefix_reused` plus the cached token count on every escalated trace row. The
 release validator rejects a missing or silently bypassed prefix cache.
 
-The custom scorer changes no model math. It removes the generic multiple-choice helper's inserted
-space so candidates exactly continue the ScamGuard JSON prefix, and prints the already-computed
-length-normalized answer log-probabilities. `training/eval_gguf.py` applies the same frozen
-temperature and threshold used by the reference checkpoint. This scorer's aggregate phase timing
-is diagnostic only; Hugging Face authorization separately requires a hash-bound, interleaved,
+The custom scorer changes no model weights. It tokenizes the three exact JSON verdict continuations,
+finds their first divergent tokenizer position, performs one shared prompt forward pass, and reads
+the three corresponding next-token log-probabilities. This is the same
+`qwen-verdict-branch-token-v1` rule as the BF16 evaluator; unequal complete-label token lengths never
+enter the score. A quantized candidate refits calibration on development data, then must demonstrate
+ledger and threshold parity against the frozen reference contract. Aggregate phase timing remains
+diagnostic only; Hugging Face authorization separately requires a hash-bound, interleaved,
 persistent per-request routed trace.
 
 Build and rerun the pinned upstream 0.8B Q4 runtime controls independently of model training:

@@ -28,7 +28,7 @@ def test_persistent_scorer_validates_and_parses_native_protocol(tmp_path: Path) 
 
             prefix_enabled = "--prefix-hex" in sys.argv
             prefix_tokens = 7 if prefix_enabled else 0
-            print(f"READY\\t2\\t1234\\t640\\t{prefix_tokens}", flush=True)
+            print(f"READY\\t3\\t1234\\t640\\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
