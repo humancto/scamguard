@@ -1,5 +1,5 @@
 .PHONY: install test lint fetch data youtube-scam-calls apptek-callcenter harper-valley multidogo multidogo-annotations multidogo-annotation-curriculum schema13-dose16 schema14-natural-dialogue schema15-legitimate-openings schema17-call-minimal-pairs schema18-call-evidence-pairs schema19-call-windows schema20-action-states schema21-human-calls schema22-service-evidence schema23-evidence-compaction schema24-annotated-hard-negatives schema24-audit schema24-audit-review schema24-audit-bundle schema24-audit-import schema24-audit-check schema24-ai-internal-audit encoder-schema13-dose16 encoder-schema14-natural-dialogue encoder-schema15-legitimate-openings encoder-schema16-cache encoder-schema16-preflight encoder-schema16-retention encoder-schema17-preflight encoder-schema17-pair-retention encoder-schema18-preflight encoder-schema18-action encoder-schema19-preflight encoder-schema19-windowmix encoder-schema20-preflight encoder-schema20-actionheads encoder-schema21-preflight encoder-schema21-human-calls encoder-schema22-preflight encoder-schema22-service-evidence encoder-schema22-gates encoder-schema23-cache encoder-schema23-preflight encoder-schema23-evidence-compaction encoder-schema23-gates apptek-eval-schema13 apptek-eval-schema14 apptek-eval-schema15 apptek-eval-schema16 apptek-eval-schema17 apptek-eval-schema18 youtube-eval-schema16 youtube-eval-schema17 youtube-eval-schema18 bothbosu-eval-schema18 encoder-onnx-export encoder-onnx-eval-fp32 encoder-onnx-eval-int8 encoder-coreml-export encoder-coreml-eval teleantifraud-fetch teleantifraud-audit fresh-holdout chichewa-holdout scam-dialogue-holdout taskmaster-dialogues audit audit-check baseline encoder encoder-large encoder-schema12 encoder-dialogue-base encoder-dialogue-large encoder-taskmaster-base encoder-taskmaster-large reference forum-learning-data forum-learning-curve qwen-data qwen-token-audit qwen-08b qwen-08b-full-data qwen-08b-full-token-audit qwen-08b-full-freeze qwen-08b-full qwen-08b-full-eval qwen-08b-full-gates qwen-08b-ai-internal-errors qwen-2b qwen-4b qwen-4b-schema9 qwen-batch-benchmark qwen-4b-batch-benchmark qwen-eval qwen-4b-core-eval qwen-4b-eval qwen-generation qwen-error-audit paired qwen-merge qwen-gguf qwen-gguf-eval huggingface-release-check demo
-.PHONY: schema24-audit-handoff-preflight schema24-ai-internal-overlay qwen-08b-ai-internal-token-audit qwen-08b-ai-internal-freeze qwen-08b-ai-internal qwen-08b-ai-internal-eval qwen-08b-ai-internal-gates qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
+.PHONY: schema24-audit-handoff-preflight schema24-ai-internal-overlay qwen-08b-ai-internal-token-audit qwen-08b-ai-internal-freeze qwen-08b-ai-internal qwen-08b-ai-internal-eval qwen-08b-ai-internal-gates qwen-08b-ai-internal-branch-eval qwen-08b-ai-internal-branch-gates qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
 .PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
@@ -21,6 +21,8 @@ QWEN08_AI_CONFIG ?= configs/qwen35-08b-schema24-ai-internal-exploratory.json
 QWEN08_AI_OUTPUT ?= artifacts/checkpoints/qwen35-08b-schema24-ai-internal-lora
 QWEN08_AI_REPORT ?= reports/runs/qwen35-08b-schema24-ai-internal.json
 QWEN08_AI_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-ai-internal-gates.json
+QWEN08_AI_BRANCH_REPORT ?= reports/runs/qwen35-08b-schema24-ai-internal-branch.json
+QWEN08_AI_BRANCH_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-ai-internal-branch-gates.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -296,6 +298,21 @@ qwen-08b-ai-internal-eval: qwen-08b-ai-internal
 qwen-08b-ai-internal-gates: qwen-08b-ai-internal-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_AI_REPORT)" --output "$(QWEN08_AI_GATE_REPORT)"
+
+qwen-08b-ai-internal-branch-eval: qwen-08b-ai-internal
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_AI_OUTPUT)" \
+		--data "$(SCHEMA24_AI_OVERLAY)" --external-data data/external \
+		--splits $(QWEN08_FULL_EVAL_SPLITS) \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token --require-mps \
+		--report "$(QWEN08_AI_BRANCH_REPORT)"
+
+qwen-08b-ai-internal-branch-gates: qwen-08b-ai-internal-branch-eval
+	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
+		--report "$(QWEN08_AI_BRANCH_REPORT)" \
+		--output "$(QWEN08_AI_BRANCH_GATE_REPORT)"
 
 baseline: data
 	uv run --extra train python training/train_linear.py

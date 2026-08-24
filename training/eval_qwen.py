@@ -25,6 +25,24 @@ from scamguard.qwen_scoring import bucketed_sequence_length, candidate_token_seq
 
 LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 SCORING_VERSION = "qwen-verdict-likelihood-v2"
+BRANCH_SCORING_VERSION = "qwen-verdict-branch-token-v1"
+SCORING_MODES = ("length_normalized", "branch_token")
+
+
+def scoring_version(mode: str) -> str:
+    if mode == "length_normalized":
+        return SCORING_VERSION
+    if mode == "branch_token":
+        return BRANCH_SCORING_VERSION
+    raise ValueError(f"unsupported scoring mode: {mode}")
+
+
+def scoring_description(mode: str) -> str:
+    if mode == "length_normalized":
+        return "length-normalized teacher-forced verdict likelihood"
+    if mode == "branch_token":
+        return "teacher-forced first divergent verdict-token likelihood"
+    raise ValueError(f"unsupported scoring mode: {mode}")
 
 
 def artifact_size(path: Path) -> int:
@@ -50,9 +68,11 @@ def score_cache_identity(
     examples: int,
     batch_size: int,
     sequence_bucket_size: int = 0,
+    scoring_mode: str = "length_normalized",
 ) -> dict[str, Any]:
     return {
-        "scoring_version": SCORING_VERSION,
+        "scoring_version": scoring_version(scoring_mode),
+        "scoring_mode": scoring_mode,
         "model": model,
         "revision": revision,
         "adapter_sha256": adapter_sha256,
@@ -247,6 +267,7 @@ def score_message(
     device: torch.device,
     *,
     sequence_bucket_size: int = 0,
+    scoring_mode: str = "length_normalized",
 ) -> np.ndarray:
     return score_messages(
         model,
@@ -254,6 +275,7 @@ def score_message(
         [text],
         device,
         sequence_bucket_size=sequence_bucket_size,
+        scoring_mode=scoring_mode,
     )[0]
 
 
@@ -268,7 +290,9 @@ def score_messages(
     memory_telemetry: dict[str, int] | None = None,
     progress_label: str | None = None,
     progress_every: int = 10,
+    scoring_mode: str = "length_normalized",
 ) -> np.ndarray:
+    scoring_version(scoring_mode)
     all_scores: list[np.ndarray] = []
     total_batches = math.ceil(len(texts) / batch_size)
     for start in range(0, len(texts), batch_size):
@@ -288,8 +312,12 @@ def score_messages(
                 processor.tokenizer, prompt, LABELS
             )
             for candidate in candidates:
-                sequences.append(candidate)
-                metadata.append((common_prefix, candidate[common_prefix:]))
+                if scoring_mode == "branch_token":
+                    sequences.append(candidate[: common_prefix + 1])
+                    metadata.append((common_prefix, [candidate[common_prefix]]))
+                else:
+                    sequences.append(candidate)
+                    metadata.append((common_prefix, candidate[common_prefix:]))
         maximum = bucketed_sequence_length(sequences, sequence_bucket_size)
         # Left padding aligns every candidate suffix at the right edge. Qwen's
         # logits_to_keep can then avoid materializing a [batch, full_sequence,
@@ -337,7 +365,12 @@ def score_messages(
 
 
 def score_message_unbatched(
-    model: Any, processor: Any, text: str, device: torch.device
+    model: Any,
+    processor: Any,
+    text: str,
+    device: torch.device,
+    *,
+    scoring_mode: str = "length_normalized",
 ) -> np.ndarray:
     """Reference implementation retained for scorer equivalence tests."""
 
@@ -348,6 +381,10 @@ def score_message_unbatched(
     prompt = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     prompt += '{"verdict":"'
     sequences, common_prefix = candidate_token_sequences(processor.tokenizer, prompt, LABELS)
+    if scoring_mode == "branch_token":
+        sequences = [sequence[: common_prefix + 1] for sequence in sequences]
+    else:
+        scoring_version(scoring_mode)
     maximum = max(len(sequence) for sequence in sequences)
     pad = processor.tokenizer.pad_token_id
     input_ids = torch.tensor(
@@ -531,6 +568,15 @@ def main() -> None:
     )
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument(
+        "--scoring-mode",
+        choices=SCORING_MODES,
+        default="length_normalized",
+        help=(
+            "Score every token in the verdict spelling with length normalization, or score "
+            "only the first token where SAFE/UNCERTAIN/SCAM diverge."
+        ),
+    )
+    parser.add_argument(
         "--require-mps",
         action="store_true",
         help="Fail before loading weights when Apple Metal is not visible.",
@@ -634,6 +680,7 @@ def main() -> None:
             examples=len(split_rows),
             batch_size=args.batch_size,
             sequence_bucket_size=args.sequence_bucket_size,
+            scoring_mode=args.scoring_mode,
         )
         cached = None if args.no_cache else load_score_cache(cache_dir, split, identity)
         if cached is not None:
@@ -649,6 +696,7 @@ def main() -> None:
             sequence_bucket_size=args.sequence_bucket_size,
             memory_telemetry=memory_telemetry,
             progress_label=split,
+            scoring_mode=args.scoring_mode,
         )
         if not args.no_cache:
             save_score_cache(cache_dir, split, all_scores[split], identity)
@@ -666,8 +714,12 @@ def main() -> None:
         ]
         prompt = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         prompt += '{"verdict":"'
-        candidates, _ = candidate_token_sequences(processor.tokenizer, prompt, LABELS)
-        latency_input_tokens.append(max(len(candidate) for candidate in candidates))
+        candidates, common_prefix = candidate_token_sequences(processor.tokenizer, prompt, LABELS)
+        latency_input_tokens.append(
+            common_prefix + 1
+            if args.scoring_mode == "branch_token"
+            else max(len(candidate) for candidate in candidates)
+        )
         started = time.perf_counter_ns()
         score_message(
             model,
@@ -675,6 +727,7 @@ def main() -> None:
             str(row["text"]),
             device,
             sequence_bucket_size=args.sequence_bucket_size,
+            scoring_mode=args.scoring_mode,
         )
         if device.type == "mps":
             torch.mps.synchronize()
@@ -700,7 +753,8 @@ def main() -> None:
         "base_model_revision": resolved_revision or args.revision,
         "adapter": str(args.adapter) if args.adapter else None,
         "adapter_sha256": adapter_sha256,
-        "scoring": "length-normalized teacher-forced verdict likelihood",
+        "scoring": scoring_description(args.scoring_mode),
+        "scoring_mode": args.scoring_mode,
         "temperature": temperature,
         "scam_threshold": threshold,
         "safe_threshold": safe_threshold,
@@ -733,7 +787,7 @@ def main() -> None:
             "candidate_sequences_per_message": len(LABELS),
             "candidate_batch_size": args.batch_size * len(LABELS),
             "sequence_bucket_size": args.sequence_bucket_size,
-            "scoring_version": SCORING_VERSION,
+            "scoring_version": scoring_version(args.scoring_mode),
         },
         "latency": {
             "median_ms": float(np.median(all_latencies)),
@@ -833,6 +887,8 @@ def main() -> None:
                 "SAFE threshold maximizes three-way macro F1 after freezing SCAM policy"
             ),
             "scoring": result["scoring"],
+            "scoring_mode": args.scoring_mode,
+            "scoring_version": scoring_version(args.scoring_mode),
             "sequence_bucket_size": args.sequence_bucket_size,
             "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
         }

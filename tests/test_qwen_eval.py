@@ -99,6 +99,33 @@ def test_batched_qwen_scores_match_unbatched_reference() -> None:
     assert model.kept_values[2:] == [0, 0, 0]
 
 
+def test_branch_token_scores_match_unbatched_reference() -> None:
+    texts = ["short", "a somewhat longer message"]
+    model = FakeModel()
+    processor = FakeProcessor()
+    device = torch.device("cpu")
+
+    batched = score_messages(
+        model,
+        processor,
+        texts,
+        device,
+        batch_size=2,
+        scoring_mode="branch_token",
+    )
+    reference = np.stack(
+        [
+            score_message_unbatched(
+                model, processor, text, device, scoring_mode="branch_token"
+            )
+            for text in texts
+        ]
+    )
+
+    np.testing.assert_allclose(batched, reference, rtol=1e-6, atol=2e-7)
+    assert model.kept_values[0] == 2
+
+
 def test_sequence_length_bucketing_is_bounded_and_explicit() -> None:
     assert bucketed_sequence_length([[1, 2], [1, 2, 3]], 0) == 3
     assert bucketed_sequence_length([[1, 2], [1, 2, 3]], 64) == 64
@@ -125,6 +152,11 @@ def test_score_cache_requires_exact_experiment_identity(tmp_path) -> None:
     assert load_score_cache(tmp_path, "dev", changed_batch) is None
     changed_bucket = identity | {"sequence_bucket_size": 64}
     assert load_score_cache(tmp_path, "dev", changed_bucket) is None
+    changed_scoring = identity | {
+        "scoring_mode": "branch_token",
+        "scoring_version": "qwen-verdict-branch-token-v1",
+    }
+    assert load_score_cache(tmp_path, "dev", changed_scoring) is None
 
 
 def test_score_cache_rejects_partial_or_invalid_arrays(tmp_path) -> None:

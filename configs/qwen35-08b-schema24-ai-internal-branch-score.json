@@ -1,0 +1,47 @@
+{
+  "artifact_schema_version": 1,
+  "experiment_id": "sg-qwen35-08b-schema24-ai-internal-branch-score-v1",
+  "run_kind": "exploratory_dev_selected_evaluator_correction",
+  "frozen_on": "2026-08-24",
+  "parent_training_experiment": "sg-qwen35-08b-schema24-ai-internal-v1",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "adapter_path": "artifacts/checkpoints/qwen35-08b-schema24-ai-internal-lora",
+  "adapter_sha256": "d0cb140ba70849cc4462012518bd52d713f475f5c0c30fa9fb75b1947f25111e",
+  "data_directory": "data/experiments/schema24-ai-internal-overlay/processed",
+  "data_manifest_sha256": "300a825c2c4f823a73d49c7b1a1a7c1de10d5212f2efe5d15d1672a1e04edc22",
+  "selection_evidence": {
+    "split": "dev",
+    "test_metrics_observed_before_freeze": false,
+    "previous_scoring_mode": "length_normalized",
+    "previous_scoring_version": "qwen-verdict-likelihood-v2",
+    "dev_score_cache_sha256": "2ae7c675ccf94aadcb4ea6da8ec7bca91e8175ac074596f87144e3ef49de695b",
+    "dev_score_cache_identity_sha256": "77022176af669e267870b7920ae188bf2c505c9b4c0f92110f052514bdb9c2ea",
+    "observed_argmax_verdict_counts": {
+      "SAFE": 0,
+      "UNCERTAIN": 2634,
+      "SCAM": 0
+    },
+    "observed_dev_scam_recall": 0.8015564202334631,
+    "observed_dev_safe_fpr": 0.019345238095238096,
+    "observed_dev_calibrated_macro_f1": 0.8198205554115736,
+    "rationale": "Length normalization rewards the longer predictable spelling of UNCERTAIN after the first class branch. Score only the first token where the three verdict labels diverge."
+  },
+  "scoring": {
+    "mode": "branch_token",
+    "version": "qwen-verdict-branch-token-v1",
+    "definition": "teacher-forced likelihood of the first token where SAFE, UNCERTAIN, and SCAM diverge",
+    "message_batch_size": 1,
+    "candidate_batch_size": 3,
+    "sequence_bucket_size": 64
+  },
+  "threshold_policy": {
+    "fit_split": "dev",
+    "maximum_safe_fpr": 0.02,
+    "scam_recall_gate": 0.97,
+    "test_macro_f1_gate": 0.94
+  },
+  "comparison_policy": "Freeze branch-token scoring before reading previous-mode test metrics; run unchanged test and OOD rows; do not tune this scorer from those results.",
+  "release_eligible": false,
+  "publication_authorized": false
+}
