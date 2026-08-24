@@ -174,3 +174,70 @@ def test_rejects_multidogo_family_crossing_validation(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="crosses training and validation"):
         build(parent, multidogo, tmp_path / "output")
+
+
+def test_stage3_full_replay_adds_grounded_nonoverlapping_supplement(tmp_path: Path) -> None:
+    parent, multidogo = fixture(tmp_path)
+    supplement = tmp_path / "supplement.jsonl"
+    supplement_rows = [
+        raw_row(
+            "persist-scam",
+            "SCAM",
+            "persist-family-scam",
+            source="scamguard_synthetic_evidence_persistence_v1",
+            text=(
+                "CALLER: Buy gift cards and send the codes now.\n"
+                "RECIPIENT: I need time to check.\nCONTACT: All right, we can stop."
+            ),
+        ),
+        raw_row(
+            "persist-safe",
+            "SAFE",
+            "persist-family-safe",
+            source="scamguard_synthetic_evidence_persistence_v1",
+            text=(
+                "AGENT: Use the official app and do not share a code.\n"
+                "RECIPIENT: I need time to check.\nCONTACT: All right, we can stop."
+            ),
+        ),
+    ]
+    write_jsonl(supplement, supplement_rows)
+    supplement_manifest = tmp_path / "supplement-manifest.json"
+    supplement_manifest.write_text(
+        json.dumps(
+            {
+                "rows": len(supplement_rows),
+                "sha256": file_sha256(supplement),
+                "held_rows_copied": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
+    reference = tmp_path / "held.jsonl"
+    write_jsonl(
+        reference,
+        [raw_row("held", "SAFE", "held-family", text="A table is ready at the cafe.")],
+    )
+    output = tmp_path / "stage3"
+
+    manifest = build(
+        parent,
+        multidogo,
+        output,
+        multidogo_repetitions=1,
+        full_parent_replay=True,
+        supplement=supplement,
+        supplement_manifest=supplement_manifest,
+        overlap_references=(reference,),
+        stage_name="stage3",
+    )
+
+    train = [
+        json.loads(line)
+        for line in (output / "qwen_sft/train.jsonl").read_text().splitlines()
+    ]
+    assert manifest["experiment_kind"] == "qwen_boundary_recovery_stage3_curriculum"
+    assert manifest["selection"]["parent_replay_rows"] == 4
+    assert manifest["selection"]["supplement"]["near_overlap_rows"] == 0
+    assert {"persist-safe", "persist-scam"} <= {str(row["id"]) for row in train}
+    assert sum(str(row["id"]).startswith("stage3-md-") for row in train) == 1

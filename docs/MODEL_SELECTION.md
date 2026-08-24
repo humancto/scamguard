@@ -108,6 +108,22 @@ raises SAFE FPR from 1.03% to 1.37% and still fails the 0.94 macro-F1 gate. Deve
 therefore chooses no additional confidence-margin traffic. A trained 0.8B specialist must beat the
 encoder-only baseline on the same rows and clear every gate; model size alone earns no routing role.
 
+The first schema-24 Qwen3.5-0.8B adapter passed 29/39 protocol-v3 branch-token gates and was
+rejected, chiefly because complete MultiDoGO calls produced a 5.69% SAFE false-positive rate. A
+family-disjoint call-robustness continuation reduced that result to 1.56% and passed 35/39 gates.
+It remains rejected: unchanged-test SAFE FPR is 3.72%, calibrated macro F1 is 0.7502, the software
+call subgroup is 3.42% FPR, and the prior-open BothBosu scam recall is 56.74%. Quantization is not
+authorized for either adapter.
+
+The frozen stage-3 correction is deliberately narrower than another broad-data increment. It
+replays all 23,435 parent SFT rows once, presents 895 publisher-training complete calls once, and
+adds 768 balanced advisory-grounded dialogues where label-matched neutral closing turns follow the
+decisive earlier behavior. The supplement has zero SimHash-radius-6 overlap with the open
+development/regression rows, BothBosu validation and sealed OOD rows, held MultiDoGO calls, or the
+sealed primary test. The 25,098-row curriculum has no sequence above 598 tokens at the frozen
+640-token limit. Stage 3 continues from the rejected stage-2 adapter at `1e-5`; it earns no release
+or quantization status until it clears the same 39 gates without moving any threshold or slice.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen

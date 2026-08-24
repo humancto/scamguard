@@ -31,6 +31,12 @@ def freeze(
     source_report_path: Path,
     output: Path,
     checkpoint_output: Path,
+    *,
+    experiment_id: str = "sg-qwen35-08b-call-robustness-stage2-v1",
+    expected_curriculum_kind: str = "qwen_call_robustness_stage2_curriculum",
+    role: str = "development-only call-context and abstention robustness continuation",
+    seed: int = 20260824,
+    learning_rate: float = 0.00002,
 ) -> dict[str, object]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite frozen experiment: {output}")
@@ -45,8 +51,7 @@ def freeze(
     source_report = json.loads(source_report_path.read_text(encoding="utf-8"))
     initial = adapter_identity(initial_adapter)
     if (
-        manifest.get("experiment_kind")
-        != "qwen_call_robustness_stage2_curriculum"
+        manifest.get("experiment_kind") != expected_curriculum_kind
         or manifest.get("release_eligible") is not False
         or manifest.get("publication_authorized") is not False
         or sft_manifest.get("input_manifest_sha256") != file_sha256(manifest_path)
@@ -64,9 +69,9 @@ def freeze(
         raise ValueError("source evaluation report does not bind the initial adapter")
 
     config: dict[str, object] = {
-        "experiment_id": "sg-qwen35-08b-call-robustness-stage2-v1",
+        "experiment_id": experiment_id,
         "run_kind": "exploratory_continuation",
-        "role": "development-only call-context and abstention robustness continuation",
+        "role": role,
         "release_eligible": False,
         "publication_authorized": False,
         "checkpoint_output": str(checkpoint_output),
@@ -79,7 +84,7 @@ def freeze(
             "sha256": file_sha256(source_report_path),
             "status": "rejected; regression evidence only for this continuation",
         },
-        "seed": 20260824,
+        "seed": seed,
         "epochs": 1.0,
         "batch_size": 4,
         "eval_batch_size": 4,
@@ -90,7 +95,7 @@ def freeze(
             "development loss, then frozen regression and selection diagnostics; "
             "primary_test_v8 remains unopened until this adapter and threshold policy are frozen"
         ),
-        "learning_rate": 0.00002,
+        "learning_rate": learning_rate,
         "warmup_fraction": 0.05,
         "weight_decay": 0.01,
         "max_length": 640,
@@ -142,6 +147,19 @@ def main() -> None:
     parser.add_argument("--source-report", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--checkpoint-output", type=Path, required=True)
+    parser.add_argument(
+        "--experiment-id", default="sg-qwen35-08b-call-robustness-stage2-v1"
+    )
+    parser.add_argument(
+        "--expected-curriculum-kind",
+        default="qwen_call_robustness_stage2_curriculum",
+    )
+    parser.add_argument(
+        "--role",
+        default="development-only call-context and abstention robustness continuation",
+    )
+    parser.add_argument("--seed", type=int, default=20260824)
+    parser.add_argument("--learning-rate", type=float, default=0.00002)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -152,6 +170,11 @@ def main() -> None:
                 args.source_report,
                 args.output,
                 args.checkpoint_output,
+                experiment_id=args.experiment_id,
+                expected_curriculum_kind=args.expected_curriculum_kind,
+                role=args.role,
+                seed=args.seed,
+                learning_rate=args.learning_rate,
             ),
             indent=2,
         )

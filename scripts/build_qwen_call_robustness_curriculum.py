@@ -16,7 +16,8 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scamguard.metrics import file_sha256
-from training.build_qwen_sft import convert
+from scripts.audit_source_overlap import near_overlap_indices
+from training.build_qwen_sft import convert, convert_supported_rows
 
 MULTIDOGO_SOURCE = "multidogo_human_service_dialogues"
 LONG_CALL_SOURCE = "scamguard_synthetic_long_call_action_states_v1"
@@ -68,11 +69,20 @@ def build(
     *,
     multidogo_repetitions: int = 3,
     core_per_label: int = 1_000,
+    full_parent_replay: bool = False,
+    supplement: Path | None = None,
+    supplement_manifest: Path | None = None,
+    overlap_references: tuple[Path, ...] = (),
+    stage_name: str = "stage2",
 ) -> dict[str, Any]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite curriculum: {output}")
     if multidogo_repetitions < 1 or core_per_label < 0:
         raise ValueError("curriculum repetition and sample counts must be non-negative")
+    if stage_name not in {"stage2", "stage3"}:
+        raise ValueError("stage_name must be stage2 or stage3")
+    if (supplement is None) != (supplement_manifest is None):
+        raise ValueError("supplement and supplement_manifest must be supplied together")
 
     parent_manifest_path = parent / "manifest.json"
     parent_sft = parent / "qwen_sft"
@@ -126,29 +136,71 @@ def build(
     if train_families & held_families:
         raise ValueError("MultiDoGO complete-call family crosses training and validation")
 
-    replay: list[dict[str, Any]] = []
-    replay_ids: set[str] = set()
-    for row in parent_sft_train:
-        raw = raw_by_id[str(row["id"])]
-        target = json.loads(row["messages"][-1]["content"])
-        if (
-            raw.get("source") in {LONG_CALL_SOURCE, DIALOGUE_SOURCE}
-            or raw.get("source_window") == TASKMASTER_LONG_WINDOW
-            or target.get("verdict") == "UNCERTAIN"
-        ):
-            replay.append(row)
-            replay_ids.add(str(row["id"]))
+    if full_parent_replay:
+        replay = list(parent_sft_train)
+    else:
+        replay = []
+        replay_ids: set[str] = set()
+        for row in parent_sft_train:
+            raw = raw_by_id[str(row["id"])]
+            target = json.loads(row["messages"][-1]["content"])
+            if (
+                raw.get("source") in {LONG_CALL_SOURCE, DIALOGUE_SOURCE}
+                or raw.get("source_window") == TASKMASTER_LONG_WINDOW
+                or target.get("verdict") == "UNCERTAIN"
+            ):
+                replay.append(row)
+                replay_ids.add(str(row["id"]))
 
-    remaining = [
-        raw_by_id[str(row["id"])]
-        for row in parent_sft_train
-        if str(row["id"]) not in replay_ids
-    ]
-    core_rows = ranked_sample(remaining, core_per_label, "SAFE") + ranked_sample(
-        remaining, core_per_label, "SCAM"
-    )
-    sft_by_id = {str(row["id"]): row for row in parent_sft_train}
-    replay.extend(sft_by_id[str(row["id"])] for row in core_rows)
+        remaining = [
+            raw_by_id[str(row["id"])]
+            for row in parent_sft_train
+            if str(row["id"]) not in replay_ids
+        ]
+        core_rows = ranked_sample(remaining, core_per_label, "SAFE") + ranked_sample(
+            remaining, core_per_label, "SCAM"
+        )
+        sft_by_id = {str(row["id"]): row for row in parent_sft_train}
+        replay.extend(sft_by_id[str(row["id"])] for row in core_rows)
+
+    supplement_rows: list[dict[str, Any]] = []
+    supplement_contract: dict[str, Any] | None = None
+    if supplement is not None and supplement_manifest is not None:
+        supplement_contract = json.loads(supplement_manifest.read_text(encoding="utf-8"))
+        raw_supplement = read_jsonl(supplement)
+        if (
+            file_sha256(supplement) != supplement_contract.get("sha256")
+            or len(raw_supplement) != supplement_contract.get("rows")
+            or supplement_contract.get("held_rows_copied") != 0
+        ):
+            raise ValueError("supplement differs from its non-held manifest contract")
+        supplement_rows, excluded = convert_supported_rows(raw_supplement)
+        if excluded or len(supplement_rows) != len(raw_supplement):
+            raise ValueError("supplement contains unsupported grounded supervision")
+        reference_rows: list[dict[str, Any]] = []
+        reference_contracts: list[dict[str, Any]] = []
+        for reference in overlap_references:
+            rows = read_jsonl(reference)
+            reference_rows.extend(rows)
+            reference_contracts.append(
+                {"path": str(reference), "rows": len(rows), "sha256": file_sha256(reference)}
+            )
+        overlaps = (
+            near_overlap_indices(raw_supplement, reference_rows, 6) if reference_rows else set()
+        )
+        if overlaps:
+            raise ValueError("supplement near-overlaps a held or evaluation reference")
+        supplement_contract = {
+            "path": str(supplement),
+            "manifest_path": str(supplement_manifest),
+            "manifest_sha256": file_sha256(supplement_manifest),
+            "rows": len(supplement_rows),
+            "sha256": file_sha256(supplement),
+            "held_rows_copied": 0,
+            "near_overlap_radius": 6,
+            "near_overlap_rows": 0,
+            "overlap_references": reference_contracts,
+        }
 
     call_rows: list[dict[str, Any]] = []
     for repetition in range(multidogo_repetitions):
@@ -156,10 +208,10 @@ def build(
             row = convert(raw)
             row["curriculum_parent_id"] = row["id"]
             row["curriculum_repetition"] = repetition + 1
-            row["id"] = f"stage2-md-r{repetition + 1}-{row['id']}"
+            row["id"] = f"{stage_name}-md-r{repetition + 1}-{row['id']}"
             call_rows.append(row)
 
-    train = sorted(replay + call_rows, key=lambda row: str(row["id"]))
+    train = sorted(replay + call_rows + supplement_rows, key=lambda row: str(row["id"]))
     train_ids = [str(row["id"]) for row in train]
     dev_ids = [str(row["id"]) for row in parent_sft_dev]
     if len(train_ids) != len(set(train_ids)) or set(train_ids) & set(dev_ids):
@@ -181,7 +233,11 @@ def build(
     source_counts = Counter(str(row["source"]) for row in train)
     manifest: dict[str, Any] = {
         "artifact_schema_version": 1,
-        "experiment_kind": "qwen_call_robustness_stage2_curriculum",
+        "experiment_kind": (
+            "qwen_call_robustness_stage2_curriculum"
+            if stage_name == "stage2"
+            else "qwen_boundary_recovery_stage3_curriculum"
+        ),
         "schema_version": 24,
         "release_eligible": False,
         "publication_authorized": False,
@@ -206,13 +262,19 @@ def build(
         },
         "selection": {
             "policy": (
-                "replay all existing synthetic long-call, dialogue, Taskmaster long-window, "
-                "and UNCERTAIN rows; add deterministic SAFE/SCAM core controls"
+                "replay the complete parent SFT corpus"
+                if full_parent_replay
+                else (
+                    "replay all existing synthetic long-call, dialogue, Taskmaster long-window, "
+                    "and UNCERTAIN rows; add deterministic SAFE/SCAM core controls"
+                )
             ),
             "salt": SELECTION_SALT,
             "core_per_label": core_per_label,
+            "full_parent_replay": full_parent_replay,
             "parent_replay_rows": len(replay),
             "new_complete_call_presentations": len(call_rows),
+            "supplement": supplement_contract,
             "primary_test_rows_used": 0,
             "bothbosu_rows_used_for_fitting": 0,
         },
@@ -242,7 +304,7 @@ def build(
         "input_directory": str(output),
         "input_manifest_sha256": file_sha256(manifest_path),
         "policy": {
-            "second_stage_replay_only": True,
+            "continuation_replay_only": True,
             "complete_call_source_partition": "publisher training only",
             "held_rows_used_for_fitting": 0,
         },
@@ -261,6 +323,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--multidogo-repetitions", type=int, default=3)
     parser.add_argument("--core-per-label", type=int, default=1_000)
+    parser.add_argument("--full-parent-replay", action="store_true")
+    parser.add_argument("--supplement", type=Path)
+    parser.add_argument("--supplement-manifest", type=Path)
+    parser.add_argument("--overlap-reference", type=Path, action="append", default=[])
+    parser.add_argument("--stage-name", choices=("stage2", "stage3"), default="stage2")
     args = parser.parse_args()
     print(
         json.dumps(
@@ -270,6 +337,11 @@ def main() -> None:
                 args.output,
                 multidogo_repetitions=args.multidogo_repetitions,
                 core_per_label=args.core_per_label,
+                full_parent_replay=args.full_parent_replay,
+                supplement=args.supplement,
+                supplement_manifest=args.supplement_manifest,
+                overlap_references=tuple(args.overlap_reference),
+                stage_name=args.stage_name,
             ),
             indent=2,
         )
