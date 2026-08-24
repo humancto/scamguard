@@ -85,10 +85,16 @@ def summarize_ledger(
 
     by_split: dict[str, list[dict[str, Any]]] = defaultdict(list)
     by_source: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    by_source_language: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    by_source_domain: dict[str, list[dict[str, Any]]] = defaultdict(list)
     by_category: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for record in records:
         by_split[str(record["split"])].append(record)
         by_source[str(record["source"])].append(record)
+        if record.get("source_language"):
+            by_source_language[str(record["source_language"])].append(record)
+        if record.get("source_domain"):
+            by_source_domain[str(record["source_domain"])].append(record)
         by_category[str(record["category"])].append(record)
 
     errors = [
@@ -108,6 +114,14 @@ def summarize_ledger(
         "by_source": {
             key: summarize_records(values) for key, values in sorted(by_source.items())
         },
+        "by_source_language": {
+            key: summarize_records(values)
+            for key, values in sorted(by_source_language.items())
+        },
+        "by_source_domain": {
+            key: summarize_records(values)
+            for key, values in sorted(by_source_domain.items())
+        },
         "by_category": {
             key: summarize_records(values) for key, values in sorted(by_category.items())
         },
@@ -116,6 +130,8 @@ def summarize_ledger(
                 "id": record["id"],
                 "split": record["split"],
                 "source": record["source"],
+                "source_language": record.get("source_language"),
+                "source_domain": record.get("source_domain"),
                 "category": record["category"],
                 "truth": record["truth"],
                 "calibrated_verdict": record["calibrated_verdict"],

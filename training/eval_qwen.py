@@ -791,6 +791,7 @@ def main() -> None:
                     "split": split,
                     "source": row["source"],
                     "source_language": row.get("source_language"),
+                    "source_domain": row.get("source_domain"),
                     "category": row["category"],
                     "truth": row["label"],
                     "argmax": LABELS[int(values.argmax())],

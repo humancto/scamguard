@@ -19,6 +19,8 @@ def prediction(
         "id": identifier,
         "split": "test",
         "source": "fixture",
+        "source_language": "en",
+        "source_domain": "finance",
         "category": "IMPERSONATION",
         "truth": truth,
         "calibrated_verdict": verdict,
@@ -42,6 +44,8 @@ def test_summary_reports_false_positives_misses_and_hardest_errors() -> None:
     assert report["overall"]["scam_false_negative_rate"] == 0.5
     assert report["overall"]["verdict_error_rate"] == 0.5
     assert report["by_split"]["test"]["examples"] == 4
+    assert report["by_source_language"]["en"]["examples"] == 4
+    assert report["by_source_domain"]["finance"]["examples"] == 4
     assert report["hardest_calibrated_errors"][0]["id"] == "scam-fn"
 
 
