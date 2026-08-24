@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, PeftModel, get_peft_model
 from torch.utils.data import Dataset
 from transformers import (
     AutoModelForImageTextToText,
@@ -81,6 +81,20 @@ def line_count(path: Path) -> int:
         return sum(1 for line in handle if line.strip())
 
 
+def adapter_identity(path: Path) -> dict[str, str]:
+    """Return the immutable files needed to bind a continuation adapter."""
+
+    weights = path / "adapter_model.safetensors"
+    config = path / "adapter_config.json"
+    if not weights.is_file() or not config.is_file():
+        raise ValueError(f"adapter is incomplete: {path}")
+    return {
+        "path": str(path),
+        "adapter_model_sha256": sha256(weights),
+        "adapter_config_sha256": sha256(config),
+    }
+
+
 def experiment_config_errors(
     args: argparse.Namespace,
     config: dict[str, Any],
@@ -127,6 +141,29 @@ def experiment_config_errors(
         errors.append(
             f"trainer_eval: config {config['trainer_eval']!r}, command {not args.skip_eval!r}"
         )
+    initial_adapter = getattr(args, "initial_adapter", None)
+    declared_initial = config.get("initial_adapter")
+    if initial_adapter is None:
+        if declared_initial is not None:
+            errors.append(
+                "initial_adapter: config declares a continuation adapter "
+                "but command does not"
+            )
+    elif not isinstance(declared_initial, dict):
+        errors.append("initial_adapter: config declaration is missing")
+    else:
+        try:
+            actual_initial = adapter_identity(initial_adapter)
+        except ValueError as error:
+            errors.append(f"initial_adapter: {error}")
+        else:
+            expected_initial = {
+                "path": declared_initial.get("path"),
+                "adapter_model_sha256": declared_initial.get("adapter_model_sha256"),
+                "adapter_config_sha256": declared_initial.get("adapter_config_sha256"),
+            }
+            if actual_initial != expected_initial:
+                errors.append("initial_adapter: path or immutable adapter hash differs")
     checkpoint_output = config.get("checkpoint_output")
     if checkpoint_output is not None and Path(str(checkpoint_output)) != args.output:
         errors.append(
@@ -394,6 +431,11 @@ def main() -> None:
     parser.add_argument(
         "--output", type=Path, default=Path("artifacts/checkpoints/qwen35-08b-lora")
     )
+    parser.add_argument(
+        "--initial-adapter",
+        type=Path,
+        help="Continue training an existing immutable LoRA adapter on the frozen curriculum.",
+    )
     parser.add_argument("--epochs", type=float, default=1.0)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--eval-batch-size", type=int, default=4)
@@ -457,16 +499,19 @@ def main() -> None:
         model.gradient_checkpointing_enable()
     base_model_revision = getattr(model.config, "_commit_hash", None)
     require_loaded_revision(requested=args.revision, loaded=base_model_revision)
-    lora = LoraConfig(
-        r=16,
-        lora_alpha=32,
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
-        target_modules=LANGUAGE_LORA_TARGETS,
-        revision=args.revision,
-    )
-    model = get_peft_model(model, lora)
+    if args.initial_adapter is not None:
+        model = PeftModel.from_pretrained(model, args.initial_adapter, is_trainable=True)
+    else:
+        lora = LoraConfig(
+            r=16,
+            lora_alpha=32,
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+            target_modules=LANGUAGE_LORA_TARGETS,
+            revision=args.revision,
+        )
+        model = get_peft_model(model, lora)
     trainable = [
         (name, parameter) for name, parameter in model.named_parameters() if parameter.requires_grad
     ]
@@ -524,6 +569,11 @@ def main() -> None:
             {
                 "base_model": args.model,
                 "base_model_revision": base_model_revision,
+                "initial_adapter": (
+                    adapter_identity(args.initial_adapter)
+                    if args.initial_adapter is not None
+                    else None
+                ),
                 "experiment_id": (
                     experiment_config.get("experiment_id") if experiment_config else None
                 ),

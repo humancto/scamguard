@@ -10,10 +10,19 @@ unobserved primary test:
 
 Macro F1 ≥ 0.94 is the stretch target. The binary safety gate uses only clearly labeled SAFE and
 SCAM rows. UNCERTAIN rows remain in the three-way macro-F1 evaluation and abstention analysis.
-For Qwen/GGUF candidates, the SCAM threshold is selected first on the binary dev subset under the
-FPR constraint. With that threshold frozen, a SAFE threshold is selected on the full dev split to
-maximize three-way macro F1; anything meeting neither threshold abstains as UNCERTAIN. Reports retain
-raw argmax as a diagnostic, but the stretch gate uses this frozen product decision rule.
+For Qwen/GGUF candidates, the SCAM threshold is the highest threshold on the binary development
+subset that jointly achieves recall at least 0.97 and FPR at most 0.02. If that joint contract is
+infeasible, the evaluator falls back to maximum recall under the FPR constraint and records the
+failure. With the SCAM threshold frozen, a SAFE threshold is selected on the full development split
+to maximize three-way macro F1; anything meeting neither threshold abstains as UNCERTAIN. Reports
+retain raw argmax as a diagnostic, but the stretch gate uses this frozen product decision rule.
+
+Qwen verdict scores compare the first tokenizer position where `SAFE`, `UNCERTAIN`, and `SCAM`
+diverge, using one prompt forward pass and three class logits. Historical reports that
+length-normalized each complete label spelling are retained as rejected evidence: unequal token
+lengths made the longer `UNCERTAIN` suffix artificially favorable. A GGUF candidate must implement
+the same branch-token rule and demonstrate score, verdict, and threshold parity before its quality
+result can authorize packaging.
 Every scam category represented by at least 20 untouched test examples must independently achieve
 recall ≥ 0.97; tiny categories remain reported without being promoted into a statistically brittle
 pass/fail rule.

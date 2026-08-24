@@ -9,6 +9,7 @@ import pytest
 
 from training.train_qwen_lora import (
     LANGUAGE_LORA_TARGETS,
+    adapter_identity,
     completion_token_start,
     experiment_config_errors,
     require_loaded_revision,
@@ -208,6 +209,26 @@ def test_loaded_base_revision_must_be_present_and_exact() -> None:
         require_loaded_revision(requested=revision, loaded=None)
     with pytest.raises(RuntimeError, match="differs"):
         require_loaded_revision(requested=revision, loaded="b" * 40)
+
+
+def test_continuation_adapter_is_hash_bound(tmp_path: Path) -> None:
+    args, config = frozen_experiment(tmp_path)
+    adapter = tmp_path / "initial-adapter"
+    adapter.mkdir()
+    (adapter / "adapter_model.safetensors").write_bytes(b"weights")
+    (adapter / "adapter_config.json").write_text("{}", encoding="utf-8")
+    args.initial_adapter = adapter
+    config["initial_adapter"] = adapter_identity(adapter)
+
+    assert experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    ) == []
+
+    (adapter / "adapter_model.safetensors").write_bytes(b"changed")
+    errors = experiment_config_errors(
+        args, config, transformers_revision=TRANSFORMERS_REVISION
+    )
+    assert "initial_adapter: path or immutable adapter hash differs" in errors
 
 
 def test_full_experiment_rejects_unselected_batch_geometry(tmp_path: Path) -> None:

@@ -29,7 +29,8 @@ contamination-controlled benchmark.
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
-| Qwen3.5-0.8B, BF16 base / Q4 control | routed schema-v24 specialist; AI-internal correction experiment training, human audit pending | 537 MiB verified Q4_0 plus 5.27 MB portable arm64 runner | product-shaped BF16 base is 30.32% recall / 2.52% FPR / 0.4295 macro F1; hash-verified public SDK path is 39.60 ms p95 with no Transformers runtime; blind AI review is 635/635 with 83.46% agreement and cannot authorize release |
+| Qwen3.5-0.8B, BF16 base / Q4 control | untouched runtime and capacity control | 537 MiB verified Q4_0 plus 5.27 MB portable arm64 runner | product-shaped BF16 base is 30.32% recall / 2.52% FPR / 0.4295 macro F1; hash-verified public SDK path is 39.60 ms p95 with no Transformers runtime |
+| Qwen3.5-0.8B, schema-v24 AI-internal LoRA | trained specialist; rejected before quantization | 41.3 MB adapter plus BF16 base | primary regression is 99.66% recall / 0.115% FPR, but macro F1 is 0.7407, MultiDoGO complete-call FPR is 5.69%, and BothBosu is 65.96% recall / 3.27% FPR; 29/39 gates pass |
 | ModernBERT schema v23 + Qwen 0.8B base | rejected routed control | 4.68% test escalation; 1.13 GB process peak RSS | exact product-shape parity; fast-path p95 10.71 ms and routed p95 17.26 ms, but p99 190.79 ms, escalated p95 216.66 ms, and macro F1 0.7730; rejected |
 | Qwen3.5-2B, BF16 LoRA reference | high-recall teacher/explainer | 83 MiB adapter plus 4.19 GiB base | 100% test recall / 4.52% FPR; 354.8/579.9 ms median/p95; gates failed |
 | Qwen3.5-4B, BF16 LoRA | rejected sole detector; possible teacher | 9.21 GB measured | historical core is strong, but selection dialogue is 92.91% recall / 24.84% FPR and Taskmaster FPR is 4.44% |
@@ -54,6 +55,9 @@ The strict text-free ledger join, development-only routing freeze, and rejected 
 control are in [reports/ROUTED_BASE_DIAGNOSTIC.md](reports/ROUTED_BASE_DIAGNOSTIC.md).
 The three-pass persistent MPS trace, tail latency, scoring-batch mismatch, and exact parity failure
 are in [reports/ROUTED_BASE_RUNTIME.md](reports/ROUTED_BASE_RUNTIME.md).
+The trained 0.8B result, corrected branch-token scorer, complete gate rejection, and split-safe
+call-robustness continuation are in
+[reports/QWEN08_AI_INTERNAL_BRANCH_EXPERIMENT.md](reports/QWEN08_AI_INTERNAL_BRANCH_EXPERIMENT.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).
