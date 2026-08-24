@@ -12,10 +12,29 @@ from training.train_qwen_lora import (
     adapter_identity,
     completion_token_start,
     experiment_config_errors,
+    final_eval_metrics,
     require_loaded_revision,
 )
 
 TRANSFORMERS_REVISION = "0c92811846095910816a87aca50050d10c545270"
+
+
+def test_final_eval_metrics_returns_last_eval_record_without_progress_fields() -> None:
+    history = [
+        {"loss": 0.2, "step": 10},
+        {"eval_loss": 0.08, "eval_runtime": 4.0, "epoch": 0.5},
+        {"eval_loss": 0.04, "eval_runtime": 5.0, "epoch": 1.0},
+        {"train_runtime": 100.0, "epoch": 1.0},
+    ]
+
+    assert final_eval_metrics(history) == {
+        "eval_loss": 0.04,
+        "eval_runtime": 5.0,
+    }
+
+
+def test_final_eval_metrics_returns_none_when_eval_was_skipped() -> None:
+    assert final_eval_metrics([{"train_loss": 0.1}]) is None
 
 
 def test_completion_token_start_at_exact_token_boundary() -> None:

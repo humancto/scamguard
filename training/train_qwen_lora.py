@@ -95,6 +95,15 @@ def adapter_identity(path: Path) -> dict[str, str]:
     }
 
 
+def final_eval_metrics(log_history: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Return the final complete Trainer evaluation record for the run receipt."""
+
+    for record in reversed(log_history):
+        if "eval_loss" in record:
+            return {key: value for key, value in record.items() if key.startswith("eval_")}
+    return None
+
+
 def experiment_config_errors(
     args: argparse.Namespace,
     config: dict[str, Any],
@@ -615,6 +624,7 @@ def main() -> None:
                 "trainable_tensors": len(trainable),
                 "lora_target_modules": LANGUAGE_LORA_TARGETS,
                 "metrics": result.metrics,
+                "eval_metrics": final_eval_metrics(trainer.state.log_history),
                 "training_path": "Transformers+PEFT (not MLX)",
                 "environment": {
                     "python_arch": platform.machine(),
