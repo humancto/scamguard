@@ -2,6 +2,7 @@
 .PHONY: schema24-audit-handoff-preflight schema24-ai-internal-overlay qwen-08b-ai-internal-token-audit qwen-08b-ai-internal-freeze qwen-08b-ai-internal qwen-08b-ai-internal-eval qwen-08b-ai-internal-gates qwen-08b-ai-internal-branch-eval qwen-08b-ai-internal-branch-gates qwen-08b-call-robustness-data qwen-08b-call-robustness-token-audit qwen-08b-call-robustness-freeze qwen-08b-call-robustness qwen-08b-call-robustness-eval qwen-08b-call-robustness-gates qwen-08b-call-robustness-merge qwen-08b-call-robustness-gguf qwen-08b-call-robustness-native-q4-eval qwen-08b-call-robustness-native-q4-gates qwen-08b-call-robustness-product-audit qwen-08b-call-robustness-product-gates qwen-08b-call-robustness-primary-v8-freeze qwen-08b-call-robustness-primary-v8-eval qwen-08b-call-robustness-primary-v8-gates qwen-08b-training-preflight qwen-08b-batch-preflight qwen-08b-base-product-eval qwen-08b-base-gguf qwen-08b-base-gguf-benchmark qwen-08b-base-gguf-verdict-benchmark qwen-08b-base-native-gguf-prefix-benchmark encoder-schema23-ledger qwen-08b-base-routed-diagnostic qwen-08b-base-routed-runtime qwen-08b-full-routed-diagnostic qwen-08b-full-routed-runtime qwen-08b-full-merge qwen-08b-full-gguf qwen-08b-full-gguf-eval-q4 qwen-08b-full-gguf-eval-q5 routed-eval
 .PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
 .PHONY: qwen-08b-boundary-recovery-data qwen-08b-boundary-recovery-token-audit qwen-08b-boundary-recovery-freeze qwen-08b-boundary-recovery qwen-08b-boundary-recovery-eval qwen-08b-boundary-recovery-gates
+.PHONY: qwen-08b-boundary-separation-data qwen-08b-boundary-separation-token-audit qwen-08b-boundary-separation-freeze qwen-08b-boundary-separation qwen-08b-boundary-separation-eval qwen-08b-boundary-separation-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
 PYTHON_BIN ?= .venv/bin/python
@@ -46,6 +47,12 @@ QWEN08_RECOVERY_CONFIG ?= configs/qwen35-08b-boundary-recovery-stage3.json
 QWEN08_RECOVERY_OUTPUT ?= artifacts/checkpoints/qwen35-08b-boundary-recovery-stage3-lora
 QWEN08_RECOVERY_REPORT ?= reports/runs/qwen35-08b-boundary-recovery-stage3-regression.json
 QWEN08_RECOVERY_GATE_REPORT ?= reports/runs/qwen35-08b-boundary-recovery-stage3-regression-gates.json
+QWEN08_SEPARATION_DATA ?= data/experiments/qwen35-08b-boundary-separation-stage4
+QWEN08_SEPARATION_TOKEN_AUDIT ?= reports/runs/qwen35-08b-boundary-separation-stage4-token-audit.json
+QWEN08_SEPARATION_CONFIG ?= configs/qwen35-08b-boundary-separation-stage4.json
+QWEN08_SEPARATION_OUTPUT ?= artifacts/checkpoints/qwen35-08b-boundary-separation-stage4-lora
+QWEN08_SEPARATION_REPORT ?= reports/runs/qwen35-08b-boundary-separation-stage4-regression.json
+QWEN08_SEPARATION_GATE_REPORT ?= reports/runs/qwen35-08b-boundary-separation-stage4-regression-gates.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -464,6 +471,78 @@ qwen-08b-boundary-recovery-gates: qwen-08b-boundary-recovery-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_RECOVERY_REPORT)" \
 		--output "$(QWEN08_RECOVERY_GATE_REPORT)"
+
+qwen-08b-boundary-separation-data:
+	@if [ ! -f data/generated/boundary_separation_curriculum_manifest.json ]; then \
+		$(PYTHON_BIN) scripts/generate_boundary_separation_curriculum.py; \
+	fi
+	@if [ ! -f "$(QWEN08_SEPARATION_DATA)/manifest.json" ]; then \
+		$(PYTHON_BIN) scripts/build_qwen_call_robustness_curriculum.py \
+			--parent "$(SCHEMA24_AI_OVERLAY)" --multidogo data/external/multidogo \
+			--output "$(QWEN08_SEPARATION_DATA)" --multidogo-repetitions 1 \
+			--full-parent-replay --uncertain-repetitions 2 \
+			--synthetic-safe-repetitions 1 \
+			--supplement data/generated/boundary_separation_curriculum.jsonl \
+			--supplement-manifest data/generated/boundary_separation_curriculum_manifest.json \
+			--overlap-reference "$(SCHEMA24_AI_OVERLAY)/dev.jsonl" \
+			--overlap-reference "$(SCHEMA24_AI_OVERLAY)/test.jsonl" \
+			--overlap-reference data/external/scam_dialogue/scam_dialogue_validation.jsonl \
+			--overlap-reference data/external/scam_dialogue/ood_scam_dialogue.jsonl \
+			--overlap-reference data/external/multidogo/multidogo_call_validation.jsonl \
+			--overlap-reference data/processed/primary_test_v8.jsonl --stage-name stage4; \
+	fi
+
+qwen-08b-boundary-separation-token-audit: qwen-08b-boundary-separation-data
+	$(PYTHON_BIN) scripts/audit_qwen_tokens.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --data "$(QWEN08_SEPARATION_DATA)/qwen_sft" \
+		--max-length 640 --output "$(QWEN08_SEPARATION_TOKEN_AUDIT)"
+
+qwen-08b-boundary-separation-freeze: qwen-08b-boundary-separation-token-audit
+	@if [ ! -f "$(QWEN08_SEPARATION_CONFIG)" ]; then \
+		$(PYTHON_BIN) scripts/freeze_qwen08_call_robustness.py \
+			--curriculum "$(QWEN08_SEPARATION_DATA)" \
+			--token-audit "$(QWEN08_SEPARATION_TOKEN_AUDIT)" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--source-report "$(QWEN08_RECOVERY_REPORT)" \
+			--output "$(QWEN08_SEPARATION_CONFIG)" \
+			--checkpoint-output "$(QWEN08_SEPARATION_OUTPUT)" \
+			--experiment-id sg-qwen35-08b-boundary-separation-stage4-v1 \
+			--expected-curriculum-kind qwen_boundary_separation_stage4_curriculum \
+			--role "development-only class-boundary and multi-turn scam separation correction" \
+			--seed 20260826 --learning-rate 0.000005; \
+	fi
+
+qwen-08b-boundary-separation: qwen-08b-boundary-separation-freeze
+	@if [ ! -f "$(QWEN08_SEPARATION_OUTPUT)/adapter_model.safetensors" ]; then \
+		$(PYTHON_BIN) training/train_qwen_lora.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --experiment-config "$(QWEN08_SEPARATION_CONFIG)" \
+			--data "$(QWEN08_SEPARATION_DATA)/qwen_sft" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--epochs 1 --batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --learning-rate 0.000005 --max-length 640 \
+			--sampling-strategy group_by_length --seed 20260826 --require-mps \
+			--output "$(QWEN08_SEPARATION_OUTPUT)"; \
+	fi
+
+qwen-08b-boundary-separation-eval: qwen-08b-boundary-separation
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_SEPARATION_OUTPUT)" \
+		--data "$(SCHEMA24_AI_OVERLAY)" --external-data data/external \
+		--splits $(QWEN08_FULL_EVAL_SPLITS) \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps \
+		--report "$(QWEN08_SEPARATION_REPORT)"
+
+qwen-08b-boundary-separation-gates: qwen-08b-boundary-separation-eval
+	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
+		--report "$(QWEN08_SEPARATION_REPORT)" \
+		--output "$(QWEN08_SEPARATION_GATE_REPORT)"
 
 qwen-08b-call-robustness-merge: qwen-08b-call-robustness-gates
 	$(PYTHON_BIN) training/merge_qwen_adapter.py \

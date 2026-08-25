@@ -41,7 +41,12 @@ def fixture(tmp_path: Path) -> tuple[Path, Path]:
     sft.mkdir(parents=True)
     train = [
         raw_row("uncertain", "UNCERTAIN", "family-u"),
-        raw_row("safe", "SAFE", "family-s"),
+        raw_row(
+            "safe",
+            "SAFE",
+            "family-s",
+            source="scamguard_synthetic_v5",
+        ),
         raw_row(
             "scam",
             "SCAM",
@@ -241,3 +246,48 @@ def test_stage3_full_replay_adds_grounded_nonoverlapping_supplement(tmp_path: Pa
     assert manifest["selection"]["supplement"]["near_overlap_rows"] == 0
     assert {"persist-safe", "persist-scam"} <= {str(row["id"]) for row in train}
     assert sum(str(row["id"]).startswith("stage3-md-") for row in train) == 1
+
+
+def test_stage4_adds_training_only_targeted_replay(tmp_path: Path) -> None:
+    parent, multidogo = fixture(tmp_path)
+    output = tmp_path / "stage4"
+
+    manifest = build(
+        parent,
+        multidogo,
+        output,
+        multidogo_repetitions=1,
+        full_parent_replay=True,
+        stage_name="stage4",
+        uncertain_repetitions=2,
+        synthetic_safe_repetitions=1,
+    )
+
+    train = [
+        json.loads(line)
+        for line in (output / "qwen_sft/train.jsonl").read_text().splitlines()
+    ]
+    ids = {str(row["id"]) for row in train}
+    assert manifest["experiment_kind"] == "qwen_boundary_separation_stage4_curriculum"
+    assert manifest["selection"]["targeted_replay"] == {
+        "training_rows_only": True,
+        "uncertain_repetitions": 2,
+        "synthetic_safe_repetitions": 1,
+        "rows": 3,
+    }
+    assert "stage4-uncertain-r1-uncertain" in ids
+    assert "stage4-uncertain-r2-uncertain" in ids
+    assert "stage4-synthetic-safe-r1-safe" in ids
+    assert "stage4-md-r1-md-call" in ids
+
+
+def test_rejects_targeted_replay_outside_stage4(tmp_path: Path) -> None:
+    parent, multidogo = fixture(tmp_path)
+    with pytest.raises(ValueError, match="reserved for stage4"):
+        build(
+            parent,
+            multidogo,
+            tmp_path / "invalid",
+            stage_name="stage3",
+            uncertain_repetitions=1,
+        )

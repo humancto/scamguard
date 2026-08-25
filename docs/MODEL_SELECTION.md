@@ -124,6 +124,22 @@ sealed primary test. The 25,098-row curriculum has no sequence above 598 tokens 
 640-token limit. Stage 3 continues from the rejected stage-2 adapter at `1e-5`; it earns no release
 or quantization status until it clears the same 39 gates without moving any threshold or slice.
 
+The completed stage-3 result passes 36/39 gates and remains rejected. It preserves 99.83% held-test
+scam recall, reduces complete MultiDoGO call SAFE FPR to 1.12% with every domain at or below 2.05%,
+and cuts long-call SAFE FPR from stage 2's 22.37% to 0.22%. Those are real corrections, but held-test
+SAFE FPR regresses from 3.72% to 4.07%, calibrated macro F1 is 0.7370, and prior-open BothBosu scam
+recall rises only from 56.74% to 58.16%. Its BF16 reference path measures 93.54 ms median and 99.11
+ms p95 at 163--190 input tokens. Quantization remains unauthorized.
+
+The frozen stage-4 design addresses those three failures without fitting any evaluation row. It
+continues from the exact stage-3 adapter, fully replays the parent corpus and publisher-training
+complete calls, retains the stage-3 persistence rows, adds advisory-grounded SAFE/UNCERTAIN/SCAM
+dialogue triads for the four weak BothBosu categories, repeats training-only UNCERTAIN rows twice,
+and repeats training-only `scamguard_synthetic_v5` SAFE rows once. The lower `5e-6` learning rate is
+intended to preserve stage-3 call behavior while separating the underlearned three-way boundary.
+The same frozen 39 gates remain authoritative; overlap, token-length, and config hashes must be
+recorded before training.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen
