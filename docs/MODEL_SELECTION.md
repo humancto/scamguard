@@ -140,6 +140,23 @@ intended to preserve stage-3 call behavior while separating the underlearned thr
 The same frozen 39 gates remain authoritative; overlap, token-length, and config hashes must be
 recorded before training.
 
+Stage 4 completed and is rejected at 33/39 gates. It improved the prior-open BothBosu scam recall
+from 58.16% to 82.98%, but raised BothBosu SAFE FPR from 0% to 9.15%, held-test SAFE FPR from 4.07%
+to 5.50%, and complete MultiDoGO-call SAFE FPR from 1.12% to 1.90%; calibrated held-test macro F1
+fell to 0.7146. Its 82.83 ms median / 85.59 ms p95 BF16 reference latency is encouraging but does
+not compensate for failed quality gates. Adapter SHA-256 is
+`b61000295dda5afc10dce44d9d15c3c94d461947a922cad78e0f4d394a24b556`.
+
+A post-hoc diagnostic then tested 202 arithmetic and log-linear interpolations of the text-free
+stage-3 and stage-4 ledgers. Method, weight, and thresholds were selected on development only. The
+leakage-safe policy selected arithmetic weight `0.0` for stage 4: exactly stage 3, at 97.08% dev
+recall and 0.99% dev SAFE FPR. Although 64 interpolations met the dev contract, no blend improved
+dev recall and every nonzero stage-4 weight tied while spending safety margin or degraded it.
+Simple output-score interpolation is therefore ruled out as the next mobile candidate. This is a
+post-hoc direction-finding result, not fresh held-out confirmation; previously inspected splits
+remain diagnostic, and the sealed primary test remains unopened. Stage 5 must recover dialogue
+sensitivity in one adapter without the broad SAFE-boundary shift before quantization can begin.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen
