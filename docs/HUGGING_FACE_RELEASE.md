@@ -27,6 +27,15 @@ explicitly rejected by the publication validator. The full adapted 0.8B challeng
 after schema v24 data and independent label audits are frozen. The separate upstream Q4 runtime
 control and routed deployment decision are documented in `reports/QWEN08_Q4_RUNTIME_FLOOR.md`.
 
+Subsequent schema-v24 exploratory adapters have now been trained against the pinned base, but none
+is a release candidate. The strongest remains stage 3 at 36/39 frozen BF16 gates. Stage 5 trained
+36,916 examples from that adapter and completed the unchanged 20,869-row regression, but was
+rejected at 34/39 gates: development recall was 93.19%, unchanged-test SAFE FPR 4.75%, unchanged-
+test macro F1 0.7164, and prior-open BothBosu 77.30% recall / 6.54% SAFE FPR. Its adapter SHA-256 is
+`ec9ff2d3f40f2e48cf7e302b65936b7ac34395f2055f2d07b0253233c71c1e9c`. Because the development
+joint contract failed, stage 5 is not eligible for merge, GGUF conversion, quantization, physical-
+device benchmarking, or Hugging Face publication.
+
 `make qwen-08b-training-preflight` performs a separate no-update MPS forward/backward probe before
 the human audit is available. It hashes every locally resolved base-model file, requires the exact
 Qwen and Transformers commits, resolves all language-only LoRA targets, rejects visual-tower

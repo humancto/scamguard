@@ -177,6 +177,26 @@ sequences fit the frozen 640-token limit (598 maximum). Training restarts from s
 epoch at `2e-6`, seed `20260828`; the exact config and data hashes are frozen before compute. This
 is a precision-weighted sensitivity experiment, not a release candidate.
 
+Stage 5 completed and is rejected at 34/39 gates. The emitted adapter SHA-256 is
+`ec9ff2d3f40f2e48cf7e302b65936b7ac34395f2055f2d07b0253233c71c1e9c`; its frozen full-regression
+report and gate-result SHA-256 values are
+`360f3b08d3381db33277ba4ad167e9c22d266e220ee67916bdf095b3f7d59b08` and
+`df883987f5a7db1b0edfdbef0f075c1320fe42f90ea2cb938560a422fc37aadd`. It improves stage 4's dev
+SAFE FPR from 1.93% to 1.19%, held-test SAFE FPR from 5.50% to 4.75%, complete MultiDoGO-call SAFE
+FPR from 1.90% to 1.56%, and BothBosu SAFE FPR from 9.15% to 6.54%. Those partial recoveries do not
+beat stage 3: development scam recall is only 93.19%, held-test macro F1 is 0.7164, and BothBosu
+recall is 77.30%. The frozen development joint contract fails, so stage 5 cannot be selected.
+
+The text-free 20,869-row ledger contains 385 SAFE-to-SCAM false positives, 259 scam misses or
+deferrals, and 1,193 UNCERTAIN-to-SCAM overcalls. Error concentration is domain-specific: AZSC
+contributes 162 SAFE false positives, unchanged test 83, Chichewa 132 scam misses, and the public
+forum validation sources retain high SAFE false-positive rates. In contrast, the synthetic
+long-call state suite is perfect and held publisher annotations remain at 0% SAFE FPR. This rejects
+another broad SAFE-replay continuation as the next experiment: it overfits controlled call states
+without fixing multilingual and real-forum calibration. Stage 3 remains the strongest 0.8B
+checkpoint at 36/39 gates. Quantization, physical-device claims, and publication remain
+unauthorized.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen
