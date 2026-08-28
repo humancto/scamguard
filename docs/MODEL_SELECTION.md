@@ -197,6 +197,21 @@ without fixing multilingual and real-forum calibration. Stage 3 remains the stro
 checkpoint at 36/39 gates. Quantization, physical-device claims, and publication remain
 unauthorized.
 
+Stage 6A changes the objective instead of adding another broad replay. It starts from the exact
+stage-3 adapter and trains an ordinary LoRA on the same first-divergent verdict branch used by the
+runtime. The 5,063-row training-only curriculum contains all 841 `UNCERTAIN` rows from the real
+SMS/forum sources represented in development plus training-only synthetic-v5 uncertainty,
+source-matched SAFE/SCAM controls, and a deterministic 1,024-row-per-label cross-source retention
+sample. It is balanced at 1,602 SAFE / 1,865 UNCERTAIN / 1,596 SCAM across 3,895 families; the
+2,634-row dev file remains byte-identical. A text-free 7,697-row Stage-3 branch-logit cache provides
+KL retention targets. Candidate 6A uses focal weights `1/3/1`, gamma `2`, KL weight `5`, and a
+`1e-6` learning rate. No deployment head is added, so a passing adapter retains the existing
+GGUF/mobile scorer. Config SHA-256 is
+`077e9ba7cc8ff0f2b86f73e800397d56cca1d87690b52dd28e8c7462525458be`; teacher-cache SHA-256 is
+`786f8cb3dedf17eab9617954b5ae13d372b73f1a5fe0f20875510ed7aa7ab9b9`. Selection is dev-only: 6A
+must preserve at least 97% scam recall and at most 2% SAFE FPR while improving three-way macro F1
+before any regression split is opened for that candidate.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen

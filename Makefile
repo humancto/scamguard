@@ -4,6 +4,7 @@
 .PHONY: qwen-08b-boundary-recovery-data qwen-08b-boundary-recovery-token-audit qwen-08b-boundary-recovery-freeze qwen-08b-boundary-recovery qwen-08b-boundary-recovery-eval qwen-08b-boundary-recovery-gates
 .PHONY: qwen-08b-boundary-separation-data qwen-08b-boundary-separation-token-audit qwen-08b-boundary-separation-freeze qwen-08b-boundary-separation qwen-08b-boundary-separation-eval qwen-08b-boundary-separation-gates
 .PHONY: qwen-08b-precision-recovery-data qwen-08b-precision-recovery-token-audit qwen-08b-precision-recovery-freeze qwen-08b-precision-recovery qwen-08b-precision-recovery-eval qwen-08b-precision-recovery-gates
+.PHONY: qwen-08b-branch-stage6-data qwen-08b-branch-stage6-teacher qwen-08b-branch-stage6-preflight qwen-08b-branch-stage6 qwen-08b-branch-stage6-dev
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
 PYTHON_BIN ?= .venv/bin/python
@@ -60,6 +61,12 @@ QWEN08_PRECISION_CONFIG ?= configs/qwen35-08b-precision-recovery-stage5.json
 QWEN08_PRECISION_OUTPUT ?= artifacts/checkpoints/qwen35-08b-precision-recovery-stage5-lora
 QWEN08_PRECISION_REPORT ?= reports/runs/qwen35-08b-precision-recovery-stage5-regression.json
 QWEN08_PRECISION_GATE_REPORT ?= reports/runs/qwen35-08b-precision-recovery-stage5-regression-gates.json
+QWEN08_BRANCH_DATA ?= data/experiments/qwen35-08b-branch-stage6
+QWEN08_BRANCH_TEACHER ?= reports/runs/qwen35-08b-branch-stage6-teacher.jsonl
+QWEN08_BRANCH_TEACHER_MANIFEST ?= reports/runs/qwen35-08b-branch-stage6-teacher-manifest.json
+QWEN08_BRANCH_CONFIG ?= configs/qwen35-08b-branch-stage6a.json
+QWEN08_BRANCH_OUTPUT ?= artifacts/checkpoints/qwen35-08b-branch-stage6a-lora
+QWEN08_BRANCH_DEV_REPORT ?= reports/runs/qwen35-08b-branch-stage6a-dev.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -619,6 +626,68 @@ qwen-08b-precision-recovery-gates: qwen-08b-precision-recovery-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_PRECISION_REPORT)" \
 		--output "$(QWEN08_PRECISION_GATE_REPORT)"
+
+qwen-08b-branch-stage6-data:
+	@if [ ! -f "$(QWEN08_BRANCH_DATA)/manifest.json" ]; then \
+		$(PYTHON_BIN) scripts/build_qwen_branch_curriculum.py \
+			--parent "$(QWEN08_RECOVERY_DATA)/qwen_sft" \
+			--output "$(QWEN08_BRANCH_DATA)" --retention-per-label 1024 \
+			--salt scamguard-qwen08-branch-stage6-v1; \
+	fi
+
+qwen-08b-branch-stage6-teacher: qwen-08b-branch-stage6-data
+	@if [ ! -f "$(QWEN08_BRANCH_TEACHER_MANIFEST)" ]; then \
+		$(PYTHON_BIN) training/cache_qwen_branch_teacher.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--data "$(QWEN08_BRANCH_DATA)/qwen_sft" \
+			--output "$(QWEN08_BRANCH_TEACHER)" \
+			--manifest "$(QWEN08_BRANCH_TEACHER_MANIFEST)" \
+			--batch-size 4 --max-length 640 --require-mps; \
+	fi
+
+qwen-08b-branch-stage6-preflight: qwen-08b-branch-stage6-teacher
+	$(PYTHON_BIN) training/train_qwen_branch_lora.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --experiment-config "$(QWEN08_BRANCH_CONFIG)" \
+		--data "$(QWEN08_BRANCH_DATA)/qwen_sft" \
+		--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+		--teacher-cache "$(QWEN08_BRANCH_TEACHER)" \
+		--teacher-cache-manifest "$(QWEN08_BRANCH_TEACHER_MANIFEST)" \
+		--output "$(QWEN08_BRANCH_OUTPUT)" --epochs 1 --batch-size 4 \
+		--eval-batch-size 4 --gradient-accumulation 4 --learning-rate 0.000001 \
+		--max-length 640 --class-weights 1 3 1 --focal-gamma 2 --kl-weight 5 \
+		--kl-temperature 1 --sampling-strategy group_by_length --seed 20260829 \
+		--require-mps --preflight-only
+
+qwen-08b-branch-stage6: qwen-08b-branch-stage6-preflight
+	@if [ ! -f "$(QWEN08_BRANCH_OUTPUT)/adapter_model.safetensors" ]; then \
+		$(PYTHON_BIN) training/train_qwen_branch_lora.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --experiment-config "$(QWEN08_BRANCH_CONFIG)" \
+			--data "$(QWEN08_BRANCH_DATA)/qwen_sft" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--teacher-cache "$(QWEN08_BRANCH_TEACHER)" \
+			--teacher-cache-manifest "$(QWEN08_BRANCH_TEACHER_MANIFEST)" \
+			--output "$(QWEN08_BRANCH_OUTPUT)" --epochs 1 --batch-size 4 \
+			--eval-batch-size 4 --gradient-accumulation 4 --learning-rate 0.000001 \
+			--max-length 640 --class-weights 1 3 1 --focal-gamma 2 --kl-weight 5 \
+			--kl-temperature 1 --sampling-strategy group_by_length --seed 20260829 \
+			--require-mps; \
+	fi
+
+qwen-08b-branch-stage6-dev: qwen-08b-branch-stage6
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_BRANCH_OUTPUT)" \
+		--data "$(SCHEMA24_AI_OVERLAY)" --external-data data/external --splits dev \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
+		--report "$(QWEN08_BRANCH_DEV_REPORT)"
 
 qwen-08b-call-robustness-merge: qwen-08b-call-robustness-gates
 	$(PYTHON_BIN) training/merge_qwen_adapter.py \

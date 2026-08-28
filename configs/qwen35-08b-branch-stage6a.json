@@ -1,0 +1,93 @@
+{
+  "experiment_id": "sg-qwen35-08b-branch-stage6a-v1",
+  "run_kind": "exploratory_continuation",
+  "role": "development-only real-uncertainty branch correction with Stage 3 retention",
+  "release_eligible": false,
+  "publication_authorized": false,
+  "checkpoint_output": "artifacts/checkpoints/qwen35-08b-branch-stage6a-lora",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "transformers_revision": "0c92811846095910816a87aca50050d10c545270",
+  "initial_adapter": {
+    "path": "artifacts/checkpoints/qwen35-08b-boundary-recovery-stage3-lora",
+    "adapter_model_sha256": "403c2e176997311396780a79b890654e8165c2a996e77d2fbcf0b7c41ac6ce9b",
+    "adapter_config_sha256": "2519b9ff3de5693891a38c623695cc9107e99f0784f6b434d38a88d553f45c8a"
+  },
+  "source_evaluation": {
+    "path": "reports/runs/qwen35-08b-boundary-recovery-stage3-regression.json",
+    "sha256": "a2dfe1ddca06efe9679f9bfecfa1731cd933237e262b8bd51d4c6125091f3266",
+    "status": "rejected at 36/39; regression evidence only, never a fitting source"
+  },
+  "seed": 20260829,
+  "epochs": 1.0,
+  "batch_size": 4,
+  "eval_batch_size": 4,
+  "gradient_accumulation": 4,
+  "gradient_checkpointing": true,
+  "trainer_eval": true,
+  "evaluation_policy": "trainer branch loss on unchanged development, then development-only branch-token screen; regression only if the binary contract and macro F1 improve",
+  "learning_rate": 0.000001,
+  "warmup_fraction": 0.05,
+  "weight_decay": 0.01,
+  "max_length": 640,
+  "sampling": "group_by_length",
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "in_proj_qkv",
+      "in_proj_z",
+      "in_proj_b",
+      "in_proj_a",
+      "out_proj",
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "scope": "language tower only; asserted at runtime"
+  },
+  "objective": {
+    "type": "branch_token_focal_kl_v1",
+    "labels": [
+      "SAFE",
+      "UNCERTAIN",
+      "SCAM"
+    ],
+    "class_weights": [
+      1.0,
+      3.0,
+      1.0
+    ],
+    "focal_gamma": 2.0,
+    "kl_weight": 5.0,
+    "kl_temperature": 1.0,
+    "deployment_head_added": false,
+    "teacher_cache": {
+      "path": "reports/runs/qwen35-08b-branch-stage6-teacher.jsonl",
+      "sha256": "786f8cb3dedf17eab9617954b5ae13d372b73f1a5fe0f20875510ed7aa7ab9b9",
+      "manifest_path": "reports/runs/qwen35-08b-branch-stage6-teacher-manifest.json",
+      "manifest_sha256": "9dce511d16a0c159a3bb4f41c35cd31d58fb8d57c30e8c94fc59208fd1c59445"
+    }
+  },
+  "data": {
+    "schema_version": 24,
+    "processed_directory": "data/experiments/qwen35-08b-branch-stage6",
+    "manifest_sha256": "82ab3ef46a3084e310018032cf3190ab6848ebc4985428b2d2d937bea0c2699a",
+    "sft_build_manifest_path": "data/experiments/qwen35-08b-branch-stage6/qwen_sft/manifest.json",
+    "sft_build_manifest_sha256": "d1c2f9de270b34e221598c1c0816aad17921ffb2f92728f2c140ca7c924a69b6",
+    "train_jsonl_sha256": "bbf206ddbaf69a18e18532c3af7032a0db9b4a8b10a8d1962ca3dbf3b1f73a69",
+    "dev_jsonl_sha256": "66229ec4bdc47b26e2bfc557a36dad645c5a6a22f340289c3a55f4055b1e009e",
+    "train_examples": 5063,
+    "dev_examples": 2634,
+    "train_families": 3895,
+    "dev_families": 575,
+    "held_rows_used_for_fitting": 0,
+    "primary_test_rows_used_for_fitting": 0,
+    "bothbosu_rows_used_for_fitting": 0
+  }
+}
