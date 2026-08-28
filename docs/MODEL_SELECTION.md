@@ -157,6 +157,15 @@ post-hoc direction-finding result, not fresh held-out confirmation; previously i
 remain diagnostic, and the sealed primary test remains unopened. Stage 5 must recover dialogue
 sensitivity in one adapter without the broad SAFE-boundary shift before quantization can begin.
 
+Linear LoRA weight interpolation was then tested as a cheaper single-adapter alternative. The
+hash-bound 6.25% stage-4 candidate still meets the binary dev contract, but only ties stage 3 at
+97.08% recall while worsening SAFE FPR from 0.99% to 1.79% and calibrated macro F1 from 0.7165 to
+0.6831. At 12.5% stage-4 weight, recall falls to 96.11% and the joint contract fails. Both were
+scored with the explicit development-only evaluator mode, which requires `--splits dev` exactly,
+does not read regression data, emits no release gates, and refuses to persist release calibration.
+The coarse higher-weight sweep was stopped after the trajectory was dominated; no interpolated
+adapter was evaluated on regression splits. Weight interpolation is therefore also rejected.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen

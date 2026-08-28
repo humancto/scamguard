@@ -24,6 +24,7 @@ from training.eval_qwen import (
     score_message_unbatched,
     score_messages,
     validate_primary_test_v8,
+    validate_requested_splits,
 )
 
 
@@ -336,3 +337,13 @@ def test_qwen_evaluation_reports_source_domains() -> None:
     assert set(report["by_source_domain"]) == {"finance", "media"}
     assert "expected_calibration_error" in report["calibration"]["before_temperature"]
     assert "multiclass_brier_score" in report["calibration"]["after_temperature"]
+
+
+def test_development_screen_split_contract_is_fail_closed() -> None:
+    validate_requested_splits(["dev"], development_screen_only=True)
+    validate_requested_splits(["dev", "test"], development_screen_only=False)
+
+    with pytest.raises(ValueError, match="requires --splits dev exactly"):
+        validate_requested_splits(["dev", "test"], development_screen_only=True)
+    with pytest.raises(ValueError, match="must include dev and test"):
+        validate_requested_splits(["dev"], development_screen_only=False)
