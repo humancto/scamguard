@@ -3,6 +3,7 @@
 .PHONY: gguf-verdict-runner portable-gguf-verdict-runner gguf-runtime-pack qwen-08b-base-runtime-pack qwen-08b-base-runtime-pack-benchmark qwen-08b-full-gguf-routed-diagnostic-q4 qwen-08b-full-gguf-routed-diagnostic-q5 qwen-08b-full-gguf-routed-runtime-q4 qwen-08b-full-gguf-routed-runtime-q5
 .PHONY: qwen-08b-boundary-recovery-data qwen-08b-boundary-recovery-token-audit qwen-08b-boundary-recovery-freeze qwen-08b-boundary-recovery qwen-08b-boundary-recovery-eval qwen-08b-boundary-recovery-gates
 .PHONY: qwen-08b-boundary-separation-data qwen-08b-boundary-separation-token-audit qwen-08b-boundary-separation-freeze qwen-08b-boundary-separation qwen-08b-boundary-separation-eval qwen-08b-boundary-separation-gates
+.PHONY: qwen-08b-precision-recovery-data qwen-08b-precision-recovery-token-audit qwen-08b-precision-recovery-freeze qwen-08b-precision-recovery qwen-08b-precision-recovery-eval qwen-08b-precision-recovery-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
 PYTHON_BIN ?= .venv/bin/python
@@ -53,6 +54,12 @@ QWEN08_SEPARATION_CONFIG ?= configs/qwen35-08b-boundary-separation-stage4.json
 QWEN08_SEPARATION_OUTPUT ?= artifacts/checkpoints/qwen35-08b-boundary-separation-stage4-lora
 QWEN08_SEPARATION_REPORT ?= reports/runs/qwen35-08b-boundary-separation-stage4-regression.json
 QWEN08_SEPARATION_GATE_REPORT ?= reports/runs/qwen35-08b-boundary-separation-stage4-regression-gates.json
+QWEN08_PRECISION_DATA ?= data/experiments/qwen35-08b-precision-recovery-stage5
+QWEN08_PRECISION_TOKEN_AUDIT ?= reports/runs/qwen35-08b-precision-recovery-stage5-token-audit.json
+QWEN08_PRECISION_CONFIG ?= configs/qwen35-08b-precision-recovery-stage5.json
+QWEN08_PRECISION_OUTPUT ?= artifacts/checkpoints/qwen35-08b-precision-recovery-stage5-lora
+QWEN08_PRECISION_REPORT ?= reports/runs/qwen35-08b-precision-recovery-stage5-regression.json
+QWEN08_PRECISION_GATE_REPORT ?= reports/runs/qwen35-08b-precision-recovery-stage5-regression-gates.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -543,6 +550,75 @@ qwen-08b-boundary-separation-gates: qwen-08b-boundary-separation-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_SEPARATION_REPORT)" \
 		--output "$(QWEN08_SEPARATION_GATE_REPORT)"
+
+qwen-08b-precision-recovery-data:
+	@if [ ! -f "$(QWEN08_PRECISION_DATA)/manifest.json" ]; then \
+		$(PYTHON_BIN) scripts/build_qwen_call_robustness_curriculum.py \
+			--parent "$(SCHEMA24_AI_OVERLAY)" --multidogo data/external/multidogo \
+			--output "$(QWEN08_PRECISION_DATA)" --multidogo-repetitions 2 \
+			--full-parent-replay --synthetic-safe-repetitions 3 \
+			--supplement-safe-repetitions 3 \
+			--supplement data/generated/boundary_separation_curriculum.jsonl \
+			--supplement-manifest data/generated/boundary_separation_curriculum_manifest.json \
+			--overlap-reference "$(SCHEMA24_AI_OVERLAY)/dev.jsonl" \
+			--overlap-reference "$(SCHEMA24_AI_OVERLAY)/test.jsonl" \
+			--overlap-reference data/external/scam_dialogue/scam_dialogue_validation.jsonl \
+			--overlap-reference data/external/scam_dialogue/ood_scam_dialogue.jsonl \
+			--overlap-reference data/external/multidogo/multidogo_call_validation.jsonl \
+			--overlap-reference data/processed/primary_test_v8.jsonl --stage-name stage5; \
+	fi
+
+qwen-08b-precision-recovery-token-audit: qwen-08b-precision-recovery-data
+	$(PYTHON_BIN) scripts/audit_qwen_tokens.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --data "$(QWEN08_PRECISION_DATA)/qwen_sft" \
+		--max-length 640 --output "$(QWEN08_PRECISION_TOKEN_AUDIT)"
+
+qwen-08b-precision-recovery-freeze: qwen-08b-precision-recovery-token-audit
+	@if [ ! -f "$(QWEN08_PRECISION_CONFIG)" ]; then \
+		$(PYTHON_BIN) scripts/freeze_qwen08_call_robustness.py \
+			--curriculum "$(QWEN08_PRECISION_DATA)" \
+			--token-audit "$(QWEN08_PRECISION_TOKEN_AUDIT)" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--source-report "$(QWEN08_RECOVERY_REPORT)" \
+			--output "$(QWEN08_PRECISION_CONFIG)" \
+			--checkpoint-output "$(QWEN08_PRECISION_OUTPUT)" \
+			--experiment-id sg-qwen35-08b-precision-recovery-stage5-v1 \
+			--expected-curriculum-kind qwen_precision_recovery_stage5_curriculum \
+			--role "development-only precision-weighted multi-turn sensitivity correction" \
+			--seed 20260828 --learning-rate 0.000002; \
+	fi
+
+qwen-08b-precision-recovery: qwen-08b-precision-recovery-freeze
+	@if [ ! -f "$(QWEN08_PRECISION_OUTPUT)/adapter_model.safetensors" ]; then \
+		$(PYTHON_BIN) training/train_qwen_lora.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --experiment-config "$(QWEN08_PRECISION_CONFIG)" \
+			--data "$(QWEN08_PRECISION_DATA)/qwen_sft" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--epochs 1 --batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --learning-rate 0.000002 --max-length 640 \
+			--sampling-strategy group_by_length --seed 20260828 --require-mps \
+			--output "$(QWEN08_PRECISION_OUTPUT)"; \
+	fi
+
+qwen-08b-precision-recovery-eval: qwen-08b-precision-recovery
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_PRECISION_OUTPUT)" \
+		--data "$(SCHEMA24_AI_OVERLAY)" --external-data data/external \
+		--splits $(QWEN08_FULL_EVAL_SPLITS) \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps \
+		--report "$(QWEN08_PRECISION_REPORT)"
+
+qwen-08b-precision-recovery-gates: qwen-08b-precision-recovery-eval
+	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
+		--report "$(QWEN08_PRECISION_REPORT)" \
+		--output "$(QWEN08_PRECISION_GATE_REPORT)"
 
 qwen-08b-call-robustness-merge: qwen-08b-call-robustness-gates
 	$(PYTHON_BIN) training/merge_qwen_adapter.py \

@@ -76,17 +76,26 @@ def build(
     stage_name: str = "stage2",
     uncertain_repetitions: int = 0,
     synthetic_safe_repetitions: int = 0,
+    supplement_safe_repetitions: int = 0,
 ) -> dict[str, Any]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite curriculum: {output}")
     if multidogo_repetitions < 1 or core_per_label < 0:
         raise ValueError("curriculum repetition and sample counts must be non-negative")
-    if stage_name not in {"stage2", "stage3", "stage4"}:
-        raise ValueError("stage_name must be stage2, stage3, or stage4")
-    if uncertain_repetitions < 0 or synthetic_safe_repetitions < 0:
+    if stage_name not in {"stage2", "stage3", "stage4", "stage5"}:
+        raise ValueError("stage_name must be stage2, stage3, stage4, or stage5")
+    if (
+        uncertain_repetitions < 0
+        or synthetic_safe_repetitions < 0
+        or supplement_safe_repetitions < 0
+    ):
         raise ValueError("targeted replay repetitions must be non-negative")
-    if stage_name != "stage4" and (uncertain_repetitions or synthetic_safe_repetitions):
-        raise ValueError("targeted replay is reserved for stage4")
+    if stage_name not in {"stage4", "stage5"} and (
+        uncertain_repetitions or synthetic_safe_repetitions or supplement_safe_repetitions
+    ):
+        raise ValueError("targeted replay is reserved for stage4 and stage5")
+    if stage_name != "stage5" and supplement_safe_repetitions:
+        raise ValueError("supplement SAFE replay is reserved for stage5")
     if (supplement is None) != (supplement_manifest is None):
         raise ValueError("supplement and supplement_manifest must be supplied together")
 
@@ -192,6 +201,7 @@ def build(
                 targeted_replay.append(repeated)
 
     supplement_rows: list[dict[str, Any]] = []
+    supplement_safe_replay: list[dict[str, Any]] = []
     supplement_contract: dict[str, Any] | None = None
     if supplement is not None and supplement_manifest is not None:
         supplement_contract = json.loads(supplement_manifest.read_text(encoding="utf-8"))
@@ -205,6 +215,18 @@ def build(
         supplement_rows, excluded = convert_supported_rows(raw_supplement)
         if excluded or len(supplement_rows) != len(raw_supplement):
             raise ValueError("supplement contains unsupported grounded supervision")
+        for row in supplement_rows:
+            target = json.loads(row["messages"][-1]["content"])
+            if target.get("verdict") != "SAFE":
+                continue
+            for repetition in range(supplement_safe_repetitions):
+                repeated = dict(row)
+                repeated["curriculum_parent_id"] = row["id"]
+                repeated["curriculum_repetition"] = repetition + 1
+                repeated["id"] = (
+                    f"{stage_name}-supplement-safe-r{repetition + 1}-{row['id']}"
+                )
+                supplement_safe_replay.append(repeated)
         reference_rows: list[dict[str, Any]] = []
         reference_contracts: list[dict[str, Any]] = []
         for reference in overlap_references:
@@ -225,6 +247,8 @@ def build(
             "rows": len(supplement_rows),
             "sha256": file_sha256(supplement),
             "held_rows_copied": 0,
+            "supplement_safe_repetitions": supplement_safe_repetitions,
+            "supplement_safe_replay_rows": len(supplement_safe_replay),
             "near_overlap_radius": 6,
             "near_overlap_rows": 0,
             "overlap_references": reference_contracts,
@@ -240,7 +264,7 @@ def build(
             call_rows.append(row)
 
     train = sorted(
-        replay + targeted_replay + call_rows + supplement_rows,
+        replay + targeted_replay + call_rows + supplement_rows + supplement_safe_replay,
         key=lambda row: str(row["id"]),
     )
     train_ids = [str(row["id"]) for row in train]
@@ -268,6 +292,7 @@ def build(
             "stage2": "qwen_call_robustness_stage2_curriculum",
             "stage3": "qwen_boundary_recovery_stage3_curriculum",
             "stage4": "qwen_boundary_separation_stage4_curriculum",
+            "stage5": "qwen_precision_recovery_stage5_curriculum",
         }[stage_name],
         "schema_version": 24,
         "release_eligible": False,
@@ -308,7 +333,9 @@ def build(
                 "training_rows_only": True,
                 "uncertain_repetitions": uncertain_repetitions,
                 "synthetic_safe_repetitions": synthetic_safe_repetitions,
+                "supplement_safe_repetitions": supplement_safe_repetitions,
                 "rows": len(targeted_replay),
+                "supplement_safe_rows": len(supplement_safe_replay),
             },
             "new_complete_call_presentations": len(call_rows),
             "supplement": supplement_contract,
@@ -365,10 +392,11 @@ def main() -> None:
     parser.add_argument("--supplement-manifest", type=Path)
     parser.add_argument("--overlap-reference", type=Path, action="append", default=[])
     parser.add_argument(
-        "--stage-name", choices=("stage2", "stage3", "stage4"), default="stage2"
+        "--stage-name", choices=("stage2", "stage3", "stage4", "stage5"), default="stage2"
     )
     parser.add_argument("--uncertain-repetitions", type=int, default=0)
     parser.add_argument("--synthetic-safe-repetitions", type=int, default=0)
+    parser.add_argument("--supplement-safe-repetitions", type=int, default=0)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -385,6 +413,7 @@ def main() -> None:
                 stage_name=args.stage_name,
                 uncertain_repetitions=args.uncertain_repetitions,
                 synthetic_safe_repetitions=args.synthetic_safe_repetitions,
+                supplement_safe_repetitions=args.supplement_safe_repetitions,
             ),
             indent=2,
         )

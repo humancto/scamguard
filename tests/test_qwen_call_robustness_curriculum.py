@@ -273,7 +273,9 @@ def test_stage4_adds_training_only_targeted_replay(tmp_path: Path) -> None:
         "training_rows_only": True,
         "uncertain_repetitions": 2,
         "synthetic_safe_repetitions": 1,
+        "supplement_safe_repetitions": 0,
         "rows": 3,
+        "supplement_safe_rows": 0,
     }
     assert "stage4-uncertain-r1-uncertain" in ids
     assert "stage4-uncertain-r2-uncertain" in ids
@@ -281,9 +283,55 @@ def test_stage4_adds_training_only_targeted_replay(tmp_path: Path) -> None:
     assert "stage4-md-r1-md-call" in ids
 
 
-def test_rejects_targeted_replay_outside_stage4(tmp_path: Path) -> None:
+def test_stage5_repeats_only_safe_supplement_rows(tmp_path: Path) -> None:
     parent, multidogo = fixture(tmp_path)
-    with pytest.raises(ValueError, match="reserved for stage4"):
+    supplement = tmp_path / "supplement.jsonl"
+    rows = [
+        raw_row("safe-supplement", "SAFE", "safe-supplement-family"),
+        raw_row(
+            "scam-supplement",
+            "SCAM",
+            "scam-supplement-family",
+            text="Send the one-time code immediately.",
+        ),
+    ]
+    write_jsonl(supplement, rows)
+    supplement_manifest = tmp_path / "supplement-manifest.json"
+    supplement_manifest.write_text(
+        json.dumps(
+            {"rows": 2, "sha256": file_sha256(supplement), "held_rows_copied": 0}
+        ),
+        encoding="utf-8",
+    )
+
+    manifest = build(
+        parent,
+        multidogo,
+        tmp_path / "stage5",
+        full_parent_replay=True,
+        supplement=supplement,
+        supplement_manifest=supplement_manifest,
+        stage_name="stage5",
+        synthetic_safe_repetitions=2,
+        supplement_safe_repetitions=3,
+    )
+    train = [
+        json.loads(line)
+        for line in (tmp_path / "stage5/qwen_sft/train.jsonl").read_text().splitlines()
+    ]
+    ids = {str(row["id"]) for row in train}
+    assert manifest["experiment_kind"] == "qwen_precision_recovery_stage5_curriculum"
+    assert manifest["selection"]["targeted_replay"]["supplement_safe_rows"] == 3
+    assert "stage5-supplement-safe-r3-safe-supplement" in ids
+    assert not any(
+        "supplement-safe" in identifier and "scam-supplement" in identifier
+        for identifier in ids
+    )
+
+
+def test_rejects_targeted_replay_outside_stage4_or_stage5(tmp_path: Path) -> None:
+    parent, multidogo = fixture(tmp_path)
+    with pytest.raises(ValueError, match="reserved for stage4 and stage5"):
         build(
             parent,
             multidogo,

@@ -166,6 +166,17 @@ does not read regression data, emits no release gates, and refuses to persist re
 The coarse higher-weight sweep was stopped after the trajectory was dominated; no interpolated
 adapter was evaluated on regression splits. Weight interpolation is therefore also rejected.
 
+Stage 5 returns to the exact stage-3 adapter and changes the training gradient rather than mixing
+failed weights. Its 36,916-row, training-only curriculum contains one complete parent replay, two
+presentations of each licensed MultiDoGO training call, three extra presentations of every
+training-only `scamguard_synthetic_v5` SAFE row, the 1,920-row advisory-grounded boundary
+supplement once, and three extra presentations of each SAFE supplement row. The resulting label
+mix is 25,938 SAFE / 7,927 SCAM / 3,051 UNCERTAIN. No BothBosu or held row is fitted; the supplement
+has zero SimHash-radius-6 overlap with every declared evaluation reference. All 39,550 train/dev
+sequences fit the frozen 640-token limit (598 maximum). Training restarts from stage 3 for one
+epoch at `2e-6`, seed `20260828`; the exact config and data hashes are frozen before compute. This
+is a precision-weighted sensitivity experiment, not a release candidate.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen

@@ -1,0 +1,80 @@
+{
+  "experiment_id": "sg-qwen35-08b-precision-recovery-stage5-v1",
+  "run_kind": "exploratory_continuation",
+  "role": "development-only precision-weighted multi-turn sensitivity correction",
+  "release_eligible": false,
+  "publication_authorized": false,
+  "checkpoint_output": "artifacts/checkpoints/qwen35-08b-precision-recovery-stage5-lora",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "transformers_revision": "0c92811846095910816a87aca50050d10c545270",
+  "initial_adapter": {
+    "path": "artifacts/checkpoints/qwen35-08b-boundary-recovery-stage3-lora",
+    "adapter_model_sha256": "403c2e176997311396780a79b890654e8165c2a996e77d2fbcf0b7c41ac6ce9b",
+    "adapter_config_sha256": "2519b9ff3de5693891a38c623695cc9107e99f0784f6b434d38a88d553f45c8a"
+  },
+  "source_evaluation": {
+    "path": "reports/runs/qwen35-08b-boundary-recovery-stage3-regression.json",
+    "sha256": "a2dfe1ddca06efe9679f9bfecfa1731cd933237e262b8bd51d4c6125091f3266",
+    "status": "rejected; regression evidence only for this continuation"
+  },
+  "seed": 20260828,
+  "epochs": 1.0,
+  "batch_size": 4,
+  "eval_batch_size": 4,
+  "gradient_accumulation": 4,
+  "gradient_checkpointing": true,
+  "trainer_eval": true,
+  "evaluation_policy": "development loss, then frozen regression and selection diagnostics; primary_test_v8 remains unopened until this adapter and threshold policy are frozen",
+  "learning_rate": 2e-06,
+  "warmup_fraction": 0.05,
+  "weight_decay": 0.01,
+  "max_length": 640,
+  "sampling": "group_by_length",
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "in_proj_qkv",
+      "in_proj_z",
+      "in_proj_b",
+      "in_proj_a",
+      "out_proj",
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "scope": "language tower only; asserted at runtime"
+  },
+  "data": {
+    "schema_version": 24,
+    "processed_directory": "data/experiments/qwen35-08b-precision-recovery-stage5",
+    "manifest_sha256": "3dcbd6e382689b6f641d0a98ca4bd0a10a227201e95c733903b84443636a70b4",
+    "train_jsonl_sha256": "4a38d4aaf8e4251b7b37081d9622f713e70f33c6662f630316ad4c402a0c4e1a",
+    "dev_jsonl_sha256": "66229ec4bdc47b26e2bfc557a36dad645c5a6a22f340289c3a55f4055b1e009e",
+    "train_examples": 36916,
+    "dev_examples": 2634,
+    "train_families": 12528,
+    "dev_families": 575,
+    "sft_build_manifest_path": "data/experiments/qwen35-08b-precision-recovery-stage5/qwen_sft/manifest.json",
+    "sft_build_manifest_sha256": "2288b5c86be06fd7508faad1730c4e560308a6b4e192b4db0f61fad087ac1c71",
+    "token_length_audit": {
+      "report_path": "reports/runs/qwen35-08b-precision-recovery-stage5-token-audit.json",
+      "report_sha256": "013f5ed28e97f497264dbc35bb90942eb5755c245190c1f1f7e2cccef5991f76",
+      "examples": 39550,
+      "full_p95": 541,
+      "full_p99": 552,
+      "full_max": 598,
+      "full_over_max_length": 0,
+      "minimum_supervised_tokens": 25
+    },
+    "held_rows_used_for_fitting": 0,
+    "primary_test_rows_used_for_fitting": 0,
+    "bothbosu_rows_used_for_fitting": 0
+  }
+}
