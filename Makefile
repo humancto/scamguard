@@ -4,7 +4,7 @@
 .PHONY: qwen-08b-boundary-recovery-data qwen-08b-boundary-recovery-token-audit qwen-08b-boundary-recovery-freeze qwen-08b-boundary-recovery qwen-08b-boundary-recovery-eval qwen-08b-boundary-recovery-gates
 .PHONY: qwen-08b-boundary-separation-data qwen-08b-boundary-separation-token-audit qwen-08b-boundary-separation-freeze qwen-08b-boundary-separation qwen-08b-boundary-separation-eval qwen-08b-boundary-separation-gates
 .PHONY: qwen-08b-precision-recovery-data qwen-08b-precision-recovery-token-audit qwen-08b-precision-recovery-freeze qwen-08b-precision-recovery qwen-08b-precision-recovery-eval qwen-08b-precision-recovery-gates
-.PHONY: qwen-08b-branch-stage6-data qwen-08b-branch-stage6-teacher qwen-08b-branch-stage6-preflight qwen-08b-branch-stage6 qwen-08b-branch-stage6-dev
+.PHONY: qwen-08b-branch-stage6-data qwen-08b-branch-stage6-teacher qwen-08b-branch-stage6-preflight qwen-08b-branch-stage6 qwen-08b-branch-stage6-dev qwen-08b-branch-stage6-diagnostics
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 
 PYTHON_BIN ?= .venv/bin/python
@@ -67,6 +67,8 @@ QWEN08_BRANCH_TEACHER_MANIFEST ?= reports/runs/qwen35-08b-branch-stage6-teacher-
 QWEN08_BRANCH_CONFIG ?= configs/qwen35-08b-branch-stage6a.json
 QWEN08_BRANCH_OUTPUT ?= artifacts/checkpoints/qwen35-08b-branch-stage6a-lora
 QWEN08_BRANCH_DEV_REPORT ?= reports/runs/qwen35-08b-branch-stage6a-dev.json
+QWEN08_BRANCH_ERROR_REPORT ?= reports/runs/qwen35-08b-branch-stage6a-dev-errors.json
+QWEN08_BRANCH_BLEND_REPORT ?= reports/runs/qwen35-08b-stage3-stage6a-score-blend.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -688,6 +690,17 @@ qwen-08b-branch-stage6-dev: qwen-08b-branch-stage6
 		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
 		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
 		--report "$(QWEN08_BRANCH_DEV_REPORT)"
+
+qwen-08b-branch-stage6-diagnostics: qwen-08b-branch-stage6-dev
+	$(PYTHON_BIN) scripts/summarize_qwen_errors.py \
+		--predictions "$(QWEN08_BRANCH_DEV_REPORT:.json=.predictions.jsonl)" \
+		--output "$(QWEN08_BRANCH_ERROR_REPORT)" --hardest-limit 25
+	$(PYTHON_BIN) scripts/analyze_qwen_score_blend.py \
+		--left "$(QWEN08_RECOVERY_REPORT:.json=.predictions.jsonl)" \
+		--right "$(QWEN08_BRANCH_DEV_REPORT:.json=.predictions.jsonl)" \
+		--left-name qwen35-08b-stage3 --right-name qwen35-08b-stage6a \
+		--alpha-steps 100 --minimum-dev-recall 0.97 --maximum-safe-fpr 0.02 \
+		--dev-only --report "$(QWEN08_BRANCH_BLEND_REPORT)"
 
 qwen-08b-call-robustness-merge: qwen-08b-call-robustness-gates
 	$(PYTHON_BIN) training/merge_qwen_adapter.py \

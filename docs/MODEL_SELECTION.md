@@ -212,6 +212,22 @@ GGUF/mobile scorer. Config SHA-256 is
 must preserve at least 97% scam recall and at most 2% SAFE FPR while improving three-way macro F1
 before any regression split is opened for that candidate.
 
+Stage 6A completed and is rejected on that development-only contract. Its adapter SHA-256 is
+`ba2067a3ded311efa51b5239e8770163ab1f6e113e5c1ea79208c998614c61e1`; the training receipt and
+dev-report SHA-256 values are `a58c2de83d725dbf5d523db6c27503e7202291b6317d5cf9ec4d259560503e1b`
+and `26aa1897c4fbba84c659e09dcfb01cd8d8aa7f0f1fd69e0254f40d1d73b67959`. Dev recall fell from
+97.08% to 96.89%, SAFE FPR rose from 0.99% to 1.04%, and macro F1 fell from 0.716450 to 0.716411.
+The candidate changed only eight calibrated verdicts: it recovered one true `UNCERTAIN`, but added
+five SAFE deferrals, one SAFE scam alarm, and one scam miss. Both changed binary decisions came
+from synthetic-v5 rows.
+
+A text-free, dev-only 202-point arithmetic/log-linear score interpolation also selects the exact
+stage-3 endpoint. The best feasible macro F1 is unchanged at 0.716450; report SHA-256 is
+`4fbee06ec82a1efa8511bbb8a285e8a4c9fac97e846fdd4ef6658bf0bf3cc85f`. This rejects a lower-step
+or stronger-retention continuation of the same branch objective: it converges back to stage 3
+without learning the real `UNCERTAIN` boundary. No regression split was opened for 6A, and merge,
+quantization, device benchmarking, sealed-primary evaluation, and publication remain forbidden.
+
 The 4B and 9B checkpoints are escalation tools, not automatic winners. Qwen3.5-4B remains practical
 as a roughly 3 GB-class Q4 desktop/high-memory-mobile artifact; Qwen3.5-9B is a desktop teacher whose
 errors and soft labels can improve a smaller student. If the 2B model already passes every frozen

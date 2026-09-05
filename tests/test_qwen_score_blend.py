@@ -7,6 +7,7 @@ import pytest
 
 from scripts.analyze_qwen_score_blend import (
     blend_probabilities,
+    comparison_splits,
     fit_blend,
     select_scam_threshold,
 )
@@ -94,7 +95,22 @@ def test_fit_blend_uses_only_supplied_dev_records_and_fits_safe_threshold() -> N
     assert selected["dev_macro_f1"] == pytest.approx(1.0)
     assert 0.0 <= selected["safe_threshold"] <= 1.0
     assert len(candidates) == 10
+    assert all("dev_macro_f1" in candidate for candidate in candidates)
     assert probabilities.shape == (5, 3)
+
+
+def test_dev_only_comparison_explicitly_allows_non_dev_rows_on_one_side() -> None:
+    dev_left, dev_right = record("dev", "SAFE", (0.8, 0.1, 0.1), (0.9, 0.05, 0.05))
+    test_left, _test_right = record(
+        "test", "SCAM", (0.1, 0.1, 0.8), (0.05, 0.05, 0.9)
+    )
+    test_left["split"] = "test"
+    left = {("dev", "dev"): dev_left, ("test", "test"): test_left}
+    right = {("dev", "dev"): dev_right}
+
+    assert comparison_splits(left, right, dev_only=True) == ["dev"]
+    with pytest.raises(ValueError, match="ledger key mismatch"):
+        comparison_splits(left, right, dev_only=False)
 
 
 def test_invalid_shapes_weights_and_methods_fail_closed() -> None:

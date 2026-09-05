@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
+from sklearn.metrics import accuracy_score, f1_score
 
 from scamguard.metrics import file_sha256
 from scamguard.qwen_scoring import bucketed_sequence_length
@@ -292,6 +293,39 @@ def test_safe_threshold_is_fit_after_scam_threshold_is_frozen() -> None:
 
     assert threshold == 0.75
     assert predicted.tolist() == truth.tolist()
+
+
+def test_fast_safe_threshold_matches_brute_force() -> None:
+    rng = np.random.default_rng(20260831)
+    for rows in (3, 17, 101):
+        truth = rng.integers(0, len(LABELS), size=rows)
+        truth[: min(rows, len(LABELS))] = np.arange(min(rows, len(LABELS)))
+        probabilities = rng.dirichlet(np.ones(len(LABELS)), size=rows)
+        scam_threshold = 0.37
+        candidates = sorted(
+            {0.0, 1.0, *(float(value) for value in probabilities[:, 0])}
+        )
+        brute = max(
+            (
+                float(
+                    f1_score(
+                        truth,
+                        predict_with_abstention(probabilities, scam_threshold, threshold),
+                        average="macro",
+                        zero_division=0,
+                    )
+                ),
+                float(
+                    accuracy_score(
+                        truth,
+                        predict_with_abstention(probabilities, scam_threshold, threshold),
+                    )
+                ),
+                threshold,
+            )
+            for threshold in candidates
+        )[2]
+        assert choose_safe_threshold(truth, probabilities, scam_threshold) == brute
 
 
 def test_multiclass_calibration_metrics_are_reproducible() -> None:

@@ -155,6 +155,34 @@ class BranchTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
 
+def branch_training_arguments(args: argparse.Namespace) -> TrainingArguments:
+    """Bind the custom branch target so Trainer evaluates the actual training loss."""
+    return TrainingArguments(
+        output_dir=str(args.output.parent / (args.output.name + "-trainer")),
+        learning_rate=args.learning_rate,
+        per_device_train_batch_size=args.batch_size,
+        per_device_eval_batch_size=args.eval_batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation,
+        num_train_epochs=args.epochs,
+        warmup_steps=0.05,
+        weight_decay=0.01,
+        eval_strategy="no" if args.skip_eval else "epoch",
+        save_strategy="no" if args.skip_eval else "epoch",
+        save_total_limit=1,
+        load_best_model_at_end=not args.skip_eval,
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
+        logging_steps=10,
+        report_to=[],
+        remove_unused_columns=False,
+        label_names=["targets"],
+        dataloader_pin_memory=False,
+        train_sampling_strategy=args.sampling_strategy,
+        seed=args.seed,
+        data_seed=args.seed,
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
@@ -249,29 +277,7 @@ def main() -> None:
         split="dev",
         teacher_cache=cache,
     )
-    training_args = TrainingArguments(
-        output_dir=str(args.output.parent / (args.output.name + "-trainer")),
-        learning_rate=args.learning_rate,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.eval_batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation,
-        num_train_epochs=args.epochs,
-        warmup_steps=0.05,
-        weight_decay=0.01,
-        eval_strategy="no" if args.skip_eval else "epoch",
-        save_strategy="no" if args.skip_eval else "epoch",
-        save_total_limit=1,
-        load_best_model_at_end=not args.skip_eval,
-        metric_for_best_model="eval_loss",
-        greater_is_better=False,
-        logging_steps=10,
-        report_to=[],
-        remove_unused_columns=False,
-        dataloader_pin_memory=False,
-        train_sampling_strategy=args.sampling_strategy,
-        seed=args.seed,
-        data_seed=args.seed,
-    )
+    training_args = branch_training_arguments(args)
     trainer = BranchTrainer(
         model=model,
         args=training_args,

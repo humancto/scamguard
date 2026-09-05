@@ -21,6 +21,7 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 
 from scamguard.metrics import (
     binary_safety_metrics,
+    choose_safe_abstention_threshold,
     choose_threshold,
     choose_threshold_for_gates,
     file_sha256,
@@ -332,23 +333,9 @@ def predict_with_abstention(
 def choose_safe_threshold(
     truth: np.ndarray, probabilities: np.ndarray, scam_threshold: float
 ) -> float:
-    """Fit the SAFE/UNCERTAIN abstention boundary on dev after freezing SCAM policy."""
+    """Fit the SAFE/UNCERTAIN boundary after freezing the SCAM policy."""
 
-    safe_probabilities = probabilities[:, LABELS.index("SAFE")]
-    candidates = sorted({0.0, 1.0, *(float(value) for value in safe_probabilities)})
-    ranked: list[tuple[float, float, float]] = []
-    for threshold in candidates:
-        predicted = predict_with_abstention(probabilities, scam_threshold, threshold)
-        ranked.append(
-            (
-                float(f1_score(truth, predicted, average="macro", zero_division=0)),
-                float(accuracy_score(truth, predicted)),
-                threshold,
-            )
-        )
-    # The final tie-break prefers a higher SAFE threshold: with equal measured
-    # quality, abstention is safer than forcing an unsupported SAFE verdict.
-    return max(ranked)[2]
+    return choose_safe_abstention_threshold(truth, probabilities, scam_threshold)
 
 
 def score_message(

@@ -19,12 +19,19 @@ from typing import Any
 import numpy as np
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 
-from scamguard.metrics import binary_safety_metrics, file_sha256, wilson_interval
+from scamguard.metrics import (
+    binary_safety_metrics,
+    choose_safe_abstention_threshold,
+    file_sha256,
+    wilson_interval,
+)
 
 LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 METHODS = ("arithmetic", "log_linear")
 REQUIRED_FIELDS = {"id", "split", "source", "category", "truth", "probabilities"}
 FORBIDDEN_TEXT_FIELDS = {"text", "message", "prompt", "conversation", "transcript"}
+
+choose_safe_threshold = choose_safe_abstention_threshold
 
 
 def forbidden_text_fields(value: Any) -> set[str]:
@@ -195,27 +202,6 @@ def predict_with_abstention(
     return predicted
 
 
-def choose_safe_threshold(
-    truth: np.ndarray, probabilities: np.ndarray, scam_threshold: float
-) -> float:
-    """Match the evaluator's dev-only SAFE/UNCERTAIN macro-F1 policy."""
-
-    candidates = sorted(
-        {0.0, 1.0, *(float(value) for value in probabilities[:, LABELS.index("SAFE")])}
-    )
-    ranked: list[tuple[float, float, float]] = []
-    for threshold in candidates:
-        predicted = predict_with_abstention(probabilities, scam_threshold, threshold)
-        ranked.append(
-            (
-                float(f1_score(truth, predicted, average="macro", zero_division=0)),
-                float(accuracy_score(truth, predicted)),
-                threshold,
-            )
-        )
-    return max(ranked)[2]
-
-
 def binary_dev_arrays(
     joined: list[tuple[dict[str, Any], dict[str, Any]]], probabilities: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -298,6 +284,9 @@ def fit_blend(
         raise ValueError("alpha_steps must be positive")
     left = probability_matrix(dev_joined, 0)
     right = probability_matrix(dev_joined, 1)
+    dev_truth = np.array(
+        [LABELS.index(str(left_record["truth"])) for left_record, _ in dev_joined]
+    )
     candidates = []
     matrices: dict[tuple[str, float], np.ndarray] = {}
     for method in METHODS:
@@ -314,25 +303,22 @@ def fit_blend(
                 min_recall=min_recall,
                 max_fpr=max_fpr,
             )
+            safe_threshold = choose_safe_threshold(
+                dev_truth, probabilities, float(candidate["scam_threshold"])
+            )
+            calibrated = predict_with_abstention(
+                probabilities, float(candidate["scam_threshold"]), safe_threshold
+            )
+            candidate["safe_threshold"] = safe_threshold
+            candidate["dev_accuracy"] = float(accuracy_score(dev_truth, calibrated))
+            candidate["dev_macro_f1"] = float(
+                f1_score(dev_truth, calibrated, average="macro", zero_division=0)
+            )
             candidates.append(candidate)
             matrices[(method, right_weight)] = probabilities
 
     selected = max(candidates, key=candidate_rank).copy()
     selected_probabilities = matrices[(selected["method"], selected["right_weight"])]
-    dev_truth = np.array(
-        [LABELS.index(str(left_record["truth"])) for left_record, _ in dev_joined]
-    )
-    safe_threshold = choose_safe_threshold(
-        dev_truth, selected_probabilities, float(selected["scam_threshold"])
-    )
-    calibrated = predict_with_abstention(
-        selected_probabilities, float(selected["scam_threshold"]), safe_threshold
-    )
-    selected["safe_threshold"] = safe_threshold
-    selected["dev_accuracy"] = float(accuracy_score(dev_truth, calibrated))
-    selected["dev_macro_f1"] = float(
-        f1_score(dev_truth, calibrated, average="macro", zero_division=0)
-    )
     selected["selection_used_non_dev_labels"] = False
     return selected, candidates, selected_probabilities
 
@@ -414,6 +400,27 @@ def prediction_records(
     return records
 
 
+def comparison_splits(
+    left: dict[tuple[str, str], dict[str, Any]],
+    right: dict[tuple[str, str], dict[str, Any]],
+    *,
+    dev_only: bool,
+) -> list[str]:
+    """Resolve explicitly comparable splits without silently dropping rows."""
+
+    if dev_only:
+        join_split(left, right, "dev")
+        return ["dev"]
+    if set(left) != set(right):
+        missing = sorted(set(left) - set(right))[:3]
+        extra = sorted(set(right) - set(left))[:3]
+        raise ValueError(f"ledger key mismatch: missing right={missing}, extra right={extra}")
+    splits = sorted({split for split, _ in left})
+    if "dev" not in splits:
+        raise ValueError("prediction ledgers must contain the dev split")
+    return splits
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--left", type=Path, required=True)
@@ -423,19 +430,18 @@ def main() -> None:
     parser.add_argument("--alpha-steps", type=int, default=100)
     parser.add_argument("--minimum-dev-recall", type=float, default=0.97)
     parser.add_argument("--maximum-safe-fpr", type=float, default=0.02)
+    parser.add_argument(
+        "--dev-only",
+        action="store_true",
+        help="Compare only identical dev IDs when one input also contains other splits.",
+    )
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--predictions", type=Path)
     args = parser.parse_args()
 
     left = read_prediction_ledger(args.left)
     right = read_prediction_ledger(args.right)
-    if set(left) != set(right):
-        missing = sorted(set(left) - set(right))[:3]
-        extra = sorted(set(right) - set(left))[:3]
-        raise ValueError(f"ledger key mismatch: missing right={missing}, extra right={extra}")
-    splits = sorted({split for split, _ in left})
-    if "dev" not in splits:
-        raise ValueError("prediction ledgers must contain the dev split")
+    splits = comparison_splits(left, right, dev_only=args.dev_only)
     joined_by_split = {split: join_split(left, right, split) for split in splits}
     selected, candidates, dev_probabilities = fit_blend(
         joined_by_split["dev"],
@@ -503,6 +509,8 @@ def main() -> None:
         },
         "selection_policy": {
             "fit_split": "dev",
+            "compared_splits": splits,
+            "dev_only": args.dev_only,
             "selection_used_non_dev_labels": False,
             "methods": list(METHODS),
             "alpha_steps": args.alpha_steps,
@@ -519,6 +527,19 @@ def main() -> None:
             ),
         },
         "selected": selected,
+        "best_feasible_by_macro_f1": max(
+            (
+                candidate
+                for candidate in candidates
+                if candidate["joint_dev_contract_satisfied"]
+            ),
+            key=lambda candidate: (
+                candidate["dev_macro_f1"],
+                -candidate["false_positive_rate"],
+                candidate["scam_recall"],
+            ),
+            default=None,
+        ),
         "dev_candidates": candidates,
         "split_metrics": split_metrics,
         "prediction_ledger": {

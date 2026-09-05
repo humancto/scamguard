@@ -270,6 +270,25 @@ These historical schema-v9 baselines use their original frozen thresholds. Taskm
 cannot fit a threshold or update weights; the corresponding 1,800 fitting families exist only in
 schema v10.
 
+## Qwen 0.8B Stage 6A verdict-branch experiment
+
+Reproduce the immutable curriculum, Stage-3 teacher cache, exact focal/KL branch training, and the
+development-only rejection diagnostics with:
+
+```bash
+make qwen-08b-branch-stage6-data
+make qwen-08b-branch-stage6-teacher
+make qwen-08b-branch-stage6-preflight
+make qwen-08b-branch-stage6
+make qwen-08b-branch-stage6-dev
+make qwen-08b-branch-stage6-diagnostics
+```
+
+The dev command physically permits only the unchanged `dev` split. The diagnostics consume
+text-free ledgers, compare 202 arithmetic/log-linear score paths, and never use non-dev labels for
+selection. Stage 6A fails the 97% recall floor and does not improve macro F1, so there is deliberately
+no Stage-6 regression, merge, or GGUF target.
+
 ## Native arm64 GGUF toolchain
 
 Use the exact llama.cpp revision and apply the small score-output patch before building:

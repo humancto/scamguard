@@ -36,6 +36,13 @@ test macro F1 0.7164, and prior-open BothBosu 77.30% recall / 6.54% SAFE FPR. It
 joint contract failed, stage 5 is not eligible for merge, GGUF conversion, quantization, physical-
 device benchmarking, or Hugging Face publication.
 
+Stage 6A then trained the exact first-divergent verdict branch with focal loss and Stage-3 KL
+retention. It was rejected without opening regression: dev recall was 96.89%, SAFE FPR 1.04%, and
+three-way macro F1 0.716411, slightly below Stage 3. A dev-only 202-point score interpolation found
+no feasible macro-F1 improvement over the exact Stage-3 endpoint. Its adapter SHA-256 is
+`ba2067a3ded311efa51b5239e8770163ab1f6e113e5c1ea79208c998614c61e1`. Stage 3 therefore remains
+the strongest 0.8B checkpoint, and no Qwen artifact is publication-eligible.
+
 `make qwen-08b-training-preflight` performs a separate no-update MPS forward/backward probe before
 the human audit is available. It hashes every locally resolved base-model file, requires the exact
 Qwen and Transformers commits, resolves all language-only LoRA targets, rejects visual-tower

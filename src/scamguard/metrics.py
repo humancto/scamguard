@@ -113,3 +113,56 @@ def choose_threshold_for_gates(
         ):
             return threshold
     return None
+
+
+def choose_safe_abstention_threshold(
+    truth: np.ndarray, probabilities: np.ndarray, scam_threshold: float
+) -> float:
+    """Fit ScamGuard's exact SAFE/UNCERTAIN boundary in O(n log n).
+
+    Columns and integer labels use the frozen SAFE, UNCERTAIN, SCAM order.
+    SCAM decisions are fixed first; the sweep then moves remaining rows from
+    SAFE to UNCERTAIN as the minimum SAFE probability increases.
+    """
+
+    if len(truth) != len(probabilities) or not len(truth):
+        raise ValueError("truth and probabilities must be non-empty and aligned")
+    if probabilities.ndim != 2 or probabilities.shape[1] != 3:
+        raise ValueError("probabilities must have shape N x 3")
+    safe_probabilities = probabilities[:, 0]
+    scam_fixed = probabilities[:, 2] >= scam_threshold
+    predicted = np.full(len(truth), 0, dtype=np.int64)
+    predicted[scam_fixed] = 2
+    confusion = confusion_matrix(truth, predicted, labels=[0, 1, 2]).astype(np.int64)
+
+    movable = np.flatnonzero(~scam_fixed)
+    order = movable[np.argsort(safe_probabilities[movable], kind="stable")]
+    candidates = sorted({0.0, 1.0, *(float(value) for value in safe_probabilities)})
+    best: tuple[float, float, float] | None = None
+    cursor = 0
+    for threshold in candidates:
+        while cursor < len(order) and safe_probabilities[order[cursor]] < threshold:
+            actual = int(truth[int(order[cursor])])
+            confusion[actual, 0] -= 1
+            confusion[actual, 1] += 1
+            cursor += 1
+        true_positive = np.diag(confusion).astype(np.float64)
+        false_positive = confusion.sum(axis=0) - true_positive
+        false_negative = confusion.sum(axis=1) - true_positive
+        denominator = 2.0 * true_positive + false_positive + false_negative
+        per_label = np.divide(
+            2.0 * true_positive,
+            denominator,
+            out=np.zeros_like(true_positive),
+            where=denominator != 0,
+        )
+        active = (confusion.sum(axis=0) + confusion.sum(axis=1)) > 0
+        rank = (
+            float(per_label[active].mean()),
+            float(np.trace(confusion) / len(truth)),
+            threshold,
+        )
+        if best is None or rank > best:
+            best = rank
+    assert best is not None
+    return best[2]

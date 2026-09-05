@@ -7,7 +7,10 @@ from pathlib import Path
 
 import torch
 
-from training.train_qwen_branch_lora import branch_experiment_errors
+from training.train_qwen_branch_lora import (
+    branch_experiment_errors,
+    branch_training_arguments,
+)
 from training.train_qwen_lora import LANGUAGE_LORA_TARGETS, adapter_identity
 
 TRANSFORMERS_REVISION = "0c92811846095910816a87aca50050d10c545270"
@@ -167,3 +170,12 @@ def test_branch_trainer_loss_has_gradients() -> None:
     loss.backward()
     assert logits.grad is not None
     assert torch.isfinite(logits.grad).all()
+
+
+def test_branch_training_arguments_bind_custom_eval_target(tmp_path: Path) -> None:
+    args, _config = fixture(tmp_path)
+    training_args = branch_training_arguments(args)
+    assert training_args.label_names == ["targets"]
+    assert training_args.eval_strategy.value == "epoch"
+    assert training_args.load_best_model_at_end is True
+    assert training_args.metric_for_best_model == "eval_loss"
