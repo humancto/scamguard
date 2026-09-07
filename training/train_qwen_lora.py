@@ -474,6 +474,14 @@ def main() -> None:
     )
     parser.add_argument("--resume-from-checkpoint")
     parser.add_argument("--seed", type=int, default=20260820)
+    parser.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help=(
+            "Verify the frozen command, artifacts, and requested accelerator "
+            "without loading weights."
+        ),
+    )
     args = parser.parse_args()
     experiment_config: dict[str, Any] | None = None
     if args.experiment_config is not None:
@@ -489,6 +497,11 @@ def main() -> None:
             "--require-mps was set, but torch.backends.mps.is_available() is false. "
             "Run outside a restricted sandbox or choose an explicit CPU workflow."
         )
+    if args.preflight_only:
+        if experiment_config is None:
+            raise RuntimeError("--preflight-only requires --experiment-config")
+        print("frozen experiment preflight passed")
+        return
     print(f"training accelerator: {'mps' if mps_available else 'cpu'}")
 
     processor = AutoProcessor.from_pretrained(

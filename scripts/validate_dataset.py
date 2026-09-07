@@ -81,16 +81,30 @@ TRUSTED_POSITIVE_ONLY_SOURCES = {
         "provenance_class": "real_scam_call_or_autodialer_transcript",
     }
 }
+TRUSTED_PUBLISHER_SYNTHETIC_SOURCES = {
+    "shakeleoatmeal_phone_scam_synthetic": {
+        "license": "MIT",
+        "synthetic_method": "publisher_generated_multi_turn_phone_dialogue",
+        "source_repository": "shakeleoatmeal/phone-scam-detection-synthetic",
+        "source_revision": "27a1f6d0cf21dda995130d221383900b060dbcc9",
+        "metadata_used_as_model_input": False,
+    }
+}
 
 
 def has_scam_label_evidence(row: dict[str, object]) -> bool:
     if extract_signal_matches(str(row["text"])):
         return True
     contract = TRUSTED_POSITIVE_ONLY_SOURCES.get(str(row.get("source")))
-    if contract is None:
-        return False
-    return all(row.get(field) == expected for field, expected in contract.items()) and bool(
-        str(row.get("source_record_id", "")).strip()
+    if contract is not None:
+        return all(row.get(field) == expected for field, expected in contract.items()) and bool(
+            str(row.get("source_record_id", "")).strip()
+        )
+    synthetic_contract = TRUSTED_PUBLISHER_SYNTHETIC_SOURCES.get(str(row.get("source")))
+    return bool(
+        synthetic_contract
+        and all(row.get(field) == expected for field, expected in synthetic_contract.items())
+        and row.get("source_label") == "publisher_binary:1"
     )
 
 
@@ -286,6 +300,8 @@ def main() -> None:
         split_names.append("multidogo_annotation_dev")
     if (args.data / "multidogo_annotation_test.jsonl").is_file():
         split_names.append("multidogo_annotation_test")
+    if (args.data / "phone_scam_validation.jsonl").is_file():
+        split_names.append("phone_scam_validation")
     rows_by_split = {split: read_rows(args.data / f"{split}.jsonl") for split in split_names}
     errors: list[str] = []
     manifest = json.loads((args.data / "manifest.json").read_text(encoding="utf-8"))
@@ -376,9 +392,7 @@ def main() -> None:
                 if not isinstance(row.get("schema24_privacy_replacement_counts"), dict):
                     errors.append(f"{split}:{index} lacks schema-v24 privacy replacement counts")
                 if mask_contextual_sensitive_values(str(row["text"])).changed:
-                    errors.append(
-                        f"{split}:{index} retains a contextual short sensitive value"
-                    )
+                    errors.append(f"{split}:{index} retains a contextual short sensitive value")
             for field in ("id", "text", "source", "source_label", "license", "family_id"):
                 if not isinstance(row[field], str) or not str(row[field]).strip():
                     errors.append(f"{split}:{index} empty or non-string {field}")
@@ -393,13 +407,20 @@ def main() -> None:
             if row["is_synthetic"] and REAL_PII.search(str(row["text"])):
                 errors.append(f"synthetic PII-like value: {split}:{index}")
             if row["is_synthetic"]:
-                if row.get("synthetic_method") not in SYNTHETIC_METHODS:
-                    errors.append(f"synthetic method missing or unexpected: {split}:{index}")
-                reference = str(row.get("pattern_reference", ""))
-                if not reference.startswith(SYNTHETIC_REFERENCE_PREFIXES):
-                    errors.append(
-                        f"synthetic pattern reference is not authoritative: {split}:{index}"
-                    )
+                publisher_contract = TRUSTED_PUBLISHER_SYNTHETIC_SOURCES.get(str(row.get("source")))
+                if publisher_contract:
+                    if not all(
+                        row.get(field) == expected for field, expected in publisher_contract.items()
+                    ):
+                        errors.append(f"publisher synthetic contract differs: {split}:{index}")
+                else:
+                    if row.get("synthetic_method") not in SYNTHETIC_METHODS:
+                        errors.append(f"synthetic method missing or unexpected: {split}:{index}")
+                    reference = str(row.get("pattern_reference", ""))
+                    if not reference.startswith(SYNTHETIC_REFERENCE_PREFIXES):
+                        errors.append(
+                            f"synthetic pattern reference is not authoritative: {split}:{index}"
+                        )
             if not row["is_synthetic"] and (
                 REAL_PII.search(str(row["text"])) or FORUM_UNMASKED_PHONE.search(str(row["text"]))
             ):

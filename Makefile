@@ -5,7 +5,9 @@
 .PHONY: qwen-08b-boundary-separation-data qwen-08b-boundary-separation-token-audit qwen-08b-boundary-separation-freeze qwen-08b-boundary-separation qwen-08b-boundary-separation-eval qwen-08b-boundary-separation-gates
 .PHONY: qwen-08b-precision-recovery-data qwen-08b-precision-recovery-token-audit qwen-08b-precision-recovery-freeze qwen-08b-precision-recovery qwen-08b-precision-recovery-eval qwen-08b-precision-recovery-gates
 .PHONY: qwen-08b-branch-stage6-data qwen-08b-branch-stage6-teacher qwen-08b-branch-stage6-preflight qwen-08b-branch-stage6 qwen-08b-branch-stage6-dev qwen-08b-branch-stage6-diagnostics
+.PHONY: qwen-08b-phone-stage7-data qwen-08b-phone-stage7-token-audit qwen-08b-phone-stage7-freeze qwen-08b-phone-stage7-preflight qwen-08b-phone-stage7 qwen-08b-phone-stage7-dev qwen-08b-phone-stage7-eval qwen-08b-phone-stage7-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
+.PHONY: phone-scam-synthetic-fetch phone-scam-synthetic schema25-full-call-curriculum encoder-schema25-cache encoder-schema25-preflight encoder-schema25-full-call-curriculum encoder-schema25-gates
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -69,6 +71,13 @@ QWEN08_BRANCH_OUTPUT ?= artifacts/checkpoints/qwen35-08b-branch-stage6a-lora
 QWEN08_BRANCH_DEV_REPORT ?= reports/runs/qwen35-08b-branch-stage6a-dev.json
 QWEN08_BRANCH_ERROR_REPORT ?= reports/runs/qwen35-08b-branch-stage6a-dev-errors.json
 QWEN08_BRANCH_BLEND_REPORT ?= reports/runs/qwen35-08b-stage3-stage6a-score-blend.json
+QWEN08_PHONE_DATA ?= data/experiments/qwen35-08b-phone-generalization-stage7
+QWEN08_PHONE_TOKEN_AUDIT ?= reports/runs/qwen35-08b-phone-generalization-stage7-token-audit.json
+QWEN08_PHONE_CONFIG ?= configs/qwen35-08b-phone-generalization-stage7.json
+QWEN08_PHONE_OUTPUT ?= artifacts/checkpoints/qwen35-08b-phone-generalization-stage7-lora
+QWEN08_PHONE_DEV_REPORT ?= reports/runs/qwen35-08b-phone-generalization-stage7-dev.json
+QWEN08_PHONE_REPORT ?= reports/runs/qwen35-08b-phone-generalization-stage7-regression.json
+QWEN08_PHONE_GATE_REPORT ?= reports/runs/qwen35-08b-phone-generalization-stage7-regression-gates.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -702,6 +711,102 @@ qwen-08b-branch-stage6-diagnostics: qwen-08b-branch-stage6-dev
 		--alpha-steps 100 --minimum-dev-recall 0.97 --maximum-safe-fpr 0.02 \
 		--dev-only --report "$(QWEN08_BRANCH_BLEND_REPORT)"
 
+qwen-08b-phone-stage7-data:
+	@if [ ! -f "$(QWEN08_PHONE_DATA)/manifest.json" ]; then \
+		$(PYTHON_BIN) scripts/build_qwen_phone_curriculum.py \
+			--parent "$(QWEN08_RECOVERY_DATA)" \
+			--phone-manifest data/external/phone_scam_synthetic/manifest.json \
+			--phone-train data/external/phone_scam_synthetic/train.jsonl \
+			--output "$(QWEN08_PHONE_DATA)" \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--max-length 640 --local-files-only \
+			--overlap-reference "$(SCHEMA24_AI_OVERLAY)/dev.jsonl" \
+			--overlap-reference "$(SCHEMA24_AI_OVERLAY)/test.jsonl" \
+			--overlap-reference data/external/scam_dialogue/scam_dialogue_validation.jsonl \
+			--overlap-reference data/external/scam_dialogue/ood_scam_dialogue.jsonl \
+			--overlap-reference data/external/multidogo/multidogo_call_validation.jsonl \
+			--overlap-reference data/processed/primary_test_v8.jsonl; \
+	fi
+
+qwen-08b-phone-stage7-token-audit: qwen-08b-phone-stage7-data
+	@if [ ! -f "$(QWEN08_PHONE_TOKEN_AUDIT)" ]; then \
+		$(PYTHON_BIN) scripts/audit_qwen_tokens.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --data "$(QWEN08_PHONE_DATA)/qwen_sft" \
+			--max-length 640 --output "$(QWEN08_PHONE_TOKEN_AUDIT)"; \
+	fi
+
+qwen-08b-phone-stage7-freeze: qwen-08b-phone-stage7-token-audit
+	@if [ ! -f "$(QWEN08_PHONE_CONFIG)" ]; then \
+		$(PYTHON_BIN) scripts/freeze_qwen08_call_robustness.py \
+			--curriculum "$(QWEN08_PHONE_DATA)" \
+			--token-audit "$(QWEN08_PHONE_TOKEN_AUDIT)" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--source-report "$(QWEN08_RECOVERY_REPORT)" \
+			--output "$(QWEN08_PHONE_CONFIG)" \
+			--checkpoint-output "$(QWEN08_PHONE_OUTPUT)" \
+			--experiment-id sg-qwen35-08b-phone-generalization-stage7-v1 \
+			--expected-curriculum-kind qwen_phone_generalization_stage7_curriculum \
+			--role "development-only rights-clear phone generalization continuation" \
+			--seed 20260906 --learning-rate 0.000001; \
+	fi
+
+qwen-08b-phone-stage7-preflight: qwen-08b-phone-stage7-freeze
+	$(PYTHON_BIN) training/train_qwen_lora.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --experiment-config "$(QWEN08_PHONE_CONFIG)" \
+		--data "$(QWEN08_PHONE_DATA)/qwen_sft" \
+		--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+		--epochs 1 --batch-size 4 --eval-batch-size 4 \
+		--gradient-accumulation 4 --learning-rate 0.000001 --max-length 640 \
+		--sampling-strategy group_by_length --seed 20260906 --require-mps \
+		--output "$(QWEN08_PHONE_OUTPUT)" --preflight-only
+
+qwen-08b-phone-stage7: qwen-08b-phone-stage7-preflight
+	@if [ ! -f "$(QWEN08_PHONE_OUTPUT)/adapter_model.safetensors" ]; then \
+		$(PYTHON_BIN) training/train_qwen_lora.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --experiment-config "$(QWEN08_PHONE_CONFIG)" \
+			--data "$(QWEN08_PHONE_DATA)/qwen_sft" \
+			--initial-adapter "$(QWEN08_RECOVERY_OUTPUT)" \
+			--epochs 1 --batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --learning-rate 0.000001 --max-length 640 \
+			--sampling-strategy group_by_length --seed 20260906 --require-mps \
+			--output "$(QWEN08_PHONE_OUTPUT)"; \
+	fi
+
+qwen-08b-phone-stage7-dev: qwen-08b-phone-stage7
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_PHONE_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external --splits dev \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
+		--report "$(QWEN08_PHONE_DEV_REPORT)"
+
+qwen-08b-phone-stage7-eval: qwen-08b-phone-stage7
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_PHONE_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external \
+		--splits $(QWEN08_FULL_EVAL_SPLITS) phone_scam_validation \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps \
+		--report "$(QWEN08_PHONE_REPORT)"
+
+qwen-08b-phone-stage7-gates: qwen-08b-phone-stage7-eval
+	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
+		--report "$(QWEN08_PHONE_REPORT)" \
+		--output "$(QWEN08_PHONE_GATE_REPORT)"
+
 qwen-08b-call-robustness-merge: qwen-08b-call-robustness-gates
 	$(PYTHON_BIN) training/merge_qwen_adapter.py \
 		--base Qwen/Qwen3.5-0.8B \
@@ -927,6 +1032,26 @@ multidogo-annotations:
 
 multidogo-annotation-curriculum: multidogo multidogo-annotations
 	$(PYTHON_BIN) scripts/build_multidogo_annotation_curriculum.py
+
+phone-scam-synthetic-fetch:
+	$(PYTHON_BIN) scripts/fetch_phone_scam_synthetic.py
+
+phone-scam-synthetic: phone-scam-synthetic-fetch
+	@if [ -f data/external/phone_scam_synthetic/manifest.json ]; then \
+		echo "Reusing immutable phone-scam synthetic derivative; manifest will be rechecked"; \
+	else \
+		$(PYTHON_BIN) scripts/build_phone_scam_synthetic.py; \
+	fi
+
+schema25-full-call-curriculum: schema24-annotated-hard-negatives phone-scam-synthetic
+	@if [ -f data/experiments/schema25-full-call-curriculum/processed/manifest.json ]; then \
+		echo "Reusing immutable schema-v25 experiment; validation will recheck it"; \
+	else \
+		$(PYTHON_BIN) scripts/build_schema25_full_call_curriculum.py; \
+	fi
+	$(PYTHON_BIN) scripts/validate_dataset.py \
+		--expected-schema-version 25 --sealed-data data/processed \
+		--data data/experiments/schema25-full-call-curriculum/processed
 
 schema22-service-evidence: schema20-action-states multidogo
 	@if [ -f data/experiments/schema22-service-evidence/processed/manifest.json ]; then \
@@ -1156,6 +1281,38 @@ encoder-schema23-evidence-compaction: encoder-schema23-preflight
 encoder-schema23-gates:
 	$(PYTHON_BIN) scripts/check_encoder_schema23_gates.py \
 		--output reports/runs/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right.gates.json
+
+encoder-schema25-cache: schema25-full-call-curriculum
+	$(PYTHON_BIN) training/cache_encoder_teacher_logits.py --require-mps \
+		--checkpoint artifacts/checkpoints/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right \
+		--data data/experiments/schema25-full-call-curriculum/processed/retention/parent_train.jsonl \
+		--output data/experiments/schema25-full-call-curriculum/teacher/schema23-parent-verdict-logits.jsonl \
+		--manifest data/experiments/schema25-full-call-curriculum/teacher/manifest.json \
+		--dialogue-policy speaker-neutral-evidence-recent-v2 --max-length 256 --batch-size 32
+
+encoder-schema25-preflight: encoder-schema25-cache
+	$(PYTHON_BIN) scripts/verify_encoder_schema25_config.py
+
+encoder-schema25-full-call-curriculum: encoder-schema25-preflight
+	$(PYTHON_BIN) training/train_encoder.py \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external \
+		--init-checkpoint artifacts/checkpoints/sg-modernbert-schema23-evidencecompact-ret4-aw05-vw025-lr2e6-right \
+		--teacher-logits data/experiments/schema25-full-call-curriculum/teacher/schema23-parent-verdict-logits.jsonl \
+		--teacher-manifest data/experiments/schema25-full-call-curriculum/teacher/manifest.json \
+		--epochs 1 --batch-size 16 --gradient-accumulation 1 --learning-rate 1e-6 \
+		--max-length 256 --truncation-side right --dialogue-policy speaker-neutral-evidence-recent-v2 \
+		--binary-loss-weight 1 --retention-weight 4 --retention-temperature 2 \
+		--action-targets sensitive_action_language,requested_disclosure_or_transfer,caller_controls_target,official_self_navigation,independent_verification,pressure_or_secrecy,irreversible_action \
+		--action-loss-weight 0.5 --action-verdict-weight 0.25 --seed 20260906 \
+		--output artifacts/checkpoints/sg-modernbert-schema25-fullcall-phone-ret4-aw05-vw025-lr1e6-right \
+		--report reports/runs/sg-modernbert-schema25-fullcall-phone-ret4-aw05-vw025-lr1e6-right.json
+	$(MAKE) encoder-schema25-gates
+
+encoder-schema25-gates:
+	$(PYTHON_BIN) scripts/check_encoder_schema23_gates.py \
+		--config configs/encoder-schema25-fullcall-phone-ret4-aw05-vw025-lr1e6-right.json \
+		--output reports/runs/sg-modernbert-schema25-fullcall-phone-ret4-aw05-vw025-lr1e6-right.gates.json
 
 encoder-schema23-ledger:
 	test -f "$(ENCODER23_OUTPUT)/model.safetensors"

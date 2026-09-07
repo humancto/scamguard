@@ -108,7 +108,7 @@ def freeze(
             "scope": "language tower only; asserted at runtime",
         },
         "data": {
-            "schema_version": 24,
+            "schema_version": manifest["schema_version"],
             "processed_directory": str(curriculum),
             "manifest_sha256": file_sha256(manifest_path),
             "train_jsonl_sha256": file_sha256(train_path),

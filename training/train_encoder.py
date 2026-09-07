@@ -1268,6 +1268,7 @@ def main() -> None:
         "multidogo_state_validation",
         "action_calibration",
         "ftc_pattern_validation",
+        "phone_scam_validation",
     ):
         path = args.data / f"{split}.jsonl"
         if path.exists():
@@ -1658,6 +1659,7 @@ def main() -> None:
         "multidogo_state_validation",
         "action_calibration",
         "ftc_pattern_validation",
+        "phone_scam_validation",
     ):
         if split not in rows:
             continue

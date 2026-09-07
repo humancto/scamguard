@@ -98,3 +98,13 @@ def test_full_gate_rejects_dynamic_sequence_shapes() -> None:
     result = evaluate_gates(report)
 
     assert "frozen quality sequence bucket size" in result["failed_gates"]
+
+
+def test_full_gate_applies_phone_synthetic_gates_when_present() -> None:
+    report = passing_report()
+    report["phone_scam_validation"] = {"binary_safety": binary(recall=0.91, fpr=0.11)}
+
+    result = evaluate_gates(report)
+
+    assert result["total_gates"] == 41
+    assert "publisher phone synthetic validation SAFE FPR" in result["failed_gates"]

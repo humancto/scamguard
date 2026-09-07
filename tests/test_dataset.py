@@ -403,3 +403,33 @@ def test_validator_rejects_incomplete_positive_only_source_contract() -> None:
     }
 
     assert not has_scam_label_evidence(row)
+
+
+def test_validator_accepts_exact_publisher_synthetic_source_contract() -> None:
+    row = {
+        "text": "ordinary dialogue without a static rule signal",
+        "source": "shakeleoatmeal_phone_scam_synthetic",
+        "license": "MIT",
+        "synthetic_method": "publisher_generated_multi_turn_phone_dialogue",
+        "source_repository": "shakeleoatmeal/phone-scam-detection-synthetic",
+        "source_revision": "27a1f6d0cf21dda995130d221383900b060dbcc9",
+        "metadata_used_as_model_input": False,
+        "source_label": "publisher_binary:1",
+    }
+
+    assert has_scam_label_evidence(row)
+
+
+def test_validator_rejects_drifted_publisher_synthetic_revision() -> None:
+    row = {
+        "text": "ordinary dialogue without a static rule signal",
+        "source": "shakeleoatmeal_phone_scam_synthetic",
+        "license": "MIT",
+        "synthetic_method": "publisher_generated_multi_turn_phone_dialogue",
+        "source_repository": "shakeleoatmeal/phone-scam-detection-synthetic",
+        "source_revision": "main",
+        "metadata_used_as_model_input": False,
+        "source_label": "publisher_binary:1",
+    }
+
+    assert not has_scam_label_evidence(row)

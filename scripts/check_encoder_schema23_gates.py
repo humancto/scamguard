@@ -215,6 +215,22 @@ def evaluate_gates(config: dict[str, Any], report: dict[str, Any]) -> dict[str, 
         ),
         "bothbosu_fpr_max",
     )
+    if "phone_scam_validation_recall_min" in quality:
+        minimum(
+            "phone-scam synthetic validation recall",
+            nested(report, "phone_scam_validation", "binary_safety", "scam_recall"),
+            "phone_scam_validation_recall_min",
+        )
+        maximum(
+            "phone-scam synthetic validation SAFE FPR",
+            nested(
+                report,
+                "phone_scam_validation",
+                "binary_safety",
+                "false_positive_rate",
+            ),
+            "phone_scam_validation_fpr_max",
+        )
 
     passed = all(bool(gate["passed"]) for gate in gates)
     return {

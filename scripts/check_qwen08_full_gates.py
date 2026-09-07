@@ -153,6 +153,22 @@ def evaluate_gates(report: dict[str, Any]) -> dict[str, object]:
         ),
         0.02,
     )
+    if "phone_scam_validation" in report:
+        minimum(
+            "publisher phone synthetic validation scam recall",
+            nested(report, "phone_scam_validation", "binary_safety", "scam_recall"),
+            0.90,
+        )
+        maximum(
+            "publisher phone synthetic validation SAFE FPR",
+            nested(
+                report,
+                "phone_scam_validation",
+                "binary_safety",
+                "false_positive_rate",
+            ),
+            0.10,
+        )
     passed = all(bool(gate["passed"]) for gate in gates)
     return {
         "quality_status": "passed" if passed else "rejected",

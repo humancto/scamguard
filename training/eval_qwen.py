@@ -788,6 +788,7 @@ def main() -> None:
         "ftc_pattern_validation",
         "multidogo_annotation_dev",
         "multidogo_annotation_test",
+        "phone_scam_validation",
     ):
         if (args.data / f"{split}.jsonl").exists():
             split_paths[split] = args.data / f"{split}.jsonl"

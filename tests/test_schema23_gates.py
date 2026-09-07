@@ -7,6 +7,10 @@ import pytest
 
 from scripts.check_encoder_schema23_gates import CONFIG_PATH, evaluate_gates
 
+SCHEMA25_CONFIG_PATH = Path(
+    "configs/encoder-schema25-fullcall-phone-ret4-aw05-vw025-lr1e6-right.json"
+)
+
 
 def binary(recall: float = 1.0, fpr: float = 0.0) -> dict[str, float]:
     return {"scam_recall": recall, "false_positive_rate": fpr}
@@ -86,3 +90,15 @@ def test_schema23_gate_checker_rejects_missing_domain() -> None:
 
     with pytest.raises(ValueError, match="six-domain contract"):
         evaluate_gates(config(), report)
+
+
+def test_schema25_gate_checker_adds_phone_recall_and_fpr_gates() -> None:
+    schema25_config = json.loads(SCHEMA25_CONFIG_PATH.read_text(encoding="utf-8"))
+    report = passing_report()
+    report["phone_scam_validation"] = {"binary_safety": binary(recall=0.95, fpr=0.11)}
+
+    result = evaluate_gates(schema25_config, report)
+
+    assert result["total_gates"] == 38
+    assert result["quality_status"] == "rejected"
+    assert "phone-scam synthetic validation SAFE FPR" in result["failed_gates"]
