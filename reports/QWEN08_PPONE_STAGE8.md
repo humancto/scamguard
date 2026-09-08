@@ -95,12 +95,15 @@ Promotion-report SHA-256 identities are:
 
 ## Next experiment boundary
 
-Do not run another learning-rate interpolation or increase the PPoNE dose unchanged. First audit
-the exact Stage 7-to-Stage 8b transitions for the one lost PPoNE scam, the three recovered
-abstentions, and the added phone SAFE alarm. Build paired, family-separated examples that hold the
-surface form constant while changing only the evidentiary fact: verified scam action, ambiguous
-automated solicitation, or legitimate service action. Preserve Stage 7 scam and phone-safe anchors
-at higher sampling weight, then require the same development and open-promotion gates.
+Do not run another learning-rate interpolation or increase the PPoNE dose unchanged. The completed
+text-free transition and publisher-label audit is documented in
+`reports/PHONE_SOURCE_LABEL_QUALITY.md`. It localizes the lost PPoNE scam, three recovered
+abstentions, and the added phone SAFE alarm. The phone alarm is the only changed SAFE decision and
+belongs to a predeclared high-risk caller-action stratum; the other 152 publisher-SAFE rows have
+identical Stage 7 and Stage 8b alarms. Stage 9 must exclude flagged phone-training rows and build
+paired, family-separated examples that hold surface form constant while changing only the
+evidentiary fact: verified scam action, ambiguous automated solicitation, or legitimate service
+action. It must preserve Stage 7 government/identity SCAM and ordinary phone-safe anchors.
 
 Only a promoted single adapter may enter the full regression. The PPoNE test, publisher phone test,
 primary sealed benchmark, quantization, physical-device latency, independent human review, and

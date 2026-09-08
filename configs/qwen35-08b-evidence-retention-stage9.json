@@ -1,0 +1,80 @@
+{
+  "experiment_id": "sg-qwen35-08b-evidence-retention-stage9-v1",
+  "run_kind": "exploratory_continuation",
+  "role": "quality-filtered phone and real-robocall evidence retention",
+  "release_eligible": false,
+  "publication_authorized": false,
+  "checkpoint_output": "artifacts/checkpoints/qwen35-08b-evidence-retention-stage9-lora",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "transformers_revision": "0c92811846095910816a87aca50050d10c545270",
+  "initial_adapter": {
+    "path": "artifacts/checkpoints/qwen35-08b-phone-generalization-stage7-lora",
+    "adapter_model_sha256": "14f1d2bf121e76fa158cea722416994ec9cbfbc545956d24b9693b7808441357",
+    "adapter_config_sha256": "27e4683d15e5335ffa0cb6e11640f0812a29b324a4940adcc3634ec86e2c019b"
+  },
+  "source_evaluation": {
+    "path": "reports/runs/qwen35-08b-phone-generalization-stage7-regression.json",
+    "sha256": "5d9b1b30e22c83e07d7a19a1b71ebbb3c6c07462a1c0d5a1ffb8ba1485ab4cbb",
+    "status": "rejected; regression evidence only for this continuation"
+  },
+  "seed": 20260911,
+  "epochs": 1.0,
+  "batch_size": 4,
+  "eval_batch_size": 4,
+  "gradient_accumulation": 4,
+  "gradient_checkpointing": true,
+  "trainer_eval": true,
+  "evaluation_policy": "development loss, then frozen regression and selection diagnostics; primary_test_v8 remains unopened until this adapter and threshold policy are frozen",
+  "learning_rate": 2e-06,
+  "warmup_fraction": 0.05,
+  "weight_decay": 0.01,
+  "max_length": 640,
+  "sampling": "group_by_length",
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": [
+      "in_proj_qkv",
+      "in_proj_z",
+      "in_proj_b",
+      "in_proj_a",
+      "out_proj",
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "scope": "language tower only; asserted at runtime"
+  },
+  "data": {
+    "schema_version": 25,
+    "processed_directory": "data/experiments/qwen35-08b-evidence-retention-stage9",
+    "manifest_sha256": "c727697c342b1ee91600d825a89ba7ce9131a2fae65ea7b6d9e2bd57cead9095",
+    "train_jsonl_sha256": "1beaf29fd2cfa0900daac87f7faea6d61fa9f803933537ad4054929fe2ae9d1c",
+    "dev_jsonl_sha256": "66229ec4bdc47b26e2bfc557a36dad645c5a6a22f340289c3a55f4055b1e009e",
+    "train_examples": 1239,
+    "dev_examples": 2634,
+    "train_families": 884,
+    "dev_families": 580,
+    "sft_build_manifest_path": "data/experiments/qwen35-08b-evidence-retention-stage9/qwen_sft/manifest.json",
+    "sft_build_manifest_sha256": "ccae55ff6841b50a2b6823c56a79b13a946830c93149c3c5474e91f4c418896b",
+    "token_length_audit": {
+      "report_path": "reports/runs/qwen35-08b-evidence-retention-stage9-token-audit.json",
+      "report_sha256": "3888057679a182eccb97e5d67e7ec469c211c4762a77547ddf78e6de120c333f",
+      "examples": 3873,
+      "full_p95": 314,
+      "full_p99": 556,
+      "full_max": 638,
+      "full_over_max_length": 0,
+      "minimum_supervised_tokens": 25
+    },
+    "held_rows_used_for_fitting": 0,
+    "primary_test_rows_used_for_fitting": 0,
+    "bothbosu_rows_used_for_fitting": 0
+  }
+}

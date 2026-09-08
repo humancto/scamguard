@@ -74,6 +74,8 @@ endpoint-only score-blend diagnostic are in
 The licensed PPoNE curriculum, three frozen Stage 8 learning-rate screens, promotion failures, and
 the resulting next-experiment boundary are in
 [reports/QWEN08_PPONE_STAGE8.md](reports/QWEN08_PPONE_STAGE8.md).
+The caller-turn-aware publisher-label audit and exact Stage 7/Stage 8b transition localization are
+in [reports/PHONE_SOURCE_LABEL_QUALITY.md](reports/PHONE_SOURCE_LABEL_QUALITY.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).

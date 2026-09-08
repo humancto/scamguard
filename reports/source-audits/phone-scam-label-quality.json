@@ -1,0 +1,4313 @@
+{
+  "artifact_schema_version": 1,
+  "contains_message_text": false,
+  "policy": {
+    "automatic_relabeling_allowed": false,
+    "test_inspected": false,
+    "safe_action_conflicts_require_review_or_quarantine": true,
+    "weak_scam_evidence_requires_review_or_quarantine": true,
+    "generation_artifacts_require_quarantine": true
+  },
+  "inputs": [
+    {
+      "path": "data/external/phone_scam_synthetic/train.jsonl",
+      "sha256": "7e54e5a2a547e3ab782dac4557a63d5e822917b3a98580333615c673149d5762",
+      "rows": 1190
+    },
+    {
+      "path": "data/external/phone_scam_synthetic/validation.jsonl",
+      "sha256": "d2ae0c61278d84a709b24b667590416af08b53e94b548c3570f2046269418c3c",
+      "rows": 344
+    }
+  ],
+  "rows": 1534,
+  "counts": {
+    "train:SAFE": 588,
+    "train:SCAM": 602,
+    "validation:SAFE": 170,
+    "validation:SCAM": 174
+  },
+  "variation_style_counts": {
+    "train": {
+      "SAFE:detailed_helpful": 180,
+      "SAFE:efficient_professional": 206,
+      "SAFE:standard_professional": 202,
+      "SCAM:direct": 203,
+      "SCAM:somewhat_subtle": 204,
+      "SCAM:very_subtle": 195
+    },
+    "validation": {
+      "SAFE:detailed_helpful": 55,
+      "SAFE:efficient_professional": 56,
+      "SAFE:standard_professional": 59,
+      "SCAM:direct": 56,
+      "SCAM:somewhat_subtle": 57,
+      "SCAM:very_subtle": 61
+    }
+  },
+  "risk_reason_counts": {
+    "train:SAFE": {
+      "caller_requests_code_return": 10,
+      "caller_requests_payment": 16,
+      "caller_requests_remote_access": 1,
+      "caller_requests_sensitive_value": 87,
+      "caller_sends_or_directs_link": 122
+    },
+    "train:SCAM": {
+      "caller_requests_code_return": 4,
+      "caller_requests_payment": 21,
+      "caller_requests_sensitive_value": 345,
+      "caller_sends_or_directs_link": 25
+    },
+    "validation:SAFE": {
+      "caller_requests_code_return": 8,
+      "caller_requests_payment": 5,
+      "caller_requests_sensitive_value": 19,
+      "caller_sends_or_directs_link": 33
+    },
+    "validation:SCAM": {
+      "caller_requests_payment": 5,
+      "caller_requests_remote_access": 2,
+      "caller_requests_sensitive_value": 92,
+      "caller_sends_or_directs_link": 9
+    }
+  },
+  "validation_index": [
+    {
+      "id": "phone-scam-synthetic-0099a8a532e1f6ae",
+      "publisher_label": "SCAM",
+      "text_sha256": "d1efd8057f1c4bc407cbf28a1bc63f759c0388a2c806eeb8de3dea35a8aaa39e"
+    },
+    {
+      "id": "phone-scam-synthetic-01a78f48dc48ea22",
+      "publisher_label": "SAFE",
+      "text_sha256": "2b0012b51f5ba7f16f82982327f51cdcd93a67e1ae3978808656da7f2977833e"
+    },
+    {
+      "id": "phone-scam-synthetic-026f8b5a24401df5",
+      "publisher_label": "SAFE",
+      "text_sha256": "24ae4866e7493b2c32cc7f52a76067bf59596ae871f30937ec9eb7be5935410e"
+    },
+    {
+      "id": "phone-scam-synthetic-0372e18af954d881",
+      "publisher_label": "SCAM",
+      "text_sha256": "df521decb28eea3a2d6b9618a180162c6db326e55aca0cac92955cfe26e69a40"
+    },
+    {
+      "id": "phone-scam-synthetic-04a1ac6ec323a453",
+      "publisher_label": "SCAM",
+      "text_sha256": "f2ea24c5fd0f6d87bc7cd26b7fdc226bbf09690fa97dfda97389b44fd780ec21"
+    },
+    {
+      "id": "phone-scam-synthetic-04f2cae24eafd003",
+      "publisher_label": "SAFE",
+      "text_sha256": "9c1b4dfb28a3159f4f904f5b267f6ab957a0ea1e13a974d62715da0bc106fe3d"
+    },
+    {
+      "id": "phone-scam-synthetic-054d39dbd4be8099",
+      "publisher_label": "SAFE",
+      "text_sha256": "f3386d1313cb931fdd6f71f55b0e59400a91663a99959361d248cb89b38f0b3b"
+    },
+    {
+      "id": "phone-scam-synthetic-05893b1b4702b9d0",
+      "publisher_label": "SAFE",
+      "text_sha256": "332a6d4882b5a4455ae958822a5b8578cc2b8c2d188c56ff5e04852c1e086e2b"
+    },
+    {
+      "id": "phone-scam-synthetic-0693ae3766fea708",
+      "publisher_label": "SCAM",
+      "text_sha256": "419630ef30ddf1d961654d38981df3df7a5a606467a56856df9b82568ff7657f"
+    },
+    {
+      "id": "phone-scam-synthetic-06b8c74723230379",
+      "publisher_label": "SCAM",
+      "text_sha256": "822f54d287e5e71bf616d1f1eaa1fc4c2b94f19e7f1fa23f54f06cb5ff671ba8"
+    },
+    {
+      "id": "phone-scam-synthetic-079a59feae5d3bf5",
+      "publisher_label": "SCAM",
+      "text_sha256": "2f278ce094c43e753b59d7f6167d22262720b76ddb4cd3d9378378fca587d515"
+    },
+    {
+      "id": "phone-scam-synthetic-08650368c5adc8d9",
+      "publisher_label": "SCAM",
+      "text_sha256": "ee677638dcbd7c2622e78ac64dd3597a4c134cc47943abe866492bc58ff8bebd"
+    },
+    {
+      "id": "phone-scam-synthetic-091e7547d3d835dd",
+      "publisher_label": "SAFE",
+      "text_sha256": "51707754c0a6449770ac0856c1e816d698a1cd6938c2ee92d8e7ac6d4e967407"
+    },
+    {
+      "id": "phone-scam-synthetic-0944c95c179652e6",
+      "publisher_label": "SAFE",
+      "text_sha256": "13cc98967cb2267c8478659dc036407aed71bff0f2a6bb40730e8b54ba01ccd2"
+    },
+    {
+      "id": "phone-scam-synthetic-0992939323f2c5ff",
+      "publisher_label": "SCAM",
+      "text_sha256": "bfe1f230003991f396796cf34378d6fb19c078f4e744cc04ec2a4fc7bd3070f9"
+    },
+    {
+      "id": "phone-scam-synthetic-0997a6af7cdb8ca1",
+      "publisher_label": "SAFE",
+      "text_sha256": "aa7cc810369a75bc160c06b7374129ad4ce42895c9a9947d61bab285bd0f2b6b"
+    },
+    {
+      "id": "phone-scam-synthetic-09ac728dc384d7c7",
+      "publisher_label": "SCAM",
+      "text_sha256": "0de1cd737d911ebea0c6e67e7a30c0ba19667b887865eab6c861aeef23fc4888"
+    },
+    {
+      "id": "phone-scam-synthetic-09e951abde5de949",
+      "publisher_label": "SCAM",
+      "text_sha256": "5747ce396e4ff55b99e14430396e094b1de56f8999a710ba236e78f6146a6b51"
+    },
+    {
+      "id": "phone-scam-synthetic-0a460b416e74f872",
+      "publisher_label": "SCAM",
+      "text_sha256": "501ff3e1f3e7ebe59b3af6139bb9b8c6945abf19a19ce83cee092c702bb6760c"
+    },
+    {
+      "id": "phone-scam-synthetic-0abb7f2e315c9c42",
+      "publisher_label": "SCAM",
+      "text_sha256": "29d93cda840a35567ad1b799a6f2ef026a5ed5eb7cbdb55fd39c24fe27816eec"
+    },
+    {
+      "id": "phone-scam-synthetic-0ccb5475fadda656",
+      "publisher_label": "SCAM",
+      "text_sha256": "badf558ff8c15a0422d919f05d4bbb619f61738eefbc25e9f9d4ec05d47e5ac9"
+    },
+    {
+      "id": "phone-scam-synthetic-0d8890728c0ff2fd",
+      "publisher_label": "SCAM",
+      "text_sha256": "31b70c652468ab608be4f0b060487e2499245950d968144674d9463e0694260e"
+    },
+    {
+      "id": "phone-scam-synthetic-0f2d4f7d419c1297",
+      "publisher_label": "SCAM",
+      "text_sha256": "f43a660f1d5c08a783443ce6b906badff5e7237aaf6b2d5c56b25e75b9d4c6f1"
+    },
+    {
+      "id": "phone-scam-synthetic-1010ec0347aecf07",
+      "publisher_label": "SAFE",
+      "text_sha256": "e3a32223d899b9df5fc0ed8ca931172ead707e193fc4b62f87909c74fa444c3d"
+    },
+    {
+      "id": "phone-scam-synthetic-1016dff8897e143d",
+      "publisher_label": "SAFE",
+      "text_sha256": "c6bd21944e10f1368d97da8de3b6d38c859a7f5fbc1053170e1b630c97a85890"
+    },
+    {
+      "id": "phone-scam-synthetic-107662c21c759c6e",
+      "publisher_label": "SAFE",
+      "text_sha256": "0db7d69475a93bcd2666f8cca998bb3656d9fbb1903c42e459b90bf6c97a79dc"
+    },
+    {
+      "id": "phone-scam-synthetic-1310057e59a2a06c",
+      "publisher_label": "SAFE",
+      "text_sha256": "28114707b42e1a1d7ae1243da1f577ceb25b9452f315d8608839b8abc7f797fc"
+    },
+    {
+      "id": "phone-scam-synthetic-135b61558be83b7f",
+      "publisher_label": "SCAM",
+      "text_sha256": "c3a00f1b2022deb7aa554609b625ae87182bad824ea21be9be12ce3f3484e4f4"
+    },
+    {
+      "id": "phone-scam-synthetic-13d3d2a8e3b505d9",
+      "publisher_label": "SCAM",
+      "text_sha256": "214db1fc9dfe673237dbfd6c2d2edefdd3ce0030b4337e1134bcb75241e4779b"
+    },
+    {
+      "id": "phone-scam-synthetic-15daeed4bf489551",
+      "publisher_label": "SCAM",
+      "text_sha256": "50df76ad5f1aee2fec5f0f6cbf5760b16c1222fcfabb99a94041f3f73bdc647c"
+    },
+    {
+      "id": "phone-scam-synthetic-172c43f051842e9d",
+      "publisher_label": "SAFE",
+      "text_sha256": "cb0e64e328e50b3393fcbdd2db7e45f2bf86035704f7fa6356e367d873c0012f"
+    },
+    {
+      "id": "phone-scam-synthetic-1781d71bf5ca4c8a",
+      "publisher_label": "SAFE",
+      "text_sha256": "f67b0b17f4c96bed4d7bcb7b79e13bc4994618f6217a35bcac410ea9bd90ab3a"
+    },
+    {
+      "id": "phone-scam-synthetic-1827edb875102a11",
+      "publisher_label": "SAFE",
+      "text_sha256": "390e3ef1fdf06a40f4a44f59aa12530bf84392424f14a2e37ef6358047b38ffc"
+    },
+    {
+      "id": "phone-scam-synthetic-187057e732a5578a",
+      "publisher_label": "SAFE",
+      "text_sha256": "d55c2fc6c796db3d27c3208c883981a48ab5da6ade11a4302610b3e502539b59"
+    },
+    {
+      "id": "phone-scam-synthetic-1b791aeb0579d925",
+      "publisher_label": "SAFE",
+      "text_sha256": "055600f6a25d4a819c0d16f5ca6554c4a0cfb4011946eb3aff76545313d38479"
+    },
+    {
+      "id": "phone-scam-synthetic-1cd53c52eab2fa58",
+      "publisher_label": "SAFE",
+      "text_sha256": "2cd84ef0892e4ea86e93ca664cd24a0bc2cd75fd2ee0a1b3bf695b433ec7f374"
+    },
+    {
+      "id": "phone-scam-synthetic-1d31645158486aeb",
+      "publisher_label": "SAFE",
+      "text_sha256": "923afc523949ac89fcb68945fc017fadaead66919a643f124c501588e1d31524"
+    },
+    {
+      "id": "phone-scam-synthetic-1db7818b7a08367a",
+      "publisher_label": "SCAM",
+      "text_sha256": "06152657f5d70e37db0ba972b73c86e27047f0e82673874acf62440804e98f98"
+    },
+    {
+      "id": "phone-scam-synthetic-1dc8310b20ae7861",
+      "publisher_label": "SAFE",
+      "text_sha256": "dfbfb5ee68039f6b683eee94daafc1f2e5b99ca1a63d6d01ea893be825d1dadb"
+    },
+    {
+      "id": "phone-scam-synthetic-1e1e7e12ee07f7d8",
+      "publisher_label": "SAFE",
+      "text_sha256": "3ef6a3bbaf6b52f84cd4fff953891ce6949147496dd3e715d8470292afa3e349"
+    },
+    {
+      "id": "phone-scam-synthetic-1ebc465b44daa9a8",
+      "publisher_label": "SAFE",
+      "text_sha256": "a86a58d20dcecd7f1c771dbfc747a64bce3aff88ad77992e20810b7343c8c90e"
+    },
+    {
+      "id": "phone-scam-synthetic-2029e42fb6ca9bb4",
+      "publisher_label": "SCAM",
+      "text_sha256": "1baf7a4266623d76b523225992175693a17d79a06df9a67938778d15525231df"
+    },
+    {
+      "id": "phone-scam-synthetic-205f2bc3de0a685c",
+      "publisher_label": "SCAM",
+      "text_sha256": "8df326e638932ce5e6a6a83eead305b6ffff37ff8938e69b39067bc9619e08e5"
+    },
+    {
+      "id": "phone-scam-synthetic-20c9d7eeac38d51c",
+      "publisher_label": "SAFE",
+      "text_sha256": "9bc0521d9189485eb12abb5b6b27f0e0a8c515d1a5fd5e5fe80098631b26067a"
+    },
+    {
+      "id": "phone-scam-synthetic-221fa90c0e899af8",
+      "publisher_label": "SAFE",
+      "text_sha256": "4366f6b8ff0e189f1b8a9ada91e33028a2c600f71598eb2f0069af1ac232b7ba"
+    },
+    {
+      "id": "phone-scam-synthetic-2260f2b20d0ccb85",
+      "publisher_label": "SAFE",
+      "text_sha256": "bb7029d44ec249746e67c7c807cea982e15c25027a606cdfa67adcefdb22f055"
+    },
+    {
+      "id": "phone-scam-synthetic-22bb7f1d259932b6",
+      "publisher_label": "SAFE",
+      "text_sha256": "840800184618d43e6fe6f04e1c93ee788cb6d1f535edf6f3d8f6937a89309453"
+    },
+    {
+      "id": "phone-scam-synthetic-238bddce0796fdc9",
+      "publisher_label": "SAFE",
+      "text_sha256": "f3c3f0a6f9e320394e23f7a4dd63486b3705211339fdb629f510403a86fd3209"
+    },
+    {
+      "id": "phone-scam-synthetic-23eb28714b7c1497",
+      "publisher_label": "SAFE",
+      "text_sha256": "db7234784b43350717cb96a647e03c912ee90c582a6881ca941799195cebcf9b"
+    },
+    {
+      "id": "phone-scam-synthetic-2488763e03929eda",
+      "publisher_label": "SCAM",
+      "text_sha256": "150cfb991d5f859da2611ee4ae14574836b88f60387a33feae5061a67fdfdd0d"
+    },
+    {
+      "id": "phone-scam-synthetic-274e6a598a31a580",
+      "publisher_label": "SCAM",
+      "text_sha256": "16ee319405fdad2ef378dbdfe9780e4889fc6dd2a66c743b9c5fd0b869ba7311"
+    },
+    {
+      "id": "phone-scam-synthetic-275622832f2feac1",
+      "publisher_label": "SCAM",
+      "text_sha256": "8d599578210481492c1efd70befba35b66082bea3fce65836135a5909f3b8ac6"
+    },
+    {
+      "id": "phone-scam-synthetic-28ca214cca106e4d",
+      "publisher_label": "SAFE",
+      "text_sha256": "c539b22bbd3005e10617b49a0d4a1181ea2776ea5d6fe8eca5d68087185d47c8"
+    },
+    {
+      "id": "phone-scam-synthetic-295af2842751ac0c",
+      "publisher_label": "SAFE",
+      "text_sha256": "7960260bf5c373a45985893e751f8f16be867d0798858670cb5931291ef52538"
+    },
+    {
+      "id": "phone-scam-synthetic-2d00a05436e092b6",
+      "publisher_label": "SCAM",
+      "text_sha256": "7424d223c1e90ffe7d202d1e5e95025416a33186eeba48c4984b74cf6aeace5b"
+    },
+    {
+      "id": "phone-scam-synthetic-2db6a9d055667c03",
+      "publisher_label": "SAFE",
+      "text_sha256": "e3ac6154656800d02ca17453640b6b6b1a31dfece23e0f222e625a205ae69eb4"
+    },
+    {
+      "id": "phone-scam-synthetic-2ec83a989a02924b",
+      "publisher_label": "SAFE",
+      "text_sha256": "25130b39417e508760e0be9f02738b57dd4426129676946bb9f025be82a36590"
+    },
+    {
+      "id": "phone-scam-synthetic-2ef4894e0aa55448",
+      "publisher_label": "SAFE",
+      "text_sha256": "0c59077c564d990e9d74fa2bab6947dba069998ba51e85feccb034e177766ed7"
+    },
+    {
+      "id": "phone-scam-synthetic-313d1847d2d86e27",
+      "publisher_label": "SCAM",
+      "text_sha256": "3f618355b88601b44e04c1815d0f0a65446b797df0bd7d8aac070ad0210286af"
+    },
+    {
+      "id": "phone-scam-synthetic-317b059f72ddfa68",
+      "publisher_label": "SCAM",
+      "text_sha256": "cc468549cfb60b6d86b4888822ec6a2b56c1aec9c289fbcadb6cdf1393984534"
+    },
+    {
+      "id": "phone-scam-synthetic-32587feb4b14298b",
+      "publisher_label": "SAFE",
+      "text_sha256": "e550fdfa55d36cad85201a87c02c2ce94fe79a5aea3050f7fa44ce3b4b0c42ed"
+    },
+    {
+      "id": "phone-scam-synthetic-3323d8873086a7c5",
+      "publisher_label": "SAFE",
+      "text_sha256": "a1bc0ec0dcabc805b4ca0f8d103df75704c3af938c29c08e125c3af6466159c9"
+    },
+    {
+      "id": "phone-scam-synthetic-3441b160ccd26eb1",
+      "publisher_label": "SAFE",
+      "text_sha256": "4057fba03d778d0f29713a87ba6ba900bb0679640c224bb0f4089cbc545d1ec7"
+    },
+    {
+      "id": "phone-scam-synthetic-34b069c55fe71221",
+      "publisher_label": "SCAM",
+      "text_sha256": "815b952b61179b1babb6d38898d96245f5b7a04c9578b8747a03ea0024086c43"
+    },
+    {
+      "id": "phone-scam-synthetic-364770d051642eab",
+      "publisher_label": "SAFE",
+      "text_sha256": "04eb06849e197f9b6b9330ae4af533b517e77e01183d7be1a329f5373c33c034"
+    },
+    {
+      "id": "phone-scam-synthetic-367496394fa3758c",
+      "publisher_label": "SAFE",
+      "text_sha256": "8fa64dcd7cf913457f1ab4b787cd6fa6ec85b45587e3de1b3d9549ce4a746e28"
+    },
+    {
+      "id": "phone-scam-synthetic-36c2a05883c668af",
+      "publisher_label": "SCAM",
+      "text_sha256": "fc022d05104ce21eb72981675bfdaf4bb32a9634f27ac8feeba16649945d5ebb"
+    },
+    {
+      "id": "phone-scam-synthetic-3779712d1f4b0426",
+      "publisher_label": "SCAM",
+      "text_sha256": "4129d1f04bf75240899a804e5732ebedbf1e4c782ef9cef1a0db38a93bd562da"
+    },
+    {
+      "id": "phone-scam-synthetic-395f731e98f09c4e",
+      "publisher_label": "SCAM",
+      "text_sha256": "e18da4518d5d8446d08bc953cc2d711c14907456f884152deb5261d866c17a7e"
+    },
+    {
+      "id": "phone-scam-synthetic-3a5d3c5e6b0be9ef",
+      "publisher_label": "SAFE",
+      "text_sha256": "94450577517475b8dd70aeba61e904d13c29ca23f53b250cceb5f3fe261d67bf"
+    },
+    {
+      "id": "phone-scam-synthetic-3a9b96783177ffce",
+      "publisher_label": "SAFE",
+      "text_sha256": "1a6f6137d2171a10dae2b4ebf99ac41bc63f4a679902b482e601659800d0ee50"
+    },
+    {
+      "id": "phone-scam-synthetic-3a9f222eac74b429",
+      "publisher_label": "SCAM",
+      "text_sha256": "7c44bde720e53b5ffc072ead9417b6209046ecf67b7f6e391ff1456feb29521f"
+    },
+    {
+      "id": "phone-scam-synthetic-3ae71efd4d93906d",
+      "publisher_label": "SAFE",
+      "text_sha256": "ab1dcc6f34ddbc36b928dbf908e20578c87ed94528249a367f281a78c1e4dbeb"
+    },
+    {
+      "id": "phone-scam-synthetic-3af75b2c10c3d9d6",
+      "publisher_label": "SAFE",
+      "text_sha256": "bdc52717af6e27d66e40c4956184cbbffbaa4e35c528eced26d9a38095b225a9"
+    },
+    {
+      "id": "phone-scam-synthetic-3ba864b7bdd753e6",
+      "publisher_label": "SAFE",
+      "text_sha256": "64c760ec5ec92c99ed853706a5a4fa7e55567af916a9015503f9b71cfb953b35"
+    },
+    {
+      "id": "phone-scam-synthetic-3ba96273bc7f16c9",
+      "publisher_label": "SCAM",
+      "text_sha256": "f33c92ce3ab2651e18acda9176394aed93e8f20e5404e68b6671115c469057ea"
+    },
+    {
+      "id": "phone-scam-synthetic-3bdb1b5691034464",
+      "publisher_label": "SCAM",
+      "text_sha256": "6e540b96bba0c7b18dff9278309eef1824a27de86e938e9be964c0ccb63a304f"
+    },
+    {
+      "id": "phone-scam-synthetic-3cc0c97d0b73e962",
+      "publisher_label": "SAFE",
+      "text_sha256": "fd3d539907763da5325514ce125b1a9959698dc659f54a28e6ec4283ff541d8e"
+    },
+    {
+      "id": "phone-scam-synthetic-3cce0d7a9cedd511",
+      "publisher_label": "SAFE",
+      "text_sha256": "c6ed0dfa9ac199edab4cb13540141b2731a9e7ccb1c51bfb86ba0c5d804343d1"
+    },
+    {
+      "id": "phone-scam-synthetic-3dfca16c249da557",
+      "publisher_label": "SCAM",
+      "text_sha256": "26e6bd601c588d2ba4ecfe060fb7b3b93e733351a72f398f8ee077d2c0f46f42"
+    },
+    {
+      "id": "phone-scam-synthetic-3f5ebc837cc7d807",
+      "publisher_label": "SAFE",
+      "text_sha256": "e2d36cfe20ce6853048f4571991d0ca15e52f02cc2e207198485b6f91f59d499"
+    },
+    {
+      "id": "phone-scam-synthetic-3f80edf22bc2d2a3",
+      "publisher_label": "SAFE",
+      "text_sha256": "aafcfb89c3651399e5d89611edb2123a19db34d3886e847c1a3a35cfe35f4163"
+    },
+    {
+      "id": "phone-scam-synthetic-3f95922be7b5c37c",
+      "publisher_label": "SAFE",
+      "text_sha256": "aad6ca74493b859edef9927e6705c42b18cc8f56dc7388573b266f866b9318c0"
+    },
+    {
+      "id": "phone-scam-synthetic-407f20acb5fd2a8d",
+      "publisher_label": "SAFE",
+      "text_sha256": "7863d0ea40e8e21ea696ae8e3f19c6be1491b0bf24e9f839584317c94312fd67"
+    },
+    {
+      "id": "phone-scam-synthetic-40c4f5f8ee4131f9",
+      "publisher_label": "SAFE",
+      "text_sha256": "98f40323165113a4ba4b2f3c59dfe36b226562d5b291c9673bc9dbf3809040ca"
+    },
+    {
+      "id": "phone-scam-synthetic-40ed70147a777272",
+      "publisher_label": "SAFE",
+      "text_sha256": "1fe7d04a88cc6e37a54cb59e3df57e83845e6b2b9cec310a5f4fecf4c269523a"
+    },
+    {
+      "id": "phone-scam-synthetic-40faa31845b47379",
+      "publisher_label": "SAFE",
+      "text_sha256": "771741ec0ecbea7b469a7326f0bc309f459c94bfc240a1794a1cc982e968569e"
+    },
+    {
+      "id": "phone-scam-synthetic-41114869de78b45e",
+      "publisher_label": "SCAM",
+      "text_sha256": "67fd221d060e118e19947f66fdcea410426867f1c1640d41a51be1582c61ec60"
+    },
+    {
+      "id": "phone-scam-synthetic-4142c626169ca143",
+      "publisher_label": "SAFE",
+      "text_sha256": "caef4a81515bd996e42803fbe7400d5b4eee876cde84a02135d3472d2529b3d9"
+    },
+    {
+      "id": "phone-scam-synthetic-415ce3dbb214ba40",
+      "publisher_label": "SAFE",
+      "text_sha256": "0020e58accdaf376622561cdb5865adc84e6b8b01fb504ad91a1370891da5755"
+    },
+    {
+      "id": "phone-scam-synthetic-4166346aec32aba0",
+      "publisher_label": "SCAM",
+      "text_sha256": "8b11bb3f27633dbeb04c039fd9e4f675f433d8fbf11a5569cde651c003ed27ac"
+    },
+    {
+      "id": "phone-scam-synthetic-416a780db822a203",
+      "publisher_label": "SCAM",
+      "text_sha256": "9817b6af3479beade789f05593c4f90a0b3dd6a2e2fa02316a905b23b3ff2138"
+    },
+    {
+      "id": "phone-scam-synthetic-419c12246ff6dfb7",
+      "publisher_label": "SCAM",
+      "text_sha256": "353ad931ced1c94a72811d7fbf26ea7c996a5bea869dbe4af775aa951600b547"
+    },
+    {
+      "id": "phone-scam-synthetic-41af8b60e99ea984",
+      "publisher_label": "SAFE",
+      "text_sha256": "d1f35b60ecb4aad1e62da759f57b0883e0e95e25163308d4f053618cdd96a985"
+    },
+    {
+      "id": "phone-scam-synthetic-41e3305b83615ad4",
+      "publisher_label": "SAFE",
+      "text_sha256": "2f4d659e6a1b33e8de8299ad79b473d8f71f1d3eda2f59076e81340dd1db83c1"
+    },
+    {
+      "id": "phone-scam-synthetic-4250d50edddb7a44",
+      "publisher_label": "SAFE",
+      "text_sha256": "4ed3ee5fab8d4f9e1339319e812a2d59d829127b7afae4b5fa8b50b80d456533"
+    },
+    {
+      "id": "phone-scam-synthetic-434ac3e120302da5",
+      "publisher_label": "SAFE",
+      "text_sha256": "391feecdbb57afd4ce6b50acb9879522abb5c691a296a328932c0adc8f95724a"
+    },
+    {
+      "id": "phone-scam-synthetic-436c96cd728507f6",
+      "publisher_label": "SCAM",
+      "text_sha256": "20683315c5c3ff3a4363a24e130c6a7c2aca797d2b818bde6fb7439c2109dc0e"
+    },
+    {
+      "id": "phone-scam-synthetic-43c5e46376a5f4e5",
+      "publisher_label": "SAFE",
+      "text_sha256": "f59043911e7c7ab0c137d049cae7ce739342970bfaebaf8b2cf00841ff63e38b"
+    },
+    {
+      "id": "phone-scam-synthetic-444e9b3f7488770f",
+      "publisher_label": "SCAM",
+      "text_sha256": "6e7e30a74f7e350316754d976765f0a30973b3ec09769932e75bbdeaf6010b11"
+    },
+    {
+      "id": "phone-scam-synthetic-46b96a355982ebcb",
+      "publisher_label": "SAFE",
+      "text_sha256": "d10d50a5d378d7ef0b080b9c842d2c9ce4fc87397441dc8fcda59b4df91a6156"
+    },
+    {
+      "id": "phone-scam-synthetic-4714fc80359bdff0",
+      "publisher_label": "SAFE",
+      "text_sha256": "bd7a28d4939aeeff504652f6ef82d33feb389b6b30703736e987d25b3c4ff7a9"
+    },
+    {
+      "id": "phone-scam-synthetic-481e4c454d97fe86",
+      "publisher_label": "SCAM",
+      "text_sha256": "1cb42afc7f7ddf49f755f6f0a6f2798d27a2b904afe421c9e8d18a096298c07c"
+    },
+    {
+      "id": "phone-scam-synthetic-4a6922f152363cf7",
+      "publisher_label": "SCAM",
+      "text_sha256": "534171d316e797cbbc08f1787ae2c556480318741e8fd12f6cd2d988ecccfcf9"
+    },
+    {
+      "id": "phone-scam-synthetic-4a76eb294c91331f",
+      "publisher_label": "SAFE",
+      "text_sha256": "9a4c7e41b25854d356c9d73356e8b27f678d9b49bfffa9de28bbaf7001ce1038"
+    },
+    {
+      "id": "phone-scam-synthetic-4a9f827f92cf63ce",
+      "publisher_label": "SAFE",
+      "text_sha256": "2378bcc63a90171a84930482bbb10cdc87aabd2eebe61649b191e0058089be1c"
+    },
+    {
+      "id": "phone-scam-synthetic-4ad70e2f15540c51",
+      "publisher_label": "SAFE",
+      "text_sha256": "6a98130d30d2673cac155015576aacf8c567713cae2c1675081b4503e40178cb"
+    },
+    {
+      "id": "phone-scam-synthetic-4b16cf99f4dc9ae2",
+      "publisher_label": "SCAM",
+      "text_sha256": "baac6bcf7282ca23fe4a14174b75eac01a9d8fe931f37ea88d434427022318d3"
+    },
+    {
+      "id": "phone-scam-synthetic-4b8e93b61ec4a336",
+      "publisher_label": "SAFE",
+      "text_sha256": "6b1c5aa5e678cf22676bc92c2684bdcb8eedf2de7bf66e55b83e7cf596e24ef0"
+    },
+    {
+      "id": "phone-scam-synthetic-4be89671e06cdcd5",
+      "publisher_label": "SCAM",
+      "text_sha256": "8ad14da7e3b67e2cf99cc04e21c3eb3a5357790a7f63fccaef96a7c502cf80e8"
+    },
+    {
+      "id": "phone-scam-synthetic-4edf21a3bb92cc2d",
+      "publisher_label": "SCAM",
+      "text_sha256": "ef9b45ee9b8de507c48091f3f461c8e2ab7bb127dd36d3b5bcaacb8450ba68d3"
+    },
+    {
+      "id": "phone-scam-synthetic-4ffa0454873baff2",
+      "publisher_label": "SAFE",
+      "text_sha256": "03d12655eb7d41545deece331eef947ea257881867ea909d14279fc6476bcf85"
+    },
+    {
+      "id": "phone-scam-synthetic-50349e6dad6a452b",
+      "publisher_label": "SAFE",
+      "text_sha256": "0698f0beab0cf7b334dcfd9b97df263300496dc76db38e74c254a6f4b04a390d"
+    },
+    {
+      "id": "phone-scam-synthetic-507782be2ac4d757",
+      "publisher_label": "SCAM",
+      "text_sha256": "eb3739a4356d85e580895fdafef4ff53ba930d5def9368587385cb7ca98e9a7a"
+    },
+    {
+      "id": "phone-scam-synthetic-509200dc632595bc",
+      "publisher_label": "SAFE",
+      "text_sha256": "48b86acb43903b8decf09060739dd541591945356aa4a41e87ecc64aca9ef110"
+    },
+    {
+      "id": "phone-scam-synthetic-50db3decd8bc9d52",
+      "publisher_label": "SCAM",
+      "text_sha256": "3657e1a98b158d4da54b9c1e99c0103641386b3c209aac7bcbc3e49a23f3e12b"
+    },
+    {
+      "id": "phone-scam-synthetic-5160cd8465375fc1",
+      "publisher_label": "SCAM",
+      "text_sha256": "1579981ff86ce95899406dbeae71f5bd69038710b3de7e0e7853c8b0f05b3374"
+    },
+    {
+      "id": "phone-scam-synthetic-517dfb78fcb21ff7",
+      "publisher_label": "SAFE",
+      "text_sha256": "5d6b2a5a5159ed744bbcc3873e640fe02f9b98f4e2c364b87190424aca84527e"
+    },
+    {
+      "id": "phone-scam-synthetic-5189e2de63c1f4c0",
+      "publisher_label": "SCAM",
+      "text_sha256": "d38fa636ecba11240be047e18dc4a41f0daa53a94e53df9ffdfb90eedbead4d9"
+    },
+    {
+      "id": "phone-scam-synthetic-51b7a2651bbba265",
+      "publisher_label": "SAFE",
+      "text_sha256": "7c7e5dd9df856b26e2b7b8cedb442730155cdd6b36ccc00f3512de9b57ac1a87"
+    },
+    {
+      "id": "phone-scam-synthetic-5256750b30de334c",
+      "publisher_label": "SCAM",
+      "text_sha256": "c9918cb297db36878914912963c073e7e6980e18fef5a9ef40cd0aeb286da7ab"
+    },
+    {
+      "id": "phone-scam-synthetic-542f03d80f46f436",
+      "publisher_label": "SCAM",
+      "text_sha256": "a6d5e0963ade965f20c8e33c3dff7e367a228b1c9acff1dee33e738eb5d4b7f7"
+    },
+    {
+      "id": "phone-scam-synthetic-543ebe2b34244c22",
+      "publisher_label": "SAFE",
+      "text_sha256": "dbcef7de6f0d35c39e23f20bcd6573417897d83902bbbc6de7b43a9bdd8688b5"
+    },
+    {
+      "id": "phone-scam-synthetic-543f8625eb1d5556",
+      "publisher_label": "SAFE",
+      "text_sha256": "db7e5d28801f026037a90b3a35779de37b5c3e6c3aa922be261010e19fe20df8"
+    },
+    {
+      "id": "phone-scam-synthetic-54794e4c77ace551",
+      "publisher_label": "SAFE",
+      "text_sha256": "a107a03e4a45ded7c685a6fa232363f003f2c17326576339eb5e4535755dbecc"
+    },
+    {
+      "id": "phone-scam-synthetic-558ad78c5210762d",
+      "publisher_label": "SCAM",
+      "text_sha256": "1f1afab6f46a6c71313ef43c8c0dd57f24d1a738e46c61d5a6e5b3cc7b96aadb"
+    },
+    {
+      "id": "phone-scam-synthetic-5597913b6e72baa6",
+      "publisher_label": "SAFE",
+      "text_sha256": "bf06a8a9f5be931d53df2099ae67563cc5363bd3ce576ac0d745162853dd93d4"
+    },
+    {
+      "id": "phone-scam-synthetic-56ab87596686a3a2",
+      "publisher_label": "SCAM",
+      "text_sha256": "198dc95188cc107820248e420892801e87bf8cfadf5044318ff372e8ba1f56fb"
+    },
+    {
+      "id": "phone-scam-synthetic-56cb4d22ea1f294a",
+      "publisher_label": "SCAM",
+      "text_sha256": "8382eae0c86776d261c015555a7113089a098d7c1de3d557ee48c9772d3932e9"
+    },
+    {
+      "id": "phone-scam-synthetic-572af4474778685b",
+      "publisher_label": "SCAM",
+      "text_sha256": "f358c6cbbbac0debaf7599af02ff8db055015ec04a25a708623632dfdbabaf9f"
+    },
+    {
+      "id": "phone-scam-synthetic-5734ec12906c2acd",
+      "publisher_label": "SCAM",
+      "text_sha256": "e413a15724bfef0e5493b1f65975f382933fb52fc7e5bcef0b52345fe66bf670"
+    },
+    {
+      "id": "phone-scam-synthetic-57a6f376b4dccee6",
+      "publisher_label": "SCAM",
+      "text_sha256": "c93304103e267080a022f666d8fc3812c1c22e08741cc181ecf20bc47f856365"
+    },
+    {
+      "id": "phone-scam-synthetic-58036ff5c0ca9046",
+      "publisher_label": "SCAM",
+      "text_sha256": "d089db92d86122d5f092d748d6a6b32db6e4a77d758522adc192c79e2612a13a"
+    },
+    {
+      "id": "phone-scam-synthetic-5850337c0984861d",
+      "publisher_label": "SCAM",
+      "text_sha256": "770863771507edc213ae17e66e2f5cf2052274a2f12084abfd5e09f454a0abf3"
+    },
+    {
+      "id": "phone-scam-synthetic-58b802f9d896ab9e",
+      "publisher_label": "SAFE",
+      "text_sha256": "bd2348613f741196c33bccbe23bb2ade8df6c45d55c3a225caa4424c61fdcb63"
+    },
+    {
+      "id": "phone-scam-synthetic-58e7fc812550d66d",
+      "publisher_label": "SCAM",
+      "text_sha256": "05431629be7e711667f2c06653ecedae1901d5f028e8595c1feef97406981637"
+    },
+    {
+      "id": "phone-scam-synthetic-5b2c4424ec81a0fa",
+      "publisher_label": "SAFE",
+      "text_sha256": "e3468c2890328defd55f9abfc669515dc87427c2d5808a17ea29410a008d3eea"
+    },
+    {
+      "id": "phone-scam-synthetic-5c43cefb450592ca",
+      "publisher_label": "SAFE",
+      "text_sha256": "70c93ec381b3fb9d7cfed1f1fa34dd056d4b33deb00e7c26886425bff1ea9daa"
+    },
+    {
+      "id": "phone-scam-synthetic-5d0da452f10b2994",
+      "publisher_label": "SCAM",
+      "text_sha256": "33a72a949c67977463a7fa0b2918f24aae96ff272da4502a9b61c8861075f577"
+    },
+    {
+      "id": "phone-scam-synthetic-5d79d1ff70a09a71",
+      "publisher_label": "SCAM",
+      "text_sha256": "792ae6b6263898a394344fa53145d67a3baf68580a5e9b02fc2185bb91f42e37"
+    },
+    {
+      "id": "phone-scam-synthetic-5dccec0cad1b95c1",
+      "publisher_label": "SAFE",
+      "text_sha256": "d7c50252e77afa03f49d7bc0f93236e3ec997973dd0678ba41f8bacd00e96bba"
+    },
+    {
+      "id": "phone-scam-synthetic-5de7b625ce3cb8e2",
+      "publisher_label": "SAFE",
+      "text_sha256": "b256972b4b94119bc8ba8b5b7fc3814052b58512b77a5aa32a39a19b15af319e"
+    },
+    {
+      "id": "phone-scam-synthetic-5e1164b9f98bf062",
+      "publisher_label": "SCAM",
+      "text_sha256": "941256cb3343eecdc5d9bfe6765ac732d9d5c97c236d3bf1729d78f540f9c9b3"
+    },
+    {
+      "id": "phone-scam-synthetic-5e31f0142a698d57",
+      "publisher_label": "SCAM",
+      "text_sha256": "57433d4291a718531622538cc5e59923d28b41421e99e52816166228b15ed846"
+    },
+    {
+      "id": "phone-scam-synthetic-5e329351d28024b5",
+      "publisher_label": "SCAM",
+      "text_sha256": "2e3a90571657cc47bcff4ec493e8f5ac0ec942682d46fd3bf486053fd147ace0"
+    },
+    {
+      "id": "phone-scam-synthetic-5f3b93e465059628",
+      "publisher_label": "SAFE",
+      "text_sha256": "2b7b98d1bc9b76f4b5305d493227207742f1fabf5163aed75db4ac17d04cfeb6"
+    },
+    {
+      "id": "phone-scam-synthetic-6014db454412f6da",
+      "publisher_label": "SCAM",
+      "text_sha256": "ae1ebf0b087d18efa05d505297124facbb68bbf9245cbe59101bce8d6f8181f1"
+    },
+    {
+      "id": "phone-scam-synthetic-6165aea534e79006",
+      "publisher_label": "SAFE",
+      "text_sha256": "d98160eef177484a482bb006df3cd2aed5977de9c72cb32b4569fce0a4473f7b"
+    },
+    {
+      "id": "phone-scam-synthetic-61feb1d443e92e96",
+      "publisher_label": "SCAM",
+      "text_sha256": "e5024a720613c1e0ff6b89a20c218fca13496e95c7f15822bc21cd3787ae6ba0"
+    },
+    {
+      "id": "phone-scam-synthetic-6233544ade1bac2e",
+      "publisher_label": "SAFE",
+      "text_sha256": "34f63797804a7e253e7cdf9f86ac1a3264042d566953f3b7b42c23e66bdfcb0c"
+    },
+    {
+      "id": "phone-scam-synthetic-63c19b5c7a09b1ed",
+      "publisher_label": "SCAM",
+      "text_sha256": "75c881473bd91c5563d00d4545e0cce6f334b5b0da131928b6c77eb25de8050f"
+    },
+    {
+      "id": "phone-scam-synthetic-646856093bca5615",
+      "publisher_label": "SAFE",
+      "text_sha256": "8441abef38b925ead45e763074e80e4056222a397c3b342b94c07c72f59f96a4"
+    },
+    {
+      "id": "phone-scam-synthetic-64fd78af042ec1bc",
+      "publisher_label": "SCAM",
+      "text_sha256": "55e6988de5a698d260b40c29c5aa7a6113a2bc033c8fdcaa95042c938234afab"
+    },
+    {
+      "id": "phone-scam-synthetic-657525f23b7e3f3a",
+      "publisher_label": "SCAM",
+      "text_sha256": "73ff23721942a1e45134378671800b328c71ff0b97d263bd762cdb7243f52d72"
+    },
+    {
+      "id": "phone-scam-synthetic-65c99be37e512c47",
+      "publisher_label": "SAFE",
+      "text_sha256": "575c639da10de4d2bc5690abc981eee2bb3f7aa6bb096e1a679160f386e0a999"
+    },
+    {
+      "id": "phone-scam-synthetic-667adee585b54b5e",
+      "publisher_label": "SCAM",
+      "text_sha256": "76f2c8973f831e8d68d4fba4833e9a7cf551a669c389c5bb9b71f7fd3237fd8c"
+    },
+    {
+      "id": "phone-scam-synthetic-6779d778e0227a92",
+      "publisher_label": "SAFE",
+      "text_sha256": "7d5b5ce0754e89ddb33f2b79593e624c53cdc12381e10b9958281b59d070608d"
+    },
+    {
+      "id": "phone-scam-synthetic-6883e500a8979c19",
+      "publisher_label": "SAFE",
+      "text_sha256": "6da7e630408f07f0b9ccfd17b80416b75e611f5528a3fdaa13ae5b30f1f875b2"
+    },
+    {
+      "id": "phone-scam-synthetic-6985072b5fde2ccf",
+      "publisher_label": "SAFE",
+      "text_sha256": "c7cd8a4ba9e4b99077533c7db10ebfcbca757a9878d6c82f5418387ff9ff4d85"
+    },
+    {
+      "id": "phone-scam-synthetic-69869936307d1885",
+      "publisher_label": "SCAM",
+      "text_sha256": "e80e0698f64d75f7749c78041e372c4b18188e6e7f1626ff8f5eb12c812683e0"
+    },
+    {
+      "id": "phone-scam-synthetic-6a4cf98805aa6d0e",
+      "publisher_label": "SAFE",
+      "text_sha256": "a9c5f2adf7f4752aa00363bc3fa9e7a6cd47cc8d281c1de5b95229e5245cd665"
+    },
+    {
+      "id": "phone-scam-synthetic-6ad3472c43be46a8",
+      "publisher_label": "SAFE",
+      "text_sha256": "4ece84d98411288b9cc25eb173baa4671b2c4b7822ab91f2471c485fc44ca0b1"
+    },
+    {
+      "id": "phone-scam-synthetic-6b50855903a67b30",
+      "publisher_label": "SAFE",
+      "text_sha256": "577e483f27c095c11a5715ce3bf9ef2a7eab3438e40d6cdb0e3cc5c149ce9997"
+    },
+    {
+      "id": "phone-scam-synthetic-6be6bdcb5785247f",
+      "publisher_label": "SCAM",
+      "text_sha256": "569cdb81f55b7325c58cbe7a6fee912d3bbff37b98fff777d782fba853b51ebe"
+    },
+    {
+      "id": "phone-scam-synthetic-6c2e741e4237a76b",
+      "publisher_label": "SCAM",
+      "text_sha256": "5e5a746fe960357ce5dca057f1bca54283d440ac59ed8c898af68da78411329e"
+    },
+    {
+      "id": "phone-scam-synthetic-6cd17e2d55be46ae",
+      "publisher_label": "SAFE",
+      "text_sha256": "2e069b485254b27989ceaca869d39b1051b087d9b6af92dddf18fbff0ef4e26a"
+    },
+    {
+      "id": "phone-scam-synthetic-6d0ec66de43294c5",
+      "publisher_label": "SAFE",
+      "text_sha256": "c62d8db0d58b253cfcfbb65d04ed6973219fbe2b5739bd4cb03aadb6071c5d0d"
+    },
+    {
+      "id": "phone-scam-synthetic-6f143a5b43105ac1",
+      "publisher_label": "SCAM",
+      "text_sha256": "c8814dce01be7f81558f655f6b20cf6523fde0632ee34df3c453bb7f5e8057f0"
+    },
+    {
+      "id": "phone-scam-synthetic-6fe132189dc59c37",
+      "publisher_label": "SCAM",
+      "text_sha256": "41e2f153c88f54645acda43a3b626103b479cff004d451e3c631710cecf94a53"
+    },
+    {
+      "id": "phone-scam-synthetic-6fe246ef042c4fc8",
+      "publisher_label": "SAFE",
+      "text_sha256": "4a88ff6a599481597802244188fb47d22c40f8f4c51731d9d836156912b77e76"
+    },
+    {
+      "id": "phone-scam-synthetic-723e2922ef5f0e2a",
+      "publisher_label": "SAFE",
+      "text_sha256": "0337f73d84c1a506c9ceb4d6b5175e71b216151a34e45be4c6c06b65c532a65c"
+    },
+    {
+      "id": "phone-scam-synthetic-744893d812b237f5",
+      "publisher_label": "SCAM",
+      "text_sha256": "cd02466242c220556dbb19693e70e032ada61888ca662429c667f6b7e5e1d94b"
+    },
+    {
+      "id": "phone-scam-synthetic-7462324244fbd486",
+      "publisher_label": "SAFE",
+      "text_sha256": "6050de421a697e824991a45967c35754095288fba5decda382c954c8b41aac5e"
+    },
+    {
+      "id": "phone-scam-synthetic-74a8c05eb2d4730b",
+      "publisher_label": "SCAM",
+      "text_sha256": "0d5c4a69d40dbb94556a17c1a1b32f37bd3ad9d2c527a1af5dfe084b895f4d77"
+    },
+    {
+      "id": "phone-scam-synthetic-76e09498d9dac026",
+      "publisher_label": "SAFE",
+      "text_sha256": "2cbd6c873b19a64f0607701711198c21d45cbce8952699826c1c85ec87af29f2"
+    },
+    {
+      "id": "phone-scam-synthetic-76f3b7df0071c3b3",
+      "publisher_label": "SAFE",
+      "text_sha256": "ba33f82b2267d9023f9c347e744c390fa7b70f07a21922dc31eb63e89a9e334d"
+    },
+    {
+      "id": "phone-scam-synthetic-7766a648609e0ef9",
+      "publisher_label": "SCAM",
+      "text_sha256": "764291729d1f30d068446c2fc6b836bc726b2089b74eb08a6b74fa1b7d924f53"
+    },
+    {
+      "id": "phone-scam-synthetic-77797645e505a4f8",
+      "publisher_label": "SCAM",
+      "text_sha256": "b39b4aca08921d1d8b14fad3be3215743e05aa3ff4009a450f90b53bc1fb24de"
+    },
+    {
+      "id": "phone-scam-synthetic-779db84f9d52505a",
+      "publisher_label": "SAFE",
+      "text_sha256": "c2abef073419947b26eb89f5576980c4c4990940c7c8dbe5ea0980bdb0c0d52f"
+    },
+    {
+      "id": "phone-scam-synthetic-792205679f75d129",
+      "publisher_label": "SAFE",
+      "text_sha256": "d5fb1cf6d456fed4bfa1a75c2057d122a68e8fe8628a93c368ce705be8fa0978"
+    },
+    {
+      "id": "phone-scam-synthetic-795f4cd4cfc68e2b",
+      "publisher_label": "SCAM",
+      "text_sha256": "cb9bd34ac0503635dec17f1da054342a6f7e879742e79f2ba231f3a9114f9339"
+    },
+    {
+      "id": "phone-scam-synthetic-7a1b0c1f0cbdade1",
+      "publisher_label": "SCAM",
+      "text_sha256": "4f5a8fe2c102f03aa2745dbfd6255c5ec1bdf90ad8239128511ea07a0e0a3527"
+    },
+    {
+      "id": "phone-scam-synthetic-7a1b1c5f6507d777",
+      "publisher_label": "SCAM",
+      "text_sha256": "3c1bed33b3f8f65eb0ba374e5e26a163d7743b712cb20dc39e590539ec25d1e9"
+    },
+    {
+      "id": "phone-scam-synthetic-7a3bf752ebc52920",
+      "publisher_label": "SAFE",
+      "text_sha256": "f4f5b8c757b0b84e7802b597487a72a79f8a736eb96c6c38b76c8e4444bb72a8"
+    },
+    {
+      "id": "phone-scam-synthetic-7a608c8df31b01ea",
+      "publisher_label": "SAFE",
+      "text_sha256": "3e78c6aecc855943948521ceffad21ca6bad0393fd433821bd71745e25af574a"
+    },
+    {
+      "id": "phone-scam-synthetic-7b7571c06af6fe91",
+      "publisher_label": "SAFE",
+      "text_sha256": "ce76e2ab1ec7ed0de31c474fb0d1ab905d8413efec6a29918b6768e2fde79c85"
+    },
+    {
+      "id": "phone-scam-synthetic-7c9070b5d0e075e4",
+      "publisher_label": "SAFE",
+      "text_sha256": "9a534c996bb63443acfda65a86699573e7cb81ceaf6d15525ac6e6a2cfa042ba"
+    },
+    {
+      "id": "phone-scam-synthetic-7d1fae2621b351c0",
+      "publisher_label": "SCAM",
+      "text_sha256": "4f2d93602a47856ec74a6364f92d71db8195bb2ca4af74dbb4369bf978f85b7e"
+    },
+    {
+      "id": "phone-scam-synthetic-7e8fb1aeb2688fbf",
+      "publisher_label": "SAFE",
+      "text_sha256": "b2e0d5fb5d8c673604c0c19dc15232eb0902f14972d1265ea4cec367962c7d37"
+    },
+    {
+      "id": "phone-scam-synthetic-80c2897e55fef67a",
+      "publisher_label": "SAFE",
+      "text_sha256": "0a28ce96d02671127d9ead45aceabfc7142463a487d51c00c7daac73cead2759"
+    },
+    {
+      "id": "phone-scam-synthetic-81f0800d295eee75",
+      "publisher_label": "SCAM",
+      "text_sha256": "3059607bb00c23733113acbeca8bd8c1e6fd5363f99039fc4c5dc1b069bbc9c0"
+    },
+    {
+      "id": "phone-scam-synthetic-8253baeaf091b853",
+      "publisher_label": "SAFE",
+      "text_sha256": "d1cecec6b31f0dc316aa9281ffc1d44a2089d7a2fa812a222b1be5336788145b"
+    },
+    {
+      "id": "phone-scam-synthetic-82bb489a0e46bd46",
+      "publisher_label": "SCAM",
+      "text_sha256": "7b55b3ca494a2bf0915922b68805cc4fd68b2d7c09e3adbe42942b772a625388"
+    },
+    {
+      "id": "phone-scam-synthetic-84572ee5a84f8651",
+      "publisher_label": "SAFE",
+      "text_sha256": "50422b1e49793288c154053846a1a200d91812e9ecb53bf457d79a9b676ba3f5"
+    },
+    {
+      "id": "phone-scam-synthetic-8471c232ecc8ddf0",
+      "publisher_label": "SAFE",
+      "text_sha256": "c356ce8c873ca9446f6af8f170ea826f2fa3cb92d9f5c6ba60bbe026a5bea375"
+    },
+    {
+      "id": "phone-scam-synthetic-86304ef18b698843",
+      "publisher_label": "SCAM",
+      "text_sha256": "98fdf4770732707edfa4719d8f78031e7f09b61ab8487b7873854a284520ab41"
+    },
+    {
+      "id": "phone-scam-synthetic-8902421215a51fdb",
+      "publisher_label": "SAFE",
+      "text_sha256": "c835b107b056a11304ced426674b28623594cb90be3400909b7e72515cc9d036"
+    },
+    {
+      "id": "phone-scam-synthetic-89420dea8ddfe1c9",
+      "publisher_label": "SCAM",
+      "text_sha256": "5c20333c0f09a34de35ea71c1e2b446b379e76a28524aefc8c428bbfcdb417c7"
+    },
+    {
+      "id": "phone-scam-synthetic-8a47bdc5941a2c66",
+      "publisher_label": "SCAM",
+      "text_sha256": "9be5fa0d17ad700206b443c3a9b7e92d675dd92d1a3aafc49135e106ce0609ba"
+    },
+    {
+      "id": "phone-scam-synthetic-8ace2ec85964563c",
+      "publisher_label": "SCAM",
+      "text_sha256": "3b9c72a9aadf3083139e6f373dbe473066a1ac71a23ded0b6c2be4e2099af74c"
+    },
+    {
+      "id": "phone-scam-synthetic-8b6403f209436be2",
+      "publisher_label": "SAFE",
+      "text_sha256": "e64b03d51658f34c4ffb034bd8a9d0b7ae05c1c36127842bb9935fd15b915860"
+    },
+    {
+      "id": "phone-scam-synthetic-8c65770ef2b78d25",
+      "publisher_label": "SCAM",
+      "text_sha256": "7187c36b4a50e1f43ad538fa489c8714dd7a90a5e379e0a4b11041428b1bbcae"
+    },
+    {
+      "id": "phone-scam-synthetic-8e79a90741fab420",
+      "publisher_label": "SAFE",
+      "text_sha256": "b916b761b87325e184365ed00852885a2ccfe7d0bb2031c632296d5fb00f8f63"
+    },
+    {
+      "id": "phone-scam-synthetic-8f0311aeb8d44cda",
+      "publisher_label": "SAFE",
+      "text_sha256": "de9e47b2144c68888d32b4978ec5e9cb908ab69b02f2075561517aa34cdca91f"
+    },
+    {
+      "id": "phone-scam-synthetic-8f8348d45bb0bc84",
+      "publisher_label": "SCAM",
+      "text_sha256": "e58d80f9a7cc850f5826443d7e64a898cc899d39f250f5719b275073a63e322b"
+    },
+    {
+      "id": "phone-scam-synthetic-8ff404d1be61bdeb",
+      "publisher_label": "SCAM",
+      "text_sha256": "82eaf4cf1a50746c8efc670c4821c46d759ba248e4bdc967738fb4e944a54185"
+    },
+    {
+      "id": "phone-scam-synthetic-9126a55429c0eb58",
+      "publisher_label": "SCAM",
+      "text_sha256": "06dc5882b752185965f85277e7a008c56b34dae51803c8ea8c011b386c4c66c7"
+    },
+    {
+      "id": "phone-scam-synthetic-91d5497dc4383d46",
+      "publisher_label": "SCAM",
+      "text_sha256": "775b4816a76ee3ba71eb85b7b41a9c503f6b16d42e642081f51d595b527ed4c8"
+    },
+    {
+      "id": "phone-scam-synthetic-91f07c9a98f03a24",
+      "publisher_label": "SCAM",
+      "text_sha256": "4feb072fe6909ee7d5ec6037886b56f1bce0ec07af0a25111052666fda1ed8d1"
+    },
+    {
+      "id": "phone-scam-synthetic-923266927bf1d900",
+      "publisher_label": "SAFE",
+      "text_sha256": "bc774595b9b7ff5ab347a51309741194c36900ecd03b26fd9c16ed0099ebab86"
+    },
+    {
+      "id": "phone-scam-synthetic-93049c4dcf280448",
+      "publisher_label": "SAFE",
+      "text_sha256": "14c682257adae880bda71f818d04b101f3896d228b71aa8dc2d0ad766747652e"
+    },
+    {
+      "id": "phone-scam-synthetic-9478bda7ea4482bf",
+      "publisher_label": "SAFE",
+      "text_sha256": "2c4c10721ebcba482ed9a8c4593edb686f4d2b48447562cbda5dd460a64351ff"
+    },
+    {
+      "id": "phone-scam-synthetic-95999661fe110bce",
+      "publisher_label": "SCAM",
+      "text_sha256": "00db86cf6560798c137fcef47826fbc0d4a104782e80a7d86fdb32bdbd581634"
+    },
+    {
+      "id": "phone-scam-synthetic-96c553a75b141401",
+      "publisher_label": "SAFE",
+      "text_sha256": "56022558f283e84163e7ea054967a682558e1553061c8055ffbc738b19bd6d40"
+    },
+    {
+      "id": "phone-scam-synthetic-973b479c76e9fffc",
+      "publisher_label": "SCAM",
+      "text_sha256": "598dabdbada0d649998b13fa55b184ba3ff9c36bc160210136b3f721eeda7e08"
+    },
+    {
+      "id": "phone-scam-synthetic-9782b671ef50e8c3",
+      "publisher_label": "SCAM",
+      "text_sha256": "66d28a27ac243024bfc727c03e3230b26f27eb4790788b1ee335a9209ffe8b06"
+    },
+    {
+      "id": "phone-scam-synthetic-9a88183feecf8b53",
+      "publisher_label": "SCAM",
+      "text_sha256": "f019da44f6eb5dbcd81103d33461a62776b81fc04cdad977efa879089d315105"
+    },
+    {
+      "id": "phone-scam-synthetic-9b16a00b081aa5a3",
+      "publisher_label": "SAFE",
+      "text_sha256": "745930e99a333090ebb3dbe0f4f22f6e66deae15192a2577c4abc2623c15e64f"
+    },
+    {
+      "id": "phone-scam-synthetic-9b41a07c569c251e",
+      "publisher_label": "SCAM",
+      "text_sha256": "62157d6cc7ab4dd2a862ec7dc6049be671638cfe80fe704d709831fd06005164"
+    },
+    {
+      "id": "phone-scam-synthetic-9b62dbdbef73d4ba",
+      "publisher_label": "SCAM",
+      "text_sha256": "f083617ed23d02f83fe367ece8c2eb33f5f40b83fd5cfd395bbd603491c5c2c9"
+    },
+    {
+      "id": "phone-scam-synthetic-9bcd0d036eacec2c",
+      "publisher_label": "SCAM",
+      "text_sha256": "1e8dede65f87a0e7a149f91c24814934c53ea3c865e0f62e6b813a47eed1b1ab"
+    },
+    {
+      "id": "phone-scam-synthetic-9be76264f5fe0b5f",
+      "publisher_label": "SCAM",
+      "text_sha256": "c7c86ca8023dfe85a5c9d83360236606337b0e5172ec8113c2d6084dfa21dfe1"
+    },
+    {
+      "id": "phone-scam-synthetic-9d010853883bd6a6",
+      "publisher_label": "SAFE",
+      "text_sha256": "e342d6becfbe9b5ec5bfe80b0996f56382f720b64881d9ab458ca66acc8b20a0"
+    },
+    {
+      "id": "phone-scam-synthetic-9d0113768a815583",
+      "publisher_label": "SCAM",
+      "text_sha256": "4ca691ab0ee1281fd6edaa28d94a11a1bd5c7ec13c24bddf565528dc0f45b2ff"
+    },
+    {
+      "id": "phone-scam-synthetic-9da943830901c105",
+      "publisher_label": "SAFE",
+      "text_sha256": "cef7409b3190cc0b114e0cb7e095a889bc59034015b047046726fb651fa53513"
+    },
+    {
+      "id": "phone-scam-synthetic-9e8d5d598429145e",
+      "publisher_label": "SCAM",
+      "text_sha256": "b5553c3c9c8dbcd03d6fa4768c5c2e0b8171530f36a174c10374da0df2a825ff"
+    },
+    {
+      "id": "phone-scam-synthetic-9ea53bf7838f6bb5",
+      "publisher_label": "SCAM",
+      "text_sha256": "27db8d31c1218b41ead32e46e4b62ae3da4582318d0ceeb0356afd3a9a978949"
+    },
+    {
+      "id": "phone-scam-synthetic-9ec2deea88ec5f41",
+      "publisher_label": "SCAM",
+      "text_sha256": "3f42a3753f71a90bb39c69e7e5b112be111333b266bb37fb3fa8d771ac3cb4c4"
+    },
+    {
+      "id": "phone-scam-synthetic-9ed37352ad3acbd9",
+      "publisher_label": "SAFE",
+      "text_sha256": "6bdd625ba87631536f4509377bf207e1d1302178dd4fc5f6c29239dce2dd814f"
+    },
+    {
+      "id": "phone-scam-synthetic-9f0239d458c007d8",
+      "publisher_label": "SCAM",
+      "text_sha256": "b18ca152a8203709813ca51be3c92627267f175f261ada948049d3954d09a2fd"
+    },
+    {
+      "id": "phone-scam-synthetic-9f0c462e42c714c0",
+      "publisher_label": "SAFE",
+      "text_sha256": "2d45c45c0fce1f809164d0b4eb092643d58e68339d74504d719e4be19f4dad7a"
+    },
+    {
+      "id": "phone-scam-synthetic-9f29bd52caf3a715",
+      "publisher_label": "SCAM",
+      "text_sha256": "c28047fc063660688efd9f82057d8ddd49a70117063ad1e9cc15b6e2c7203bc0"
+    },
+    {
+      "id": "phone-scam-synthetic-a050738a5b720b75",
+      "publisher_label": "SCAM",
+      "text_sha256": "2501e6aa8ae281a8f63c389d4d0a5a4634b14e78a722645c533ab30d69ff067c"
+    },
+    {
+      "id": "phone-scam-synthetic-a1635d3b5aa686ef",
+      "publisher_label": "SAFE",
+      "text_sha256": "44ba1fd085a6c0e46b8a47e379e3b1d943104335876e51d9d38a03fad2046107"
+    },
+    {
+      "id": "phone-scam-synthetic-a17200cbe58979dd",
+      "publisher_label": "SAFE",
+      "text_sha256": "92d4f20192aeb632896164bd4898a65cf9ec7478a330a0436d80c688dae88bbe"
+    },
+    {
+      "id": "phone-scam-synthetic-a2266c1c9851c780",
+      "publisher_label": "SAFE",
+      "text_sha256": "808c7db2cf791c1f24f8c5164150a2c9130acff8059cfa5ec045121ee8bdddc2"
+    },
+    {
+      "id": "phone-scam-synthetic-a24c36a76a30769e",
+      "publisher_label": "SAFE",
+      "text_sha256": "770977cf413b370670ccb734c2f2dbc2ddda0a46b4b2274ae5da1307de3b3397"
+    },
+    {
+      "id": "phone-scam-synthetic-a3da67fca06e137e",
+      "publisher_label": "SAFE",
+      "text_sha256": "c107fc85b87071c882a5da44718e212f9c0704bb95c171b20d9b9b23ea88cea9"
+    },
+    {
+      "id": "phone-scam-synthetic-a4e2980870cd5043",
+      "publisher_label": "SAFE",
+      "text_sha256": "7b6566b06304de2e2d8372a20e17bb6f6cdfbb01c93f24ea57fb6743be46665e"
+    },
+    {
+      "id": "phone-scam-synthetic-a4f014018f283954",
+      "publisher_label": "SCAM",
+      "text_sha256": "ba2a29be82a916eaed2e2676f210feccecdab861446af68cb70b5920da810ebf"
+    },
+    {
+      "id": "phone-scam-synthetic-a7b04f6335036707",
+      "publisher_label": "SCAM",
+      "text_sha256": "de6c000ef62a186b2873c95f44ea71cb0ab1f45a1247becbcc74d5391b6bcf25"
+    },
+    {
+      "id": "phone-scam-synthetic-a80a7043d0a23608",
+      "publisher_label": "SCAM",
+      "text_sha256": "2e005372e696269a09e3bdab66cce11aad8279dc13794945376a7013d2f629da"
+    },
+    {
+      "id": "phone-scam-synthetic-a819448ae0625a02",
+      "publisher_label": "SAFE",
+      "text_sha256": "ac03ed30ae07a859b3e5ee75fa9082b576dd5557e5efc9e915e4054e6037c28a"
+    },
+    {
+      "id": "phone-scam-synthetic-a8aa609d0fac2b59",
+      "publisher_label": "SCAM",
+      "text_sha256": "6993f102041b42551b4f4b08908f765c1afeedb8589667e38d5f4acc092f83bb"
+    },
+    {
+      "id": "phone-scam-synthetic-a901e4f1ffeb76e6",
+      "publisher_label": "SCAM",
+      "text_sha256": "3001b2067b083df2dfd33e54dd062b58fd3ecf7bda5b19faa24bcd8efd1ff81f"
+    },
+    {
+      "id": "phone-scam-synthetic-a9103001d0021465",
+      "publisher_label": "SCAM",
+      "text_sha256": "214f8f7ba605a2aaaf337cf5d5fa6c59a8167515c136bab020d9356986fc08be"
+    },
+    {
+      "id": "phone-scam-synthetic-aaeefe38b189e083",
+      "publisher_label": "SAFE",
+      "text_sha256": "e6628c91b040c91c20d56f765b0a3c2f0a566427f7b0686dc9c6878b3e694fb4"
+    },
+    {
+      "id": "phone-scam-synthetic-abb76086164c0d9f",
+      "publisher_label": "SAFE",
+      "text_sha256": "3deb8016f4e95daf0900e1021d74d26ef946a6ad560d7137b4ff8e7f4c6b982a"
+    },
+    {
+      "id": "phone-scam-synthetic-ad0543637d6d367c",
+      "publisher_label": "SAFE",
+      "text_sha256": "bd244f27c7326f3ed68fff041539a371371492bbc27d450cf8aae63c4716c91f"
+    },
+    {
+      "id": "phone-scam-synthetic-aeca5c875f6e0cf1",
+      "publisher_label": "SAFE",
+      "text_sha256": "1492b565592360020e0bb03d81c3f2971e2aab704e1f3f6af781bfe0088892c5"
+    },
+    {
+      "id": "phone-scam-synthetic-af2a218cdb03c671",
+      "publisher_label": "SCAM",
+      "text_sha256": "a362bac75bc9fc60ff89b28e843ef80ed9f2684ac362af0433177313ae78e24d"
+    },
+    {
+      "id": "phone-scam-synthetic-b1027d87d237f75c",
+      "publisher_label": "SCAM",
+      "text_sha256": "c993bc3b4d0f5c5800000314237c60abbc578c86f6149e3320dfeaf8bb75e254"
+    },
+    {
+      "id": "phone-scam-synthetic-b163064f7bc07be6",
+      "publisher_label": "SCAM",
+      "text_sha256": "fde2ec1bf64fa057edfa1d8067c118066404287bbce0723f5acb75f273885a14"
+    },
+    {
+      "id": "phone-scam-synthetic-b16bc7ba407453c8",
+      "publisher_label": "SAFE",
+      "text_sha256": "d9efc8655a445ed0d0eae446f9ce086e3acf5c86ca943c36e863381ebb2cfff5"
+    },
+    {
+      "id": "phone-scam-synthetic-b1ebd69721e8b0d4",
+      "publisher_label": "SCAM",
+      "text_sha256": "619518b4f794d9bc20a9f5afc4db0f20a163d576e839c4eabb30e4867a760166"
+    },
+    {
+      "id": "phone-scam-synthetic-b3181c3c881e2be6",
+      "publisher_label": "SAFE",
+      "text_sha256": "e6300a202f6582168b66bba5280eb13e50dc2f2fa6e153dd958cb0b582f24330"
+    },
+    {
+      "id": "phone-scam-synthetic-b46de808bea76e25",
+      "publisher_label": "SCAM",
+      "text_sha256": "4094aa6f7aeab642bfd2eb70a6b2ec82cf961d143efe5e79cd54cf0219cb7682"
+    },
+    {
+      "id": "phone-scam-synthetic-b48152cf94c5b9b4",
+      "publisher_label": "SCAM",
+      "text_sha256": "3bacf06df40a351cde63fbb9d4880ace5387620e8291a6937c2fe783b5eabc38"
+    },
+    {
+      "id": "phone-scam-synthetic-b4a57abf2dab4fdc",
+      "publisher_label": "SAFE",
+      "text_sha256": "e689a116eee73dfc610eec6a7f3390a4abd5160de9404f998f777eae902522ce"
+    },
+    {
+      "id": "phone-scam-synthetic-b533af956f0526ae",
+      "publisher_label": "SCAM",
+      "text_sha256": "64e64d30adaddd355f7bd9da541df1a3e61d9ac8a7bc766f5b4f095bbb3e9c44"
+    },
+    {
+      "id": "phone-scam-synthetic-b647b2101b1e4c73",
+      "publisher_label": "SCAM",
+      "text_sha256": "f46b504327664a45071b658aa48a1a49192613c66ee7f2ae1f16716b72f5afa7"
+    },
+    {
+      "id": "phone-scam-synthetic-b751ff82ae56c48a",
+      "publisher_label": "SCAM",
+      "text_sha256": "89208d280341bea3ac66208dfc0a97ff18e8062a461c732e84693fe033a3915d"
+    },
+    {
+      "id": "phone-scam-synthetic-b7e85dd092742dbd",
+      "publisher_label": "SCAM",
+      "text_sha256": "db59dd6a116d42ef813e5dc8148636ddcec73c547c5f76f07fef63c7bc6f9afc"
+    },
+    {
+      "id": "phone-scam-synthetic-b857cc112e13f140",
+      "publisher_label": "SCAM",
+      "text_sha256": "2424606b19f4b7c9856ace3705c16f730bcd0016d450aaf393711128c2300c83"
+    },
+    {
+      "id": "phone-scam-synthetic-bad3a55f4dbd331a",
+      "publisher_label": "SAFE",
+      "text_sha256": "1b0ab73967a66329d4bb35881b2699b9709e434d92ea4c001811dc62898465f8"
+    },
+    {
+      "id": "phone-scam-synthetic-baf83dbe76aa93ed",
+      "publisher_label": "SCAM",
+      "text_sha256": "bae2e1c35f6c9c488eb77e1e60803acc63a941f8ef9774e0a034ec22b046131d"
+    },
+    {
+      "id": "phone-scam-synthetic-bdc207fc5971610d",
+      "publisher_label": "SAFE",
+      "text_sha256": "91219173ca8437392f2bd308bfd64f4a74ae5e532100a67ef5dcb69d3920c26d"
+    },
+    {
+      "id": "phone-scam-synthetic-bdd83a8f21cee88e",
+      "publisher_label": "SAFE",
+      "text_sha256": "2197bf37bc43ec844137f0eb55858ffc7de8412f28adcda5b44c75a6214cca83"
+    },
+    {
+      "id": "phone-scam-synthetic-be95549c7dd6852a",
+      "publisher_label": "SCAM",
+      "text_sha256": "5dce83b9c7f40a21ccf848ef497124bc5b155f2280c6e4d5244c4f8140fb7a9d"
+    },
+    {
+      "id": "phone-scam-synthetic-c0df74b4d1deaa27",
+      "publisher_label": "SCAM",
+      "text_sha256": "abaaa9cc436334ef05a104b468912980426aaccf5e05aa252df0b66b91281b27"
+    },
+    {
+      "id": "phone-scam-synthetic-c0f0ef4e46f08032",
+      "publisher_label": "SCAM",
+      "text_sha256": "435e774a3d10d4987f906f35c5cf8ca03bd2acff2732a0c4860f23f1149e3a4d"
+    },
+    {
+      "id": "phone-scam-synthetic-c1bfa7bf34a64ac4",
+      "publisher_label": "SAFE",
+      "text_sha256": "0d456fcb2c8cad3231aab7a5a36c97fa9445a5d9669ecfd09c409c30a9d1269c"
+    },
+    {
+      "id": "phone-scam-synthetic-c368222a0281b068",
+      "publisher_label": "SCAM",
+      "text_sha256": "580a1e557db93a06c3c54514569672ee484c552b4884bd690a98765d1fe27f0c"
+    },
+    {
+      "id": "phone-scam-synthetic-c3d792630868ae44",
+      "publisher_label": "SAFE",
+      "text_sha256": "a74776573530066a57abef9743f4e2109db9085c09993343699e24be62100325"
+    },
+    {
+      "id": "phone-scam-synthetic-c5bfaf8bb16ef4e1",
+      "publisher_label": "SAFE",
+      "text_sha256": "2bca26fab5d9bfa404e4c08f5f9892455642bf62b5578dd56ea646b2f2069b23"
+    },
+    {
+      "id": "phone-scam-synthetic-c72c0e9047e090d5",
+      "publisher_label": "SAFE",
+      "text_sha256": "78c0356991580fe285403b21491e8d14d04e3d52175105c2bf5187527f965ac4"
+    },
+    {
+      "id": "phone-scam-synthetic-c92544aa0cbbb8ac",
+      "publisher_label": "SAFE",
+      "text_sha256": "0ffffddf279de9a2cae0d65c4257f72c47253490fb654d017056a65c6b25b523"
+    },
+    {
+      "id": "phone-scam-synthetic-c9281bcec3dcd829",
+      "publisher_label": "SCAM",
+      "text_sha256": "ec8ac90650ad8be7f34da55664427c56f6c42f8e021ce5b3b4c534d03fddbfd2"
+    },
+    {
+      "id": "phone-scam-synthetic-cd7d2c70a024c32f",
+      "publisher_label": "SCAM",
+      "text_sha256": "1108665b3b5dd080caf7a313d954ea9920396e8808d9f4b1ddfc572781bd3e1c"
+    },
+    {
+      "id": "phone-scam-synthetic-ce4353822c88220e",
+      "publisher_label": "SAFE",
+      "text_sha256": "227f7e2898d2bce4581f9307e66d5d84e825b9b29142ad7497765bd79be29790"
+    },
+    {
+      "id": "phone-scam-synthetic-cf0b067223fd95a1",
+      "publisher_label": "SCAM",
+      "text_sha256": "af0be608c09229bb1c737326f8b00a54f3ba15657e04dfa03cde332e7c1599ec"
+    },
+    {
+      "id": "phone-scam-synthetic-cf19e9e2b59e11d0",
+      "publisher_label": "SCAM",
+      "text_sha256": "42b6b9c25f544fd15b89aaa0a59d55111efdc71ea649fc89667d42233955f93a"
+    },
+    {
+      "id": "phone-scam-synthetic-cfd7b6c9d8dff86b",
+      "publisher_label": "SAFE",
+      "text_sha256": "4affd89078924f3d689dfd845c93dfc0338676255a35de879c453ac9edec54ef"
+    },
+    {
+      "id": "phone-scam-synthetic-d0d9b284253d5c43",
+      "publisher_label": "SCAM",
+      "text_sha256": "074a78e0f9ee37f88811914860175790f44d3aef5a76adf55dc6311a6e9448be"
+    },
+    {
+      "id": "phone-scam-synthetic-d243e7e47d27f19a",
+      "publisher_label": "SCAM",
+      "text_sha256": "384f4757227534848e8806cfd37e63efbae36c940ab470c111f3cf3d06faeb03"
+    },
+    {
+      "id": "phone-scam-synthetic-d27f52c3a80e2754",
+      "publisher_label": "SCAM",
+      "text_sha256": "a6d4ed8fbc62653c44f57f1622589cb438838d093633c1b947bd829d0a5d19e1"
+    },
+    {
+      "id": "phone-scam-synthetic-d39de90f439f38c2",
+      "publisher_label": "SCAM",
+      "text_sha256": "c2a9ba573b358d1fe2f1ac6f433bf355b3f699fc2316caaec964a1863a10d7f1"
+    },
+    {
+      "id": "phone-scam-synthetic-d4b022f07e65e025",
+      "publisher_label": "SCAM",
+      "text_sha256": "8a16ecfabd4886b93d34b9da481f0852e2502127dc34ffba99372416c7a225f3"
+    },
+    {
+      "id": "phone-scam-synthetic-d4ebae2454dd5ccf",
+      "publisher_label": "SCAM",
+      "text_sha256": "59d524525be421b837587f8407f882cdc8e14a1f76db32ff06135e93bc698365"
+    },
+    {
+      "id": "phone-scam-synthetic-d5bf47aabb209b5d",
+      "publisher_label": "SCAM",
+      "text_sha256": "f4039ce0d77f9e7adfa41ca746b3eebe803f3622ac3f01bbbb4738779c52e381"
+    },
+    {
+      "id": "phone-scam-synthetic-d5d41908a71151d1",
+      "publisher_label": "SAFE",
+      "text_sha256": "e98bcbf971e7f6321b7b9c7dd8f7ee5294fdffac687cf52a3b9cb9849bb2852f"
+    },
+    {
+      "id": "phone-scam-synthetic-d631f88335e725d9",
+      "publisher_label": "SCAM",
+      "text_sha256": "42655a092505356115bff07ee21d938f2f4804f50ceee8377904daf1fc166e1b"
+    },
+    {
+      "id": "phone-scam-synthetic-d64fb0b8e49d557c",
+      "publisher_label": "SAFE",
+      "text_sha256": "bd172e619548b817301307b3e78091a4448d4e04d85ee9a7ce0fa4dfdf84f324"
+    },
+    {
+      "id": "phone-scam-synthetic-d72ad290018e657e",
+      "publisher_label": "SCAM",
+      "text_sha256": "72ef7aacfa9766a1b74f2a9a0d33f1b5c0cf2eb6fa8c9e717a9057acd44da847"
+    },
+    {
+      "id": "phone-scam-synthetic-d899a5335158872d",
+      "publisher_label": "SCAM",
+      "text_sha256": "a9fe14410252294bb1bfeeac895fefa64d18c0f2c07196fb1a76993d4203fc02"
+    },
+    {
+      "id": "phone-scam-synthetic-d952b3c879429516",
+      "publisher_label": "SAFE",
+      "text_sha256": "7c67cbbeb0ac58c5a48bc03222ff2c461226c17cda992ca05fa5d7c69014d98b"
+    },
+    {
+      "id": "phone-scam-synthetic-d95d2b4891873bac",
+      "publisher_label": "SCAM",
+      "text_sha256": "6ca367e291f28e65076146513dd8120186d60e87024e21c5ee917ee0bf4d6e16"
+    },
+    {
+      "id": "phone-scam-synthetic-d99f4f4afa523da1",
+      "publisher_label": "SCAM",
+      "text_sha256": "79bdea9d12f3107f68770dafb5c5b88affa8580032e56436d4c5cd94368899af"
+    },
+    {
+      "id": "phone-scam-synthetic-d9eaccd30a5f89fa",
+      "publisher_label": "SAFE",
+      "text_sha256": "9122b946fae7c3d70f8af2a9866cb2311cdf6249a3fab3d6e47c3deec469600c"
+    },
+    {
+      "id": "phone-scam-synthetic-d9ed7900f5335369",
+      "publisher_label": "SAFE",
+      "text_sha256": "8952f78c7a093e0469195daa6634bb0cfefe8ed4673b7b49386eac847a86f888"
+    },
+    {
+      "id": "phone-scam-synthetic-d9f8c78bbcf5c057",
+      "publisher_label": "SAFE",
+      "text_sha256": "05eaa7b3ab79c83b8563c207b89342d4752b3501fcc965ce2c29988bb2284ee5"
+    },
+    {
+      "id": "phone-scam-synthetic-da3809068ffae932",
+      "publisher_label": "SAFE",
+      "text_sha256": "6b6bc212ecafd5acb3cafc8a6d5f39f694b250b410f9acb90a32ef399d0eee78"
+    },
+    {
+      "id": "phone-scam-synthetic-da586c8520c2ebb0",
+      "publisher_label": "SCAM",
+      "text_sha256": "26c23c8206bd59d4b194d3c8582da7e7c858bf458b16715cae70f224b1e582a9"
+    },
+    {
+      "id": "phone-scam-synthetic-da8e035d33c8b960",
+      "publisher_label": "SCAM",
+      "text_sha256": "916dfb0052160e1ae1b4be48089471475c0bbed5b548341304e683bb82e1cf02"
+    },
+    {
+      "id": "phone-scam-synthetic-dd0fc77096c815c2",
+      "publisher_label": "SCAM",
+      "text_sha256": "92a58129f52bfd5059ef7bf867993aa14dbce8693ed9758ba591ed170152d98a"
+    },
+    {
+      "id": "phone-scam-synthetic-dffea38fe769f963",
+      "publisher_label": "SCAM",
+      "text_sha256": "8123afee02c08873b05bf995f97ca64cc1a73464b1d591e2557c8c378521877b"
+    },
+    {
+      "id": "phone-scam-synthetic-e1bf6127c849421c",
+      "publisher_label": "SCAM",
+      "text_sha256": "f4a0498344833a7ebfd4a1c60f5f1f495aa22f4da5dd1ab0b81e214c8b5847c2"
+    },
+    {
+      "id": "phone-scam-synthetic-e1efc582c9aa3718",
+      "publisher_label": "SCAM",
+      "text_sha256": "df2420f09f0f719f001c99634a88e8088760bf356e57b55770f05a08a62c4dea"
+    },
+    {
+      "id": "phone-scam-synthetic-e32d431f750b9a60",
+      "publisher_label": "SAFE",
+      "text_sha256": "5c2a9a941a2de797e8ca56a4f717e246cf125a08ea24fcdb74c775ed1559b3c4"
+    },
+    {
+      "id": "phone-scam-synthetic-e4443c79a17cccbb",
+      "publisher_label": "SCAM",
+      "text_sha256": "62cee5d46d6c3b5e21c0e16a9c0ec2b519231ffca3b1c6b37d3a3f01cfb54587"
+    },
+    {
+      "id": "phone-scam-synthetic-e55fc8bf5967fcfc",
+      "publisher_label": "SCAM",
+      "text_sha256": "5b670c636ea1504748a2f2d7b9b5a2ee8fdcf2eada438a0ff66d58aa24af5b9c"
+    },
+    {
+      "id": "phone-scam-synthetic-e650286a52173379",
+      "publisher_label": "SCAM",
+      "text_sha256": "4acfc816f44c7f78f8bc63d2862c16d43754249d23f4ccac58e5d6f53dc73a19"
+    },
+    {
+      "id": "phone-scam-synthetic-e7455a6d10f1d726",
+      "publisher_label": "SAFE",
+      "text_sha256": "32d5bdb39783be6ed78d07aff488512f6834e8bc055c4ac67463a395203d6c12"
+    },
+    {
+      "id": "phone-scam-synthetic-e782161c10d02aa2",
+      "publisher_label": "SAFE",
+      "text_sha256": "2a7a1572a3cec6a326427826ada65e7f0a8b9f3646f4b13a6470395937ff6dee"
+    },
+    {
+      "id": "phone-scam-synthetic-e9e4df0e4b1ba579",
+      "publisher_label": "SAFE",
+      "text_sha256": "44e33669abbbef720b8c68de0179fe3cda512ee7b3575240a77255097b2e78eb"
+    },
+    {
+      "id": "phone-scam-synthetic-e9ec6166b7b894cf",
+      "publisher_label": "SAFE",
+      "text_sha256": "08f02577aa459f61e9e8e452e8583a92cadc1b39e5b27b2cf4ae3ff1fdf1861e"
+    },
+    {
+      "id": "phone-scam-synthetic-ea6543272006ca71",
+      "publisher_label": "SCAM",
+      "text_sha256": "c87772cba5c791040220bec29330314fd8acebd8934ac2ad0bd14efe57cbdd09"
+    },
+    {
+      "id": "phone-scam-synthetic-eaa7c787d405745e",
+      "publisher_label": "SAFE",
+      "text_sha256": "29acb497aa9ca191f819fea60c0da76ac0b353ba2c433be0d0e2325cf932f5b4"
+    },
+    {
+      "id": "phone-scam-synthetic-eade2254ab875e34",
+      "publisher_label": "SAFE",
+      "text_sha256": "2ea68521062c1a88eb1d48a845b710e12828897cc31ff2dc9e414049fd4c2498"
+    },
+    {
+      "id": "phone-scam-synthetic-ecfa97cd70c987cf",
+      "publisher_label": "SCAM",
+      "text_sha256": "c1d0872f7fa14947b407e7f17c39a4fc146017d649a6800cd9dc768b04a6667b"
+    },
+    {
+      "id": "phone-scam-synthetic-ef04bb7065f94627",
+      "publisher_label": "SCAM",
+      "text_sha256": "03012f4c4c74521626d84a3058aa1a5756c81e5e500837f27c0a0a374f6125d5"
+    },
+    {
+      "id": "phone-scam-synthetic-efdca003b58562be",
+      "publisher_label": "SCAM",
+      "text_sha256": "89c70c57fa60b5cd00542adcd21586945e0df0a0541e157feb351cb37f7d4988"
+    },
+    {
+      "id": "phone-scam-synthetic-efebfa29759e70c7",
+      "publisher_label": "SAFE",
+      "text_sha256": "27aef0e5e35902ba8ccaef8d97ec032b1439cd96f6eec4786f4842f02252feca"
+    },
+    {
+      "id": "phone-scam-synthetic-f09722558bdf466e",
+      "publisher_label": "SAFE",
+      "text_sha256": "1a9615e1490665038f602d653420fb9a96f1be644f3bd1bbfbf3c58410a59d6a"
+    },
+    {
+      "id": "phone-scam-synthetic-f143fe391c82a6ed",
+      "publisher_label": "SAFE",
+      "text_sha256": "615217729aa318a2e05fb3f7c02d0888de5334d7af93f92ddca5c8bc4a8d8361"
+    },
+    {
+      "id": "phone-scam-synthetic-f3600639e747b233",
+      "publisher_label": "SAFE",
+      "text_sha256": "44be38aef7338bd4d1e8deeea193f7e62408553f39556a63680fd312c5b3399d"
+    },
+    {
+      "id": "phone-scam-synthetic-f437a12cf379d037",
+      "publisher_label": "SAFE",
+      "text_sha256": "2d98436ca7dd3c43b73ff1805120d6e1e3a45543cecc887b8467e1123673ec1f"
+    },
+    {
+      "id": "phone-scam-synthetic-f44907e60a298f5c",
+      "publisher_label": "SCAM",
+      "text_sha256": "c11a39578553af4204a3da3a87d2dd9bc3fcf5e77cc883e7d6246b1e747dcba0"
+    },
+    {
+      "id": "phone-scam-synthetic-f49d05a3efa46150",
+      "publisher_label": "SCAM",
+      "text_sha256": "b20e3ff9b50ce7485cf34cd4f8c57c7601a29a3c06057dbd46e0d75335181755"
+    },
+    {
+      "id": "phone-scam-synthetic-f49e3dd4315e124d",
+      "publisher_label": "SCAM",
+      "text_sha256": "b427958c5cfb67339e738c2aa0f09701f92551efede46498270b794fb531e54d"
+    },
+    {
+      "id": "phone-scam-synthetic-f56c730ff073163b",
+      "publisher_label": "SCAM",
+      "text_sha256": "30f4bf65ea83eff5dd919a446392be50dd1497a0606a5508c54ea1817b0ccc3d"
+    },
+    {
+      "id": "phone-scam-synthetic-f640dd2598f39c1f",
+      "publisher_label": "SCAM",
+      "text_sha256": "808e0af2f7921292ce38fddeb2e3155a0a417fcaacae8425fdc25a9f6af980dd"
+    },
+    {
+      "id": "phone-scam-synthetic-f6f93eac606f546c",
+      "publisher_label": "SCAM",
+      "text_sha256": "423a61268df7ce48f3e4dfb7530adc25b061e7180a7d5ff58236875bfb3d5e2c"
+    },
+    {
+      "id": "phone-scam-synthetic-f75bc4b881d7c2fb",
+      "publisher_label": "SCAM",
+      "text_sha256": "3adb181b206900341ae216a6751f459c4d27c30e286e4c0e02d146b96405de71"
+    },
+    {
+      "id": "phone-scam-synthetic-f7dbad502ca87df8",
+      "publisher_label": "SCAM",
+      "text_sha256": "17b6f1dd52b60962767f806b4e762d1cd92c26d4e93fc443814a7a54e19a5eb1"
+    },
+    {
+      "id": "phone-scam-synthetic-f845e5a740131b38",
+      "publisher_label": "SCAM",
+      "text_sha256": "e02783d55644784a64b49eed857e1a3a34ea0304b511b8de3f3c4543794985eb"
+    },
+    {
+      "id": "phone-scam-synthetic-f933192cd97c6c62",
+      "publisher_label": "SAFE",
+      "text_sha256": "edded5f0875c16de9414ef5231496c30f8396577894747500ec2fd532de9e800"
+    },
+    {
+      "id": "phone-scam-synthetic-fa09be5e702d088a",
+      "publisher_label": "SAFE",
+      "text_sha256": "46743bd8549cd4950a5d0edf22144ab98ed45b27bab80fab541f1e4bb0449f97"
+    },
+    {
+      "id": "phone-scam-synthetic-fadc2eedef02853f",
+      "publisher_label": "SAFE",
+      "text_sha256": "a28f6ffd8073fdc92d85e0c5d11292d554df829c3cb9fd9a6ec0a8335848e20a"
+    },
+    {
+      "id": "phone-scam-synthetic-fb8ff4bd1dd94d4f",
+      "publisher_label": "SAFE",
+      "text_sha256": "5cc3d1cd41a37ee0e79ef0309d829d46710d0775f3583f7907391cfde6c604cf"
+    },
+    {
+      "id": "phone-scam-synthetic-fbcdddf2904b9bd6",
+      "publisher_label": "SCAM",
+      "text_sha256": "3e3061617d47de53ed3eb057b4d691cdf28f2a100da2bfa2d5412040d4120718"
+    },
+    {
+      "id": "phone-scam-synthetic-fdda908e6cbf3cb6",
+      "publisher_label": "SAFE",
+      "text_sha256": "5b55f6d60b282041c31510d873bccdb63f01c1aa5f5c86e7a6dccc4143ad4f63"
+    },
+    {
+      "id": "phone-scam-synthetic-fe22367264bbceb9",
+      "publisher_label": "SCAM",
+      "text_sha256": "f6d459f4df59867280cd56bc1bb49461b030466c73795cedeb85c9f47c48a903"
+    },
+    {
+      "id": "phone-scam-synthetic-febd37afb765ff85",
+      "publisher_label": "SAFE",
+      "text_sha256": "93f44b800f2697ddda4678f1524a6be71f0d78bf4a9960e7f48138e63c630fef"
+    }
+  ],
+  "flag_counts": {
+    "generation_artifact": 4,
+    "publisher_safe_has_high_risk_caller_action": 70,
+    "publisher_scam_lacks_detected_runtime_evidence": 27,
+    "speaker_parse_failed": 1
+  },
+  "findings": [
+    {
+      "id": "phone-scam-synthetic-00e1b6a0a884cb9c",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "8c3714334d8d58dba8c9cdc6a2e1de1ce4a6b7e294c8ffa6f608c6d9b73a963f",
+      "characters": 1330,
+      "words": 223,
+      "family_id": "phone-scam-near-ebbbaf91a0fa33b5",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-050b538849e5f3df",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "0b891034ee0cb2f2cc1129c2dc37743378524b3398e4d42e57dec2dbb0d8d6fe",
+      "characters": 2368,
+      "words": 420,
+      "family_id": "phone-scam-near-76afe3aa69a4a935",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-0c20b9ffddd0884c",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "1fa9651b020e433f80c6d596ccd6135443486b33b23f1ac8714a8348a0dc4167",
+      "characters": 1036,
+      "words": 172,
+      "family_id": "phone-scam-near-b36313d4a5760051",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 12
+    },
+    {
+      "id": "phone-scam-synthetic-0c67bc9887efe6f4",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request"
+      ],
+      "text_sha256": "8c4702ca8a6127eabf0e782cead16d29eed874405d929316359ecf073396815d",
+      "characters": 692,
+      "words": 124,
+      "family_id": "phone-scam-near-0663361e345bbb4b",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-105ccf20306cce00",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "c3fb189b89c292e5a21f3e3aba65abb77d5e75e60fca8fd4f548834c975967f2",
+      "characters": 680,
+      "words": 119,
+      "family_id": "phone-scam-near-2585560fe94b4d9b",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-118ccd92d4264b25",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request",
+        "threat_or_coercion"
+      ],
+      "text_sha256": "ad62ba8d54a207d03e2a2bcc74b071db2580d537be1e10d0d17ada2742110ec2",
+      "characters": 2122,
+      "words": 372,
+      "family_id": "phone-scam-near-f03397d56b97f566",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-11b4f3fad13a5769",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "a813bced45593d58d3df18c5cd07ea0059c16c75d342b49e2a31c908a9fe2752",
+      "characters": 1891,
+      "words": 330,
+      "family_id": "phone-scam-near-40d18980ceb72fa5",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-1221526a54730413",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "8e7911dc8f39c89d0d0dede8f7799b7d86b2d2ce766e14cd7963d3deff65b56b",
+      "characters": 474,
+      "words": 84,
+      "family_id": "phone-scam-near-f1fc4296d2bcd0e5",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 3
+    },
+    {
+      "id": "phone-scam-synthetic-128973afa6f74a10",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "eb70e85e5c301840da8e5f6accceadaf9b1fdd224ff6ab4f23390d702ab16dd9",
+      "characters": 2537,
+      "words": 435,
+      "family_id": "phone-scam-near-a6430e179801935a",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-19ef60d4bcab64c3",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "4b5086d40eb4a5ad1f61e937746991bbf4a3f8ce27c2488f05bcaea6e6d59013",
+      "characters": 657,
+      "words": 105,
+      "family_id": "phone-scam-near-a08e7cef43144439",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-1ed8e30b55f1deac",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "c4d2b7a6f8359afddfce356ea91d7d7f505e1f12c8328d272652b377ece7f333",
+      "characters": 545,
+      "words": 92,
+      "family_id": "phone-scam-near-a3c3ed880b858726",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-2028763d5daf7cef",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "97df63faf80f246bb36388fce6299eccb2cac3735575abe5e6967c40616648ab",
+      "characters": 2193,
+      "words": 353,
+      "family_id": "phone-scam-near-9a7f6ee4c8fad7e4",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-2258e5254e9ea1df",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "076d77dd7669da9a31f09fa2d37661249473741b28326f631b8e7ec1c0d73d11",
+      "characters": 561,
+      "words": 97,
+      "family_id": "phone-scam-near-af132376f8634022",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-22f73d1ae74e03a6",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "c47b596506893b9edd418fcdd3a50ffc83df4b5e4e4aa31e853b41b38f1ddc61",
+      "characters": 720,
+      "words": 119,
+      "family_id": "phone-scam-near-ef62e65f518aae07",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-23c1c06938a59f0c",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "269b8962ff52bc8be600bc12c080d73beabedad9adf47f84463af5dbd8b2b6ed",
+      "characters": 716,
+      "words": 116,
+      "family_id": "phone-scam-near-f3983ec61b669e64",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 4
+    },
+    {
+      "id": "phone-scam-synthetic-2818a9d00a911d3c",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "0d9148c12e06a5fac0d81de63bcbebb5ba8c5ebe2fbb5c645f9fbb1d378ed1b0",
+      "characters": 428,
+      "words": 72,
+      "family_id": "phone-scam-near-5c9b387b33ca3ba8",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-2aef42f78fe1d871",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "f5e959769380324fe43030608e6af89427e876fc14445e8a31d9ec12fec4a75d",
+      "characters": 891,
+      "words": 146,
+      "family_id": "phone-scam-near-c997385f28f42d23",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 12
+    },
+    {
+      "id": "phone-scam-synthetic-3123cc900ae18946",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "4e33274b4e98bd4eebf189238b2734b09dade2dd0499ddcffb8ffc11f4d67876",
+      "characters": 766,
+      "words": 121,
+      "family_id": "phone-scam-near-0801aa47cff5cd1d",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-387cb0e1001b0de0",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "dbeaf1aa6a22f1f57318eab6ede5338b1328f3029f8c0518aa3a47ffce90d3b6",
+      "characters": 1433,
+      "words": 237,
+      "family_id": "phone-scam-near-9ea591c483f2dabd",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "very_subtle",
+      "source_batch_number": 12
+    },
+    {
+      "id": "phone-scam-synthetic-3bb1010c55368015",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "8926b8d8aabc183f6e1c3006ee6ad372ac8caf77677a9bbe8ad1b720df87e031",
+      "characters": 1985,
+      "words": 343,
+      "family_id": "phone-scam-near-3b0c38872e1839b0",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-404929f0cbdb9b11",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "5573149b4882b31fc70c2dbb65b8b52151ac2372017c599130ccb7e5dc86975b",
+      "characters": 885,
+      "words": 147,
+      "family_id": "phone-scam-near-3c8067966afd861d",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-40f26810f9654815",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "85c97ac62700d9e3b18fd813517dc006558052c14359d9920d0e7fb2c016f396",
+      "characters": 2157,
+      "words": 365,
+      "family_id": "phone-scam-near-4f1ba03e113d2ff9",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-4182d91326b6c8a3",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "0f3849f331649021a1a21d3da16e14c5faf380577ed85bbfe814b7becb95a424",
+      "characters": 1067,
+      "words": 183,
+      "family_id": "phone-scam-near-e3ea6f17aacd26e4",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-44f4d39005614a13",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "e08054f546df5afea5f6ba6ba7583e85be7d0b6d7d1ab696dab9d1092d45e5d2",
+      "characters": 849,
+      "words": 152,
+      "family_id": "phone-scam-near-05b8182b7e3aac52",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-46af961bfb83d486",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "03d2b064077df51f10f5bb05e1b0dd3523195c7578423165d41857748ba5e2c8",
+      "characters": 2159,
+      "words": 385,
+      "family_id": "phone-scam-near-534d90de37b22bfe",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-46b7997e0cb7c094",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request",
+        "payment_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "f68eb6d4925acbdf04fe44e2a25138b03d463fee297d0f5ccbfbb428916ffee6",
+      "characters": 2009,
+      "words": 335,
+      "family_id": "phone-scam-near-a159f6ecfb5ab3c3",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-470842f4168b31b2",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_remote_access"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request",
+        "remote_access_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "9d57febb63704218cfb7631e68d358489a098edd3d05a953e262b7eaae601400",
+      "characters": 2039,
+      "words": 346,
+      "family_id": "phone-scam-near-c66237b431b26ed8",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-4bb0b40fc71d2214",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "07fc1ed0b4d1cb42bad86e91e2e7565c7fa749de4e14ff1876eb53346d1239ff",
+      "characters": 701,
+      "words": 119,
+      "family_id": "phone-scam-near-32c21dea8bd0e018",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-53da8489dee06832",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request",
+        "too_good_to_be_true"
+      ],
+      "text_sha256": "47a73c292d8214fe1d0919f65502f03200bea44c6e8c62a0c29f3d762b97c8c9",
+      "characters": 1545,
+      "words": 257,
+      "family_id": "phone-scam-near-3ee33587d73853d5",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-5ef739ba77663be5",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "d27b6898eb53c62754b06355df73c6e417e35429d9b5ca8a5d0a85d863f587ca",
+      "characters": 1961,
+      "words": 363,
+      "family_id": "phone-scam-near-3169dd5e2363db20",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-5f3e4f7ed4ee5ffa",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "fadc09345fd2f512352ede06cccab85d6947b642f9d0d40346711e681023d882",
+      "characters": 722,
+      "words": 118,
+      "family_id": "phone-scam-near-13096dbab5ccbdb8",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-665c049e37cd866a",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "2bb23378d37d1e57483629f3e7838967d8a6726c4f63c9885767e033c215112a",
+      "characters": 875,
+      "words": 158,
+      "family_id": "phone-scam-near-6b800253823f77dd",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-67aa3382806c804a",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": null,
+      "flags": [
+        "speaker_parse_failed"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "e05c49fc2268525b2882e09923726c1b3cef40f95d3ea8e042f39812f3c3375a",
+      "characters": 2779,
+      "words": 485,
+      "family_id": "phone-scam-near-9cb7d165f4ddd088",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-6a50449ac4f41afc",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "4592696bd681e70b83da1e87a83c384531311f2e373679964b9a083ae92eccbd",
+      "characters": 609,
+      "words": 104,
+      "family_id": "phone-scam-near-4af615d6c0ef415d",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-6a6010c87663874a",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "45670dd22b05a93b783b6beef2fcf350b8bc993bd3d5a9155cd509f4367f6947",
+      "characters": 1598,
+      "words": 269,
+      "family_id": "phone-scam-near-a3d3e6088ffb4f32",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-6aab8250c4339338",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "874760a5f3cd433360f18c90d2bb57bae8a2b5ebb2523fb9f081a661c845411a",
+      "characters": 2459,
+      "words": 423,
+      "family_id": "phone-scam-near-4d439427e3e6ac6b",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-6caea866b6c7f98c",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "9e0847487b54871185b432abf44943fe98810860fc48ede304262e6b5be23a05",
+      "characters": 1445,
+      "words": 250,
+      "family_id": "phone-scam-near-1ba798d9388e1275",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-7356f6edb1c7ef75",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "a69340655a71806716dac9c96056fedbeca8d4a72826b5c342845d6b042a09c6",
+      "characters": 425,
+      "words": 71,
+      "family_id": "phone-scam-near-1230a87d63d1f68d",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-7517b9a968c961fa",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "a58b96fffd6d1b51f142cdb58162f274f39b3de89bb5a65742c0ccc772a6eea3",
+      "characters": 380,
+      "words": 61,
+      "family_id": "phone-scam-near-1dcea32f473b20d9",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-7dc49fa761577584",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": null,
+      "flags": [
+        "generation_artifact"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [
+        "assistant_preface"
+      ],
+      "deterministic_signals": [
+        "artificial_urgency",
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "f14b3133b6b79fea133c4b991b42bb3e6f2c267d66299b4c090843953929c02b",
+      "characters": 1369,
+      "words": 225,
+      "family_id": "phone-scam-near-37d6695c24b3eb13",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-7f63f74bf8b5b280",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "77a801bbc3e95bb30765911b7537abd0815e64239020f027e2327360a71637dd",
+      "characters": 1463,
+      "words": 243,
+      "family_id": "phone-scam-near-d87d74bd2f817731",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "very_subtle",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-7fa7e6b9cd37937b",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request"
+      ],
+      "text_sha256": "9a80972b617c7a676219d1635961f1f96c7131091628175317b85b9c54196145",
+      "characters": 909,
+      "words": 167,
+      "family_id": "phone-scam-near-83e9d1a39f7ff094",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-800e7d5fdd1522ff",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request"
+      ],
+      "text_sha256": "149e1bbd7b4cff0b1c263e92cae4b1ff895dd96fff73ec3007b9378d92e74f42",
+      "characters": 1179,
+      "words": 195,
+      "family_id": "phone-scam-near-e7b5fe7b2a2dd478",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-83b62826bdb9a80f",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "f2dd135ecab0293798a86a57dc54b40f77545dd7be0a32fc89ba1c1b5d8693d6",
+      "characters": 1440,
+      "words": 256,
+      "family_id": "phone-scam-near-59cf0c83dd413a6b",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-85a9aa3bebd53e6d",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "0c82d260be98d40822e118f0a11385e894618e6547df58f54a0a68de1ff2f5de",
+      "characters": 420,
+      "words": 66,
+      "family_id": "phone-scam-near-8b100c92105c375d",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-87b0b04de79a5e58",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "3369dbf970f7de710d5d678457612d3e51f78e9108d3ccd819b75c9e5a565e72",
+      "characters": 853,
+      "words": 157,
+      "family_id": "phone-scam-near-02b89a8b53931949",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-8984cb4b7e09ffcc",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "payment_request",
+        "too_good_to_be_true"
+      ],
+      "text_sha256": "ff1b125c99a85594fe73cebefa7169516d3131787667e56a4cc0c2174f31a700",
+      "characters": 2245,
+      "words": 392,
+      "family_id": "phone-scam-near-74fa22e0aaa9d4fa",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-8a4abf0ff3bca94d",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "otp_request"
+      ],
+      "text_sha256": "f99de11bfe9d5541ddafa1c3f65482e67217b7ed5d47bf70252d37460c93834b",
+      "characters": 1970,
+      "words": 340,
+      "family_id": "phone-scam-near-f09dce309a29047e",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-8c7e0579f3a5b099",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "e57e335da94074279e8397fa14366d978197dfa6239fcd50fd496135e7b955fd",
+      "characters": 1284,
+      "words": 228,
+      "family_id": "phone-scam-near-ab9c86083cb1f541",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-8e122c6dae72c08c",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "75941c4eef576f1347c28a44435c8ee2b0ccc769dd51bae9423f5f360b4f6c6b",
+      "characters": 1296,
+      "words": 223,
+      "family_id": "phone-scam-near-2ebea1e9fe732c58",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-8e785b6fa777ee3d",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "0b4c410b1008a4986028d8c0d509733557008f934f76c3bd3000644f3c3ca78c",
+      "characters": 1797,
+      "words": 305,
+      "family_id": "phone-scam-near-c4a0c883690e8348",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 12
+    },
+    {
+      "id": "phone-scam-synthetic-901ba1a33492ba94",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "faad39597d0ad229b024088eec07452b0699d7a52e094be3bc3fc761bdaa54eb",
+      "characters": 413,
+      "words": 67,
+      "family_id": "phone-scam-near-0ad45999d15a91bb",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-904f88eebbfc88f3",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "93bcb2736111613a5ba7163ff8bace217322cff88900130035ffc3cbd04dac6b",
+      "characters": 675,
+      "words": 117,
+      "family_id": "phone-scam-near-c009d91d04615cc6",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-9712f885a48ffb0d",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "4c3c88a9bfa860fc58ec9608291643f1358f18c2cd79c3875e3e1e341615b8a0",
+      "characters": 1836,
+      "words": 318,
+      "family_id": "phone-scam-near-9c1d760fc2de62ca",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 1
+    },
+    {
+      "id": "phone-scam-synthetic-9af567c501ba403e",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "b71c2b4fb1e359300ad40a346bad8f8652bb4022c3b6c8da31ad5c5386cdbef9",
+      "characters": 361,
+      "words": 59,
+      "family_id": "phone-scam-near-dd0efd8779c3a88f",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-9aff828455f8c0ba",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "8ce874af5f8d7ff1b5c979fd2342d8961b0a0556e24e35b75c3d3360328fffa9",
+      "characters": 2480,
+      "words": 434,
+      "family_id": "phone-scam-near-423904cf26a8ab8e",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-9bcb1326f157ad93",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "too_good_to_be_true"
+      ],
+      "text_sha256": "657a6fe444151c2b6b1fe775a20e0a02b40de67df55ee7716ea1c172dcccfc57",
+      "characters": 2152,
+      "words": 364,
+      "family_id": "phone-scam-near-d1113f1ca3e32e3d",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 3
+    },
+    {
+      "id": "phone-scam-synthetic-a1d664a5a2aa4e3c",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "24ac502018d1fb8f8d6d0d5de3587faca87ec441e4fbce237ac344708ed9d6dc",
+      "characters": 2227,
+      "words": 408,
+      "family_id": "phone-scam-near-a3ba38e405b0deb4",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-a4de65d44df141dc",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "c69209b319e47e1b4ceae6718158421a6c62d4fd116b1bde4355443678a704bc",
+      "characters": 2550,
+      "words": 430,
+      "family_id": "phone-scam-near-e7c1b08e27d97fb3",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 3
+    },
+    {
+      "id": "phone-scam-synthetic-a9d68529018eaa9f",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request"
+      ],
+      "text_sha256": "ed187f5c6dcdb20b2f8f33b2e63cc928df5329079cbf246d986a610311818e94",
+      "characters": 1661,
+      "words": 279,
+      "family_id": "phone-scam-near-9198a0d89c0932f8",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-abd7de0a4be6eb0d",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request"
+      ],
+      "text_sha256": "e8b69767476c490ccfefdc94f3bf7495be8e029bfb06357977b756ce6343fc78",
+      "characters": 1814,
+      "words": 307,
+      "family_id": "phone-scam-near-49cf9e58708dd376",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-b23ff0af0686bd80",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "d88e292cd176e0e28419e40bd7c1266b7eb98158df26a31076aa01154a67d9c5",
+      "characters": 2377,
+      "words": 399,
+      "family_id": "phone-scam-near-5dd78a2267ac776f",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 1
+    },
+    {
+      "id": "phone-scam-synthetic-b4d85358dbb641fb",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "49c58ac06d6f76af25887b40c104cbc7b2cf8d1a4f7e744553b1a3cea0852728",
+      "characters": 1437,
+      "words": 257,
+      "family_id": "phone-scam-near-67a35696e1771d60",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-b77ab18efbe36e46",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "99cfa71a189d8f1b6327c8d978767c9e47f7b3ca91b963f85c54cabfec81b32e",
+      "characters": 586,
+      "words": 106,
+      "family_id": "phone-scam-near-6159e432d584b363",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-ba5db5a6644fcbf6",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request",
+        "remote_access_request"
+      ],
+      "text_sha256": "ec70e345497b4a260e7d62184206cef9354eb17eafe8e332ba7a3378b747dbf4",
+      "characters": 2621,
+      "words": 463,
+      "family_id": "phone-scam-near-86b8921e81a1079f",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-bba4330c2ea2812c",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "e6b56694c8bf39ec2287d51ca777168255b9b4a75a3e84dc1b1a87c7f2de23a7",
+      "characters": 2424,
+      "words": 427,
+      "family_id": "phone-scam-near-0c03dfdc902ef40c",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-bcfb538c21e44e33",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "01fede23c3e848a492852d0c18b373a01c2a23378fa2dd1b32948bdb8938270f",
+      "characters": 921,
+      "words": 157,
+      "family_id": "phone-scam-near-da073ed3449cb7a4",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-c3c4c74eea14ff70",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": null,
+      "flags": [
+        "generation_artifact"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [
+        "explicit_generation_instruction"
+      ],
+      "deterministic_signals": [
+        "advance_fee",
+        "contact_diversion",
+        "credential_request",
+        "payment_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "db09b217726b3836181b623b9df5fd5be0b7d7c2824cb578a5de7a2a18ad85c2",
+      "characters": 2985,
+      "words": 515,
+      "family_id": "phone-scam-near-8439f9dfe45546c7",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-c57e499f93dfb977",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "ae3ec11dda996596a725d54d6c37c9ccfd0cc43223f6a4e6ba3c1bdaf38e61a9",
+      "characters": 211,
+      "words": 31,
+      "family_id": "phone-scam-near-effb1d41b62f2594",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-c7d70e23d8cd50ac",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "339ce123cec92a00370bc79965bf4df9fe1e88a4d39c359e5a79f7cb78de2b22",
+      "characters": 1102,
+      "words": 188,
+      "family_id": "phone-scam-near-668dfa2068b5d85c",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-ce03b55605dd1abf",
+      "split": "train",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "6bf026f244dfbc101b1ed9a60d79568c9d430c80517d41d4dc846d891666dc43",
+      "characters": 324,
+      "words": 51,
+      "family_id": "phone-scam-near-e9f5413e94722e98",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "direct",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-ea6582405f0a13ff",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "suspicious_link"
+      ],
+      "text_sha256": "2bb85f46dc13ec503b33c8ef3a488e9f6e170f8afaace3bc8e72d1bd900194bb",
+      "characters": 1753,
+      "words": 309,
+      "family_id": "phone-scam-near-e8d448f43a485552",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-eeee4cc3e5a25e38",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "8518b08b8e465c7fe1ff37e3072ee5deaccca26f37bae637f513a7f256759c29",
+      "characters": 471,
+      "words": 81,
+      "family_id": "phone-scam-near-30fe5e91a68d1e42",
+      "source_dialogue_type": "support",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-eff453e30ea30f85",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "451e83125e1f41a55fdd9bde663527e6116ad6003a4f4348c0b7f0bab6b92053",
+      "characters": 1110,
+      "words": 182,
+      "family_id": "phone-scam-near-d5a09a7495509a00",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-f03edb54476c2a49",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "1f7b6ba5ace6b93fce9438aa4a7f72e4778eebedb8e1d814e38c959435571228",
+      "characters": 1936,
+      "words": 339,
+      "family_id": "phone-scam-near-de09c110618c7e73",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-f97c0d8ad08b812c",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "2210b9acc7b078b6a5d276d230ed1b5eeef8521ea70626c241ba577e31596fa5",
+      "characters": 445,
+      "words": 73,
+      "family_id": "phone-scam-near-de7ff929b839c930",
+      "source_dialogue_type": "refund",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-fdbb469c2474f62f",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "1e8f1e0a38d37656c23b9945bd1295f6a4f605d80d44c9d730e6d8ad409f897d",
+      "characters": 1589,
+      "words": 274,
+      "family_id": "phone-scam-near-b87282501f58c0f7",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 2
+    },
+    {
+      "id": "phone-scam-synthetic-ff81942f50895fce",
+      "split": "train",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "artificial_urgency",
+        "credential_request"
+      ],
+      "text_sha256": "73fb46a1a3266c2cf55312c47504ab24982a87a125c8d281a97f3108dbe6faa0",
+      "characters": 2036,
+      "words": 349,
+      "family_id": "phone-scam-near-fc477af18932e601",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-026f8b5a24401df5",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": null,
+      "flags": [
+        "generation_artifact"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [
+        "explicit_generation_instruction"
+      ],
+      "deterministic_signals": [
+        "credential_request"
+      ],
+      "text_sha256": "24ae4866e7493b2c32cc7f52a76067bf59596ae871f30937ec9eb7be5935410e",
+      "characters": 473,
+      "words": 78,
+      "family_id": "phone-scam-near-dc75025f91b5e3e4",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "short",
+      "source_variation_style": "efficient_professional",
+      "source_batch_number": 3
+    },
+    {
+      "id": "phone-scam-synthetic-04a1ac6ec323a453",
+      "split": "validation",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "f2ea24c5fd0f6d87bc7cd26b7fdc226bbf09690fa97dfda97389b44fd780ec21",
+      "characters": 864,
+      "words": 148,
+      "family_id": "phone-scam-near-669147c1e01b0b1a",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-09e951abde5de949",
+      "split": "validation",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "5747ce396e4ff55b99e14430396e094b1de56f8999a710ba236e78f6146a6b51",
+      "characters": 752,
+      "words": 126,
+      "family_id": "phone-scam-near-ec42675bf38ba26e",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-172c43f051842e9d",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "cb0e64e328e50b3393fcbdd2db7e45f2bf86035704f7fa6356e367d873c0012f",
+      "characters": 3016,
+      "words": 516,
+      "family_id": "phone-scam-near-c300d56c195575ef",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 3
+    },
+    {
+      "id": "phone-scam-synthetic-1cd53c52eab2fa58",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "2cd84ef0892e4ea86e93ca664cd24a0bc2cd75fd2ee0a1b3bf695b433ec7f374",
+      "characters": 1145,
+      "words": 201,
+      "family_id": "phone-scam-near-94859465717b27f3",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-2ef4894e0aa55448",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "0c59077c564d990e9d74fa2bab6947dba069998ba51e85feccb034e177766ed7",
+      "characters": 1178,
+      "words": 205,
+      "family_id": "phone-scam-near-9c050620b05b21d9",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-3441b160ccd26eb1",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "4057fba03d778d0f29713a87ba6ba900bb0679640c224bb0f4089cbc545d1ec7",
+      "characters": 1369,
+      "words": 237,
+      "family_id": "phone-scam-near-3f7a26e56fbcfd9f",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 3
+    },
+    {
+      "id": "phone-scam-synthetic-3a9b96783177ffce",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "payment_request"
+      ],
+      "text_sha256": "1a6f6137d2171a10dae2b4ebf99ac41bc63f4a679902b482e601659800d0ee50",
+      "characters": 894,
+      "words": 164,
+      "family_id": "phone-scam-near-6d78812317cb108e",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-3af75b2c10c3d9d6",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "bdc52717af6e27d66e40c4956184cbbffbaa4e35c528eced26d9a38095b225a9",
+      "characters": 1456,
+      "words": 242,
+      "family_id": "phone-scam-near-51abd82c514dc8ca",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-40ed70147a777272",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "threat_or_coercion"
+      ],
+      "text_sha256": "1fe7d04a88cc6e37a54cb59e3df57e83845e6b2b9cec310a5f4fecf4c269523a",
+      "characters": 1709,
+      "words": 303,
+      "family_id": "phone-scam-near-0b4fd4bc2fb311d1",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-434ac3e120302da5",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "391feecdbb57afd4ce6b50acb9879522abb5c691a296a328932c0adc8f95724a",
+      "characters": 1098,
+      "words": 191,
+      "family_id": "phone-scam-near-9a4c7ecf27278898",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 5
+    },
+    {
+      "id": "phone-scam-synthetic-46b96a355982ebcb",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request"
+      ],
+      "text_sha256": "d10d50a5d378d7ef0b080b9c842d2c9ce4fc87397441dc8fcda59b4df91a6156",
+      "characters": 1831,
+      "words": 323,
+      "family_id": "phone-scam-near-52eb109b6dd737be",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-4ffa0454873baff2",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": null,
+      "flags": [
+        "generation_artifact"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [
+        "assistant_preface"
+      ],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request"
+      ],
+      "text_sha256": "03d12655eb7d41545deece331eef947ea257881867ea909d14279fc6476bcf85",
+      "characters": 1140,
+      "words": 189,
+      "family_id": "phone-scam-near-c60aab9ff82d33af",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 1
+    },
+    {
+      "id": "phone-scam-synthetic-5de7b625ce3cb8e2",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "b256972b4b94119bc8ba8b5b7fc3814052b58512b77a5aa32a39a19b15af319e",
+      "characters": 1564,
+      "words": 263,
+      "family_id": "phone-scam-near-9a431bdb285a2345",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 1
+    },
+    {
+      "id": "phone-scam-synthetic-6233544ade1bac2e",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "34f63797804a7e253e7cdf9f86ac1a3264042d566953f3b7b42c23e66bdfcb0c",
+      "characters": 1924,
+      "words": 337,
+      "family_id": "phone-scam-near-c429815bbe37f6a3",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 10
+    },
+    {
+      "id": "phone-scam-synthetic-646856093bca5615",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "medium",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_sends_or_directs_link"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request"
+      ],
+      "text_sha256": "8441abef38b925ead45e763074e80e4056222a397c3b342b94c07c72f59f96a4",
+      "characters": 2284,
+      "words": 380,
+      "family_id": "phone-scam-near-c006e200881028cb",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 4
+    },
+    {
+      "id": "phone-scam-synthetic-6779d778e0227a92",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "7d5b5ce0754e89ddb33f2b79593e624c53cdc12381e10b9958281b59d070608d",
+      "characters": 720,
+      "words": 119,
+      "family_id": "phone-scam-near-96d07adec4f8abb1",
+      "source_dialogue_type": "refund",
+      "source_length_category": "medium",
+      "source_variation_style": "standard_professional",
+      "source_batch_number": 6
+    },
+    {
+      "id": "phone-scam-synthetic-a4e2980870cd5043",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "threat_or_coercion"
+      ],
+      "text_sha256": "7b6566b06304de2e2d8372a20e17bb6f6cdfbb01c93f24ea57fb6743be46665e",
+      "characters": 2047,
+      "words": 339,
+      "family_id": "phone-scam-near-bde201ac6655ef9e",
+      "source_dialogue_type": "ssn",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 4
+    },
+    {
+      "id": "phone-scam-synthetic-a8aa609d0fac2b59",
+      "split": "validation",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "6993f102041b42551b4f4b08908f765c1afeedb8589667e38d5f4acc092f83bb",
+      "characters": 729,
+      "words": 127,
+      "family_id": "phone-scam-near-be356c1e677ff470",
+      "source_dialogue_type": "support",
+      "source_length_category": "medium",
+      "source_variation_style": "somewhat_subtle",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-c0f0ef4e46f08032",
+      "split": "validation",
+      "publisher_label": "SCAM",
+      "review_priority": null,
+      "flags": [
+        "publisher_scam_lacks_detected_runtime_evidence"
+      ],
+      "caller_risk_reasons": [],
+      "generation_artifacts": [],
+      "deterministic_signals": [],
+      "text_sha256": "435e774a3d10d4987f906f35c5cf8ca03bd2acff2732a0c4860f23f1149e3a4d",
+      "characters": 1392,
+      "words": 239,
+      "family_id": "phone-scam-near-b691127e630ef716",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "very_subtle",
+      "source_batch_number": 11
+    },
+    {
+      "id": "phone-scam-synthetic-c72c0e9047e090d5",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_sends_or_directs_link",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "78c0356991580fe285403b21491e8d14d04e3d52175105c2bf5187527f965ac4",
+      "characters": 1966,
+      "words": 339,
+      "family_id": "phone-scam-near-a2a14d91f5c6a045",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 7
+    },
+    {
+      "id": "phone-scam-synthetic-d952b3c879429516",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "otp_request",
+        "payment_request"
+      ],
+      "text_sha256": "7c67cbbeb0ac58c5a48bc03222ff2c461226c17cda992ca05fa5d7c69014d98b",
+      "characters": 1945,
+      "words": 338,
+      "family_id": "phone-scam-near-a9dbb15fbae8cd18",
+      "source_dialogue_type": "support",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 9
+    },
+    {
+      "id": "phone-scam-synthetic-e32d431f750b9a60",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_code_return"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "contact_diversion",
+        "otp_request"
+      ],
+      "text_sha256": "5c2a9a941a2de797e8ca56a4f717e246cf125a08ea24fcdb74c775ed1559b3c4",
+      "characters": 2214,
+      "words": 378,
+      "family_id": "phone-scam-near-455f7791e50d58e2",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 8
+    },
+    {
+      "id": "phone-scam-synthetic-e782161c10d02aa2",
+      "split": "validation",
+      "publisher_label": "SAFE",
+      "review_priority": "high",
+      "flags": [
+        "publisher_safe_has_high_risk_caller_action"
+      ],
+      "caller_risk_reasons": [
+        "caller_requests_sensitive_value",
+        "caller_requests_payment"
+      ],
+      "generation_artifacts": [],
+      "deterministic_signals": [
+        "credential_request",
+        "payment_request"
+      ],
+      "text_sha256": "2a7a1572a3cec6a326427826ada65e7f0a8b9f3646f4b13a6470395937ff6dee",
+      "characters": 1921,
+      "words": 338,
+      "family_id": "phone-scam-near-7410f2565c6e2a7d",
+      "source_dialogue_type": "refund",
+      "source_length_category": "long",
+      "source_variation_style": "detailed_helpful",
+      "source_batch_number": 7
+    }
+  ],
+  "prediction_alignment": {
+    "stage7": {
+      "path": "reports/runs/qwen35-08b-phone-generalization-stage7-regression.predictions.jsonl",
+      "sha256": "4b6f1b79a63ad4a6e625b8e157d072c0687a1b4c0c8afda881eac19809595821",
+      "prediction_split": "phone_scam_validation",
+      "safe_rows": 170,
+      "safe_rows_with_high_risk_caller_action": 18,
+      "safe_rows_without_high_risk_caller_action": 152,
+      "safe_false_positives": 27,
+      "false_positives_with_high_risk_caller_action": 1,
+      "false_positives_without_high_risk_caller_action": 26,
+      "high_risk_action_trigger_rate": 0.05555555555555555,
+      "other_safe_trigger_rate": 0.17105263157894737
+    },
+    "stage8b": {
+      "path": "reports/runs/qwen35-08b-ppone-abstention-stage8b-selection.predictions.jsonl",
+      "sha256": "4e6c705d7df235ca6b33f6b861dc23376c890ed51917ea2d151a8833787156e1",
+      "prediction_split": "phone_scam_validation",
+      "safe_rows": 170,
+      "safe_rows_with_high_risk_caller_action": 18,
+      "safe_rows_without_high_risk_caller_action": 152,
+      "safe_false_positives": 28,
+      "false_positives_with_high_risk_caller_action": 2,
+      "false_positives_without_high_risk_caller_action": 26,
+      "high_risk_action_trigger_rate": 0.1111111111111111,
+      "other_safe_trigger_rate": 0.17105263157894737
+    }
+  }
+}
