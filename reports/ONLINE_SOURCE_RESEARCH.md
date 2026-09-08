@@ -1,9 +1,36 @@
 # Online real-data source research
 
-Research freeze: 2026-08-21. This review treats a large download count as irrelevant unless the
+Research freeze: 2026-09-08. This review treats a large download count as irrelevant unless the
 source has usable rights, row-level provenance, privacy controls, and meaningful novelty after
 family-level overlap removal. Raw and processed corpora are ignored by Git; the public repository
 ships hash-pinned acquisition and audit code, not sensitive message dumps.
+
+### PPoNE robocalls: admitted real-world uncertainty curriculum
+
+- Primary artifact: <https://github.com/wspr-ncsu/robocall-audio-dataset/tree/5aa6f3bfa8563ce8c1c75ebf8a2271e6ff6b4272>
+- Pinned revision: `5aa6f3bfa8563ce8c1c75ebf8a2271e6ff6b4272`
+- Rights: the pinned publisher README places the data itself in the public domain; the descriptive
+  document is CC-BY-ND-4.0. ScamGuard uses the data records, not adapted documentation.
+- Provenance: 1,432 real-world automated or semi-automated calls published through FTC Project
+  Point of No Entry enforcement materials. The publisher describes the collection as suspected
+  illegal robocalls; that does not make every individual transcript independently verified fraud.
+- Admission: 1,378 English rows enter normalization. The builder removes 676 exact duplicates,
+  three near-overlaps with existing evaluation corpora, 342 repeated same-label templates, and
+  quarantines 102 rows from mixed-label near-template clusters. The resulting 255 representatives
+  contain 86 strong-evidence SCAM and 169 UNCERTAIN rows; this source contributes no SAFE truth.
+- Partition: the family-salted split contains 179 training, 33 open validation, and 43 sealed-test
+  rows. The sealed partition remains unopened until a candidate and thresholds are frozen.
+- Baseline finding: the Stage 3 and Stage 7 Qwen specialists detect 12/12 and 11/12 open SCAM rows,
+  respectively, but classify almost every ambiguous row as SCAM or SAFE instead of UNCERTAIN.
+  This is evidence for a narrow abstention curriculum, not a publishable source benchmark.
+
+### Reddit boundary
+
+The current official <https://redditinc.com/policies/data-api-terms> denies use of Reddit Services
+or Data to train ML or AI models without express permission from the rightsholders. ScamGuard does
+not scrape Reddit or treat public visibility as training permission. Reddit-like forum language
+enters only through separately licensed research artifacts with their own privacy and provenance
+controls.
 
 ## Admitted sources
 

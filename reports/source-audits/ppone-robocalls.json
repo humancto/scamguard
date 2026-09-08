@@ -1,0 +1,84 @@
+{
+  "artifact_schema_version": 1,
+  "artifacts": {
+    "near_label_conflicts_quarantine": {
+      "path": "data/external/ppone_robocalls/ppone_near_label_conflicts_quarantine.jsonl",
+      "rows": 102,
+      "sha256": "a098737d76cb862f3c4019643f174c866fc25a25d8b102abc09c2ef86d24d729"
+    },
+    "test": {
+      "path": "data/external/ppone_robocalls/ppone_test.jsonl",
+      "rows": 43,
+      "sha256": "f6a08bf171afc993c219a6a8d5d5996c13744c40d78d88c5ef73655c73fb6412"
+    },
+    "train": {
+      "path": "data/external/ppone_robocalls/ppone_train.jsonl",
+      "rows": 179,
+      "sha256": "e2e942253c25940169698e73ce61ca5bdc35148493022d1a6805bdb53a05f426"
+    },
+    "validation": {
+      "path": "data/external/ppone_robocalls/ppone_validation.jsonl",
+      "rows": 33,
+      "sha256": "3bb8ac2673199a23f19b6f53931ff9a58fffb6505428bfd916a71c3eaa95a6f9"
+    }
+  },
+  "counts": {
+    "admitted_labels": {
+      "SCAM": 86,
+      "UNCERTAIN": 169
+    },
+    "admitted_rows": 255,
+    "case_count": 31,
+    "english_candidate_rows": 1378,
+    "exact_duplicate_rows_removed": 676,
+    "language_counts": {
+      "en": 1378,
+      "zh": 54
+    },
+    "near_label_conflict_rows_quarantined": 102,
+    "near_overlaps_with_references_removed": 3,
+    "partition_rows": {
+      "test": 43,
+      "train": 179,
+      "validation": 33
+    },
+    "privacy_findings_before_normalization": {
+      "rows_with_email": 0,
+      "rows_with_long_digit_sequence": 3,
+      "rows_with_phone_like": 156
+    },
+    "reference_rows": 78766,
+    "same_label_near_template_rows_removed": 342,
+    "source_rows": 1432
+  },
+  "near_template_stats": {
+    "largest_near_template_cluster": 43,
+    "near_template_clusters": 261,
+    "near_template_rows_quarantined": 102,
+    "real_rows_clustered": 699
+  },
+  "policy": {
+    "independent_human_label_review_complete": false,
+    "individual_scam_ground_truth": false,
+    "non_english_rows_admitted": 0,
+    "one_representative_per_near_template_family": true,
+    "otherwise_label": "UNCERTAIN",
+    "partition": "near-template family SHA-256 salted 70/15/15",
+    "positive_or_suspicious_source_only": true,
+    "raw_text_written_to_manifest": false,
+    "safe_rows_supplied_by_this_source": 0,
+    "scam_label_requires_strong_runtime_text_evidence": true,
+    "test_prediction_sealed_until_candidate_freeze": true,
+    "validation_used_for_fitting_or_threshold": false
+  },
+  "source": {
+    "collection": "real-world automated or semi-automated calls published through FTC Project Point of No Entry enforcement materials",
+    "metadata_git_blob_sha1": "b06bd7f19af5e17c7ad915f40dbf12b3b321f140",
+    "metadata_sha256": "8e253a4a652abfa92ac3766feff8da2bef16f45ab3f0f434f212a7aafc3effe5",
+    "publisher_readme_sha256": "c39a89a53b34a0e2736b0c8848c20e400d7b710894f5cc2f975759654c7c788b",
+    "repository": "wspr-ncsu/robocall-audio-dataset",
+    "repository_license_sha256": "8d4d526b30448a13ad7d5badaeae87b9453437f1aac9837e5eb4ba4593222e5e",
+    "revision": "5aa6f3bfa8563ce8c1c75ebf8a2271e6ff6b4272",
+    "rights": "publisher README at the pinned revision declares the data itself public domain; the descriptive document is CC-BY-ND-4.0"
+  }
+}

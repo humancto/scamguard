@@ -803,6 +803,9 @@ def main() -> None:
     taskmaster_path = args.external_data / "taskmaster" / "taskmaster_validation.jsonl"
     if taskmaster_path.exists():
         split_paths["taskmaster_validation"] = taskmaster_path
+    ppone_path = args.external_data / "ppone_robocalls" / "ppone_validation.jsonl"
+    if ppone_path.exists():
+        split_paths["ppone_validation"] = ppone_path
     primary_test_v8_manifest = None
     if args.primary_test_v8 is not None:
         primary_test_v8_manifest = validate_primary_test_v8(args.primary_test_v8)

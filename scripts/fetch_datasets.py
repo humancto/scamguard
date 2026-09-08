@@ -80,6 +80,28 @@ SOURCES = (
         ),
     ),
     Source(
+        key="ppone_robocall_transcripts",
+        filename="ppone_robocall_metadata.csv",
+        url=(
+            "https://raw.githubusercontent.com/wspr-ncsu/robocall-audio-dataset/"
+            "5aa6f3bfa8563ce8c1c75ebf8a2271e6ff6b4272/metadata.csv"
+        ),
+        sha256="8e253a4a652abfa92ac3766feff8da2bef16f45ab3f0f434f212a7aafc3effe5",
+        license=(
+            "Public domain for the data per the pinned publisher README; "
+            "descriptive document is CC-BY-ND-4.0"
+        ),
+        citation=(
+            "https://github.com/wspr-ncsu/robocall-audio-dataset/tree/"
+            "5aa6f3bfa8563ce8c1c75ebf8a2271e6ff6b4272"
+        ),
+        use=(
+            "privacy-normalized real-world FTC enforcement robocall transcripts; exact/near "
+            "campaign collapse and family split; SCAM only with strong text evidence, otherwise "
+            "UNCERTAIN; source test remains prediction-sealed"
+        ),
+    ),
+    Source(
         key="imc25_public_forum_smishing",
         filename="imc25_public_forum_smishing.csv",
         url=(
