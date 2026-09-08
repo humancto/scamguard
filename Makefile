@@ -89,6 +89,10 @@ QWEN08_PPONE_SELECTION_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8
 QWEN08_PPONE_DEV_GATE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-dev-gates.json
 QWEN08_PPONE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-regression.json
 QWEN08_PPONE_GATE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-regression-gates.json
+QWEN08_PPONE_EXPERIMENT_ID ?= sg-qwen35-08b-ppone-abstention-stage8-v1
+QWEN08_PPONE_EPOCHS ?= 3
+QWEN08_PPONE_LR ?= 0.0000005
+QWEN08_PPONE_SEED ?= 20260908
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -857,10 +861,11 @@ qwen-08b-ppone-stage8-freeze: qwen-08b-ppone-stage8-token-audit
 			--source-report "$(QWEN08_PHONE_REPORT)" \
 			--output "$(QWEN08_PPONE_CONFIG)" \
 			--checkpoint-output "$(QWEN08_PPONE_OUTPUT)" \
-			--experiment-id sg-qwen35-08b-ppone-abstention-stage8-v1 \
+			--experiment-id "$(QWEN08_PPONE_EXPERIMENT_ID)" \
 			--expected-curriculum-kind qwen_ppone_abstention_stage8_curriculum \
 			--role "development-only real-robocall abstention and long-refund recovery" \
-			--seed 20260908 --learning-rate 0.0000005 --epochs 3; \
+			--seed "$(QWEN08_PPONE_SEED)" --learning-rate "$(QWEN08_PPONE_LR)" \
+			--epochs "$(QWEN08_PPONE_EPOCHS)"; \
 	fi
 
 qwen-08b-ppone-stage8-preflight: qwen-08b-ppone-stage8-freeze
@@ -870,9 +875,9 @@ qwen-08b-ppone-stage8-preflight: qwen-08b-ppone-stage8-freeze
 		--local-files-only --experiment-config "$(QWEN08_PPONE_CONFIG)" \
 		--data "$(QWEN08_PPONE_DATA)/qwen_sft" \
 		--initial-adapter "$(QWEN08_PHONE_OUTPUT)" \
-		--epochs 3 --batch-size 4 --eval-batch-size 4 \
-		--gradient-accumulation 4 --learning-rate 0.0000005 --max-length 640 \
-		--sampling-strategy group_by_length --seed 20260908 --require-mps \
+		--epochs "$(QWEN08_PPONE_EPOCHS)" --batch-size 4 --eval-batch-size 4 \
+		--gradient-accumulation 4 --learning-rate "$(QWEN08_PPONE_LR)" --max-length 640 \
+		--sampling-strategy group_by_length --seed "$(QWEN08_PPONE_SEED)" --require-mps \
 		--output "$(QWEN08_PPONE_OUTPUT)" --preflight-only
 
 qwen-08b-ppone-stage8: qwen-08b-ppone-stage8-preflight
@@ -883,9 +888,9 @@ qwen-08b-ppone-stage8: qwen-08b-ppone-stage8-preflight
 			--local-files-only --experiment-config "$(QWEN08_PPONE_CONFIG)" \
 			--data "$(QWEN08_PPONE_DATA)/qwen_sft" \
 			--initial-adapter "$(QWEN08_PHONE_OUTPUT)" \
-			--epochs 3 --batch-size 4 --eval-batch-size 4 \
-			--gradient-accumulation 4 --learning-rate 0.0000005 --max-length 640 \
-			--sampling-strategy group_by_length --seed 20260908 --require-mps \
+			--epochs "$(QWEN08_PPONE_EPOCHS)" --batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --learning-rate "$(QWEN08_PPONE_LR)" --max-length 640 \
+			--sampling-strategy group_by_length --seed "$(QWEN08_PPONE_SEED)" --require-mps \
 			--output "$(QWEN08_PPONE_OUTPUT)"; \
 	fi
 
