@@ -405,12 +405,22 @@ def comparison_splits(
     right: dict[tuple[str, str], dict[str, Any]],
     *,
     dev_only: bool,
+    requested_splits: list[str] | None = None,
 ) -> list[str]:
     """Resolve explicitly comparable splits without silently dropping rows."""
 
+    if dev_only and requested_splits:
+        raise ValueError("--dev-only and --splits cannot be combined")
     if dev_only:
         join_split(left, right, "dev")
         return ["dev"]
+    if requested_splits:
+        splits = list(dict.fromkeys(requested_splits))
+        if "dev" not in splits:
+            raise ValueError("--splits must include dev for blend selection")
+        for split in splits:
+            join_split(left, right, split)
+        return splits
     if set(left) != set(right):
         missing = sorted(set(left) - set(right))[:3]
         extra = sorted(set(right) - set(left))[:3]
@@ -435,13 +445,26 @@ def main() -> None:
         action="store_true",
         help="Compare only identical dev IDs when one input also contains other splits.",
     )
+    parser.add_argument(
+        "--splits",
+        nargs="+",
+        help=(
+            "Explicit comparable split subset; must include dev and cannot be combined "
+            "with --dev-only. Rows outside the named splits are ignored explicitly."
+        ),
+    )
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--predictions", type=Path)
     args = parser.parse_args()
 
     left = read_prediction_ledger(args.left)
     right = read_prediction_ledger(args.right)
-    splits = comparison_splits(left, right, dev_only=args.dev_only)
+    splits = comparison_splits(
+        left,
+        right,
+        dev_only=args.dev_only,
+        requested_splits=args.splits,
+    )
     joined_by_split = {split: join_split(left, right, split) for split in splits}
     selected, candidates, dev_probabilities = fit_blend(
         joined_by_split["dev"],
@@ -510,6 +533,7 @@ def main() -> None:
         "selection_policy": {
             "fit_split": "dev",
             "compared_splits": splits,
+            "requested_splits": args.splits,
             "dev_only": args.dev_only,
             "selection_used_non_dev_labels": False,
             "methods": list(METHODS),

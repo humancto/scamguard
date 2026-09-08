@@ -113,6 +113,47 @@ def test_dev_only_comparison_explicitly_allows_non_dev_rows_on_one_side() -> Non
         comparison_splits(left, right, dev_only=False)
 
 
+def test_explicit_split_subset_requires_dev_and_exact_ids() -> None:
+    dev_left, dev_right = record("dev", "SAFE", (0.8, 0.1, 0.1), (0.9, 0.05, 0.05))
+    phone_left, phone_right = record(
+        "phone", "SCAM", (0.1, 0.1, 0.8), (0.05, 0.05, 0.9)
+    )
+    phone_left["split"] = "phone_scam_validation"
+    phone_right["split"] = "phone_scam_validation"
+    extra_right, _ = record("extra", "SAFE", (0.8, 0.1, 0.1), (0.9, 0.05, 0.05))
+    extra_right["split"] = "extra"
+    left = {
+        ("dev", "dev"): dev_left,
+        ("phone_scam_validation", "phone"): phone_left,
+    }
+    right = {
+        ("dev", "dev"): dev_right,
+        ("phone_scam_validation", "phone"): phone_right,
+        ("extra", "extra"): extra_right,
+    }
+
+    assert comparison_splits(
+        left,
+        right,
+        dev_only=False,
+        requested_splits=["dev", "phone_scam_validation", "dev"],
+    ) == ["dev", "phone_scam_validation"]
+    with pytest.raises(ValueError, match="must include dev"):
+        comparison_splits(
+            left,
+            right,
+            dev_only=False,
+            requested_splits=["phone_scam_validation"],
+        )
+    with pytest.raises(ValueError, match="cannot be combined"):
+        comparison_splits(
+            left,
+            right,
+            dev_only=True,
+            requested_splits=["dev"],
+        )
+
+
 def test_invalid_shapes_weights_and_methods_fail_closed() -> None:
     matrix = np.array([[0.8, 0.1, 0.1]])
     with pytest.raises(ValueError, match="matching N x 3"):
