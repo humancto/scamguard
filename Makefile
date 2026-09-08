@@ -933,6 +933,8 @@ qwen-08b-ppone-stage8-eval: qwen-08b-ppone-stage8-dev-gates
 		--data data/experiments/schema25-full-call-curriculum/processed \
 		--external-data data/external \
 		--splits $(QWEN08_FULL_EVAL_SPLITS) phone_scam_validation ppone_validation \
+		--frozen-calibration-report "$(QWEN08_PPONE_DEV_REPORT)" \
+		--cache-dir "$(QWEN08_PPONE_DEV_REPORT:.json=.scores)" \
 		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
 		--min-recall-for-threshold 0.97 --require-mps \
 		--report "$(QWEN08_PPONE_REPORT)"

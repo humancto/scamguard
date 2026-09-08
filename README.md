@@ -38,6 +38,7 @@ independent-audit, and Hugging Face gates, is tracked in
 | Qwen3.5-0.8B, schema-v24 AI-internal LoRA | trained specialist; rejected before quantization | 41.3 MB adapter plus BF16 base | primary regression is 99.66% recall / 0.115% FPR, but macro F1 is 0.7407, MultiDoGO complete-call FPR is 5.69%, and BothBosu is 65.96% recall / 3.27% FPR; 29/39 gates pass |
 | Qwen3.5-0.8B, stage-3 boundary recovery | strongest 0.8B adapter; rejected before quantization | 60.4 MB adapter plus BF16 base | 36/39 gates; 99.83% held recall / 4.07% FPR / 0.7370 macro F1, MultiDoGO call FPR 1.12%, BothBosu recall 58.16%; 93.54/99.11 ms BF16 median/p95 |
 | Qwen3.5-0.8B, stage-7 phone generalization | rejected continuation | 60 MiB adapter plus BF16 base | 33/41 gates; phone diagnostic improved to 78.16% recall / 15.88% FPR, but regression recall/FPR narrowly fail, macro F1 is 0.7778, and BothBosu recall is 62.41%; no quantization or publication |
+| Qwen3.5-0.8B, stage-8 PPoNE abstention screen | three rejected continuations | 60 MiB adapter plus BF16 base | all preserve the dev safety contract; 2e-6 recovers 4/21 open PPoNE UNCERTAIN rows but loses one open PPoNE scam and regresses phone FPR; none earns the frozen promotion, so sealed tests remain unopened |
 | Qwen3.5-0.8B, stage-5 precision recovery | rejected continuation | 60.4 MB adapter plus BF16 base | 34/39 gates; dev contract fails at 93.19% recall, held FPR 4.75%, macro F1 0.7164, BothBosu 77.30% recall / 6.54% FPR; no merge, quantization, or publication |
 | Qwen3.5-0.8B, stage-6A verdict-branch focal/KL | rejected on dev; regression not opened | 60.4 MB adapter plus BF16 base | 96.89% dev recall / 1.04% FPR / 0.7164 macro F1; one true UNCERTAIN recovered but one scam miss, one SAFE alarm, and five SAFE deferrals added; 202-point Stage-3 blend found no improvement |
 | ModernBERT schema v23 + Qwen 0.8B base | rejected routed control | 4.68% test escalation; 1.13 GB process peak RSS | exact product-shape parity; fast-path p95 10.71 ms and routed p95 17.26 ms, but p99 190.79 ms, escalated p95 216.66 ms, and macro F1 0.7730; rejected |
@@ -70,6 +71,9 @@ call-robustness continuation are in
 The completed Stage 7 training receipt, fair Stage 3 phone baseline, eight failed gates, and
 endpoint-only score-blend diagnostic are in
 [reports/QWEN08_PHONE_STAGE7.md](reports/QWEN08_PHONE_STAGE7.md).
+The licensed PPoNE curriculum, three frozen Stage 8 learning-rate screens, promotion failures, and
+the resulting next-experiment boundary are in
+[reports/QWEN08_PPONE_STAGE8.md](reports/QWEN08_PPONE_STAGE8.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).
