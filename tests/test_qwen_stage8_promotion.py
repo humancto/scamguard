@@ -28,7 +28,10 @@ def test_stage8_promotion_passes_only_joint_improvement(tmp_path: Path) -> None:
     write(
         candidate,
         {
-            "development_screen_only": True,
+            "development_screen_only": False,
+            "selection_screen_only": True,
+            "release_gate_report": False,
+            "frozen_calibration_source": {"path": "dev.json"},
             "dev": split(0.98, 0.01, 0.80),
             "phone_scam_validation": split(0.82, 0.14, 0.56),
             "ppone_validation": split(1.0, 0.0, 0.30),
@@ -56,7 +59,10 @@ def test_stage8_promotion_rejects_uncertainty_regression(tmp_path: Path) -> None
     write(
         candidate,
         {
-            "development_screen_only": True,
+            "development_screen_only": False,
+            "selection_screen_only": True,
+            "release_gate_report": False,
+            "frozen_calibration_source": {"path": "dev.json"},
             "dev": split(0.98, 0.01, 0.80),
             "phone_scam_validation": split(0.82, 0.14, 0.56),
             "ppone_validation": split(1.0, 0.0, 0.28, uncertain_hits=1),

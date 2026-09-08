@@ -376,8 +376,25 @@ def test_qwen_evaluation_reports_source_domains() -> None:
 def test_development_screen_split_contract_is_fail_closed() -> None:
     validate_requested_splits(["dev"], development_screen_only=True)
     validate_requested_splits(["dev", "test"], development_screen_only=False)
+    validate_requested_splits(
+        ["dev", "ppone_validation"],
+        development_screen_only=False,
+        selection_screen_only=True,
+    )
 
     with pytest.raises(ValueError, match="requires --splits dev exactly"):
         validate_requested_splits(["dev", "test"], development_screen_only=True)
     with pytest.raises(ValueError, match="must include dev and test"):
         validate_requested_splits(["dev"], development_screen_only=False)
+    with pytest.raises(ValueError, match="requires dev and forbids test"):
+        validate_requested_splits(
+            ["ppone_validation"],
+            development_screen_only=False,
+            selection_screen_only=True,
+        )
+    with pytest.raises(ValueError, match="requires dev and forbids test"):
+        validate_requested_splits(
+            ["dev", "test"],
+            development_screen_only=False,
+            selection_screen_only=True,
+        )

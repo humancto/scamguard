@@ -36,12 +36,24 @@ BRANCH_SCORING_VERSION = "qwen-verdict-branch-token-v1"
 SCORING_MODES = ("length_normalized", "branch_token")
 
 
-def validate_requested_splits(splits: list[str], *, development_screen_only: bool) -> None:
+def validate_requested_splits(
+    splits: list[str],
+    *,
+    development_screen_only: bool,
+    selection_screen_only: bool = False,
+) -> None:
     """Keep candidate selection physically separate from regression evaluation."""
 
+    if development_screen_only and selection_screen_only:
+        raise ValueError("development and selection screening are mutually exclusive")
     if development_screen_only:
         if splits != ["dev"]:
             raise ValueError("--development-screen-only requires --splits dev exactly")
+    elif selection_screen_only:
+        if "dev" not in splits or "test" in splits:
+            raise ValueError(
+                "--selection-screen-only requires dev and forbids test in --splits"
+            )
     elif not {"dev", "test"}.issubset(splits):
         raise ValueError("--splits must include dev and test for calibration and gates")
 
@@ -698,6 +710,14 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--selection-screen-only",
+        action="store_true",
+        help=(
+            "Score dev plus open selection slices under --frozen-calibration-report without "
+            "reading test or emitting release gates."
+        ),
+    )
+    parser.add_argument(
         "--cache-dir",
         type=Path,
         help="Resumable raw-score cache; defaults beside --report.",
@@ -733,6 +753,13 @@ def main() -> None:
             parser.error("--development-screen-only requires --splits dev exactly")
         if args.primary_test_v8 is not None or args.frozen_calibration_report is not None:
             parser.error("development screening forbids primary-test and frozen calibration")
+    if args.selection_screen_only:
+        if args.development_screen_only:
+            parser.error("development and selection screening are mutually exclusive")
+        if args.frozen_calibration_report is None:
+            parser.error("selection screening requires --frozen-calibration-report")
+        if args.primary_test_v8 is not None:
+            parser.error("selection screening forbids primary-test")
 
     mps_available = torch.backends.mps.is_available()
     if args.require_mps and not mps_available:
@@ -815,7 +842,11 @@ def main() -> None:
     unknown_splits = sorted(set(splits) - set(available_splits))
     if unknown_splits:
         raise ValueError(f"unknown or unavailable splits: {unknown_splits}")
-    validate_requested_splits(splits, development_screen_only=args.development_screen_only)
+    validate_requested_splits(
+        splits,
+        development_screen_only=args.development_screen_only,
+        selection_screen_only=args.selection_screen_only,
+    )
     rows = {split: read_jsonl(split_paths[split], args.limit) for split in splits}
     data_sha256 = {split: file_sha256(split_paths[split]) for split in splits}
     adapter_weights = args.adapter / "adapter_model.safetensors" if args.adapter else None
@@ -858,7 +889,9 @@ def main() -> None:
 
     all_latencies: list[float] = []
     latency_input_tokens: list[int] = []
-    latency_split = "dev" if args.development_screen_only else "test"
+    latency_split = (
+        "dev" if args.development_screen_only or args.selection_screen_only else "test"
+    )
     for row in rows[latency_split][: min(50, len(rows[latency_split]))]:
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -964,7 +997,10 @@ def main() -> None:
         "safe_threshold_semantics": "minimum_safe_probability",
         "threshold_policy": threshold_policy,
         "development_screen_only": args.development_screen_only,
-        "release_gate_report": not args.development_screen_only,
+        "selection_screen_only": args.selection_screen_only,
+        "release_gate_report": not (
+            args.development_screen_only or args.selection_screen_only
+        ),
         "frozen_calibration_source": frozen_calibration_source,
         "memory_footprint_bytes": model.get_memory_footprint(),
         "memory": memory_telemetry
@@ -1028,7 +1064,7 @@ def main() -> None:
             threshold,
             safe_threshold=safe_threshold,
         )
-    if not args.development_screen_only:
+    if not (args.development_screen_only or args.selection_screen_only):
         test_binary = result["test"]["binary_safety"]
         core_categories = {
             category: values
@@ -1094,7 +1130,9 @@ def main() -> None:
         "contains_message_text": False,
     }
     args.report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    if args.adapter and not args.development_screen_only:
+    if args.adapter and not (
+        args.development_screen_only or args.selection_screen_only
+    ):
         calibration = {
             "backend_type": "qwen_verdict_likelihood",
             "model_id": args.adapter.name,

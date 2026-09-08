@@ -37,8 +37,12 @@ def check(
     candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
     stage7 = json.loads(stage7_full_path.read_text(encoding="utf-8"))
     stage7_ppone = json.loads(stage7_ppone_path.read_text(encoding="utf-8"))
-    if candidate.get("development_screen_only") is not True:
-        raise ValueError("Stage 8 promotion requires a development-only report")
+    if (
+        candidate.get("selection_screen_only") is not True
+        or candidate.get("release_gate_report") is not False
+        or candidate.get("frozen_calibration_source") is None
+    ):
+        raise ValueError("Stage 8 promotion requires a frozen selection-screen report")
     required = {"dev", "phone_scam_validation", "ppone_validation"}
     if not required <= candidate.keys():
         raise ValueError("Stage 8 development report is missing a required split")

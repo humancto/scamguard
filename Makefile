@@ -6,7 +6,7 @@
 .PHONY: qwen-08b-precision-recovery-data qwen-08b-precision-recovery-token-audit qwen-08b-precision-recovery-freeze qwen-08b-precision-recovery qwen-08b-precision-recovery-eval qwen-08b-precision-recovery-gates
 .PHONY: qwen-08b-branch-stage6-data qwen-08b-branch-stage6-teacher qwen-08b-branch-stage6-preflight qwen-08b-branch-stage6 qwen-08b-branch-stage6-dev qwen-08b-branch-stage6-diagnostics
 .PHONY: qwen-08b-phone-stage7-data qwen-08b-phone-stage7-token-audit qwen-08b-phone-stage7-freeze qwen-08b-phone-stage7-preflight qwen-08b-phone-stage7 qwen-08b-phone-stage7-dev qwen-08b-phone-stage7-eval qwen-08b-phone-stage7-gates
-.PHONY: qwen-08b-ppone-stage8-data qwen-08b-ppone-stage8-token-audit qwen-08b-ppone-stage8-freeze qwen-08b-ppone-stage8-preflight qwen-08b-ppone-stage8 qwen-08b-ppone-stage8-dev qwen-08b-ppone-stage8-dev-gates qwen-08b-ppone-stage8-eval qwen-08b-ppone-stage8-gates
+.PHONY: qwen-08b-ppone-stage8-data qwen-08b-ppone-stage8-token-audit qwen-08b-ppone-stage8-freeze qwen-08b-ppone-stage8-preflight qwen-08b-ppone-stage8 qwen-08b-ppone-stage8-dev qwen-08b-ppone-stage8-selection qwen-08b-ppone-stage8-dev-gates qwen-08b-ppone-stage8-eval qwen-08b-ppone-stage8-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 .PHONY: phone-scam-synthetic-fetch phone-scam-synthetic schema25-full-call-curriculum encoder-schema25-cache encoder-schema25-preflight encoder-schema25-full-call-curriculum encoder-schema25-gates
 .PHONY: ppone-robocalls
@@ -85,6 +85,7 @@ QWEN08_PPONE_TOKEN_AUDIT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-toke
 QWEN08_PPONE_CONFIG ?= configs/qwen35-08b-ppone-abstention-stage8.json
 QWEN08_PPONE_OUTPUT ?= artifacts/checkpoints/qwen35-08b-ppone-abstention-stage8-lora
 QWEN08_PPONE_DEV_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-dev.json
+QWEN08_PPONE_SELECTION_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-selection.json
 QWEN08_PPONE_DEV_GATE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-dev-gates.json
 QWEN08_PPONE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-regression.json
 QWEN08_PPONE_GATE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-regression-gates.json
@@ -894,14 +895,27 @@ qwen-08b-ppone-stage8-dev: qwen-08b-ppone-stage8
 		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
 		--local-files-only --adapter "$(QWEN08_PPONE_OUTPUT)" \
 		--data data/experiments/schema25-full-call-curriculum/processed \
-		--external-data data/external --splits dev ppone_validation phone_scam_validation \
+		--external-data data/external --splits dev \
 		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
 		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
 		--report "$(QWEN08_PPONE_DEV_REPORT)"
 
-qwen-08b-ppone-stage8-dev-gates: qwen-08b-ppone-stage8-dev
+qwen-08b-ppone-stage8-selection: qwen-08b-ppone-stage8-dev
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_PPONE_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external --splits dev ppone_validation phone_scam_validation \
+		--frozen-calibration-report "$(QWEN08_PPONE_DEV_REPORT)" \
+		--cache-dir "$(QWEN08_PPONE_DEV_REPORT:.json=.scores)" \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --selection-screen-only \
+		--report "$(QWEN08_PPONE_SELECTION_REPORT)"
+
+qwen-08b-ppone-stage8-dev-gates: qwen-08b-ppone-stage8-selection
 	$(PYTHON_BIN) scripts/check_qwen_stage8_promotion.py \
-		--candidate "$(QWEN08_PPONE_DEV_REPORT)" \
+		--candidate "$(QWEN08_PPONE_SELECTION_REPORT)" \
 		--stage7-full "$(QWEN08_PHONE_REPORT)" \
 		--stage7-ppone reports/runs/qwen35-08b-stage7-ppone-open.json \
 		--output "$(QWEN08_PPONE_DEV_GATE_REPORT)"
