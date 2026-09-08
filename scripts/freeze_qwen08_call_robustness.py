@@ -37,6 +37,7 @@ def freeze(
     role: str = "development-only call-context and abstention robustness continuation",
     seed: int = 20260824,
     learning_rate: float = 0.00002,
+    epochs: float = 1.0,
 ) -> dict[str, object]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite frozen experiment: {output}")
@@ -50,6 +51,8 @@ def freeze(
     token_audit = json.loads(token_audit_path.read_text(encoding="utf-8"))
     source_report = json.loads(source_report_path.read_text(encoding="utf-8"))
     initial = adapter_identity(initial_adapter)
+    if epochs <= 0:
+        raise ValueError("epochs must be positive")
     if (
         manifest.get("experiment_kind") != expected_curriculum_kind
         or manifest.get("release_eligible") is not False
@@ -85,7 +88,7 @@ def freeze(
             "status": "rejected; regression evidence only for this continuation",
         },
         "seed": seed,
-        "epochs": 1.0,
+        "epochs": epochs,
         "batch_size": 4,
         "eval_batch_size": 4,
         "gradient_accumulation": 4,
@@ -160,6 +163,7 @@ def main() -> None:
     )
     parser.add_argument("--seed", type=int, default=20260824)
     parser.add_argument("--learning-rate", type=float, default=0.00002)
+    parser.add_argument("--epochs", type=float, default=1.0)
     args = parser.parse_args()
     print(
         json.dumps(
@@ -175,6 +179,7 @@ def main() -> None:
                 role=args.role,
                 seed=args.seed,
                 learning_rate=args.learning_rate,
+                epochs=args.epochs,
             ),
             indent=2,
         )
