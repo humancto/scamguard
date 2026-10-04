@@ -81,6 +81,54 @@ def binary_safety_metrics(
     }
 
 
+def verdict_alert_metrics(truth: np.ndarray, predicted: np.ndarray) -> dict[str, Any]:
+    """Expose every SCAM alert, including reference-UNCERTAIN examples.
+
+    Both arrays use SAFE=0, UNCERTAIN=1, SCAM=2. Binary precision is conditional
+    on the definite-label subset; it is not precision across all product alerts.
+    UNCERTAIN reference rows are neither asserted false alarms nor true scams.
+    """
+
+    truth = np.asarray(truth)
+    predicted = np.asarray(predicted)
+    if (
+        truth.ndim != 1
+        or predicted.ndim != 1
+        or truth.shape != predicted.shape
+        or truth.size == 0
+        or not np.isin(truth, [0, 1, 2]).all()
+        or not np.isin(predicted, [0, 1, 2]).all()
+    ):
+        raise ValueError("verdict arrays must be non-empty, aligned SAFE/UNCERTAIN/SCAM indices")
+    labels = ("SAFE", "UNCERTAIN", "SCAM")
+    alert_mask = predicted == 2
+    alerts = int(alert_mask.sum())
+    counts = {
+        label: int(np.count_nonzero(alert_mask & (truth == index)))
+        for index, label in enumerate(labels)
+    }
+    definite_alerts = counts["SAFE"] + counts["SCAM"]
+    uncertain_examples = int(np.count_nonzero(truth == 1))
+    return {
+        "definition": (
+            "Reference-label composition of all SCAM alerts; UNCERTAIN references "
+            "are not relabeled SAFE or SCAM. Binary precision excludes them."
+        ),
+        "examples": int(truth.size),
+        "alerts": alerts,
+        "alerts_by_reference_label": counts,
+        "alert_fraction_by_reference_label": {
+            label: count / alerts if alerts else None for label, count in counts.items()
+        },
+        "binary_subset_precision": (
+            counts["SCAM"] / definite_alerts if definite_alerts else None
+        ),
+        "uncertain_to_scam_rate": (
+            counts["UNCERTAIN"] / uncertain_examples if uncertain_examples else None
+        ),
+    }
+
+
 def choose_threshold(y_true: np.ndarray, probabilities: np.ndarray, max_fpr: float = 0.02) -> float:
     candidates = sorted({float(value) for value in probabilities}, reverse=True)
     feasible: list[tuple[float, float, float]] = []

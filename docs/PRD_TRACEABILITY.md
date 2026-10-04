@@ -21,7 +21,7 @@ Status meanings:
 | Hard negatives, adversarial positives, multilingual variation, deduplication, and family isolation | **Proven for the benchmark/data factory** | [`docs/BENCHMARK_PROTOCOL.md`](BENCHMARK_PROTOCOL.md), [`docs/DATASET_SIZE_DECISION.md`](DATASET_SIZE_DECISION.md), validators, overlap audits, and frozen source-family splits | Final model must pass the untouched gates; data engineering alone does not prove model quality. |
 | Human-audited representative slice | **Pending** | Frozen 635-row blind handoff and verifier documented in [`docs/HUGGING_FACE_RELEASE.md`](HUGGING_FACE_RELEASE.md) | An independent human must complete the blind label/privacy audit. AI-internal review cannot authorize release. |
 | Same benchmark for rules, classical, open neural, and larger-model baselines | **Proven for recorded research baselines** | Model ladder and linked run reports in [`README.md`](../README.md); paired-comparison tooling in [`benchmarks/compare_paired.py`](../benchmarks/compare_paired.py) | Rerun any claimed external winner on the same final sealed benchmark before a SOTA claim. |
-| Sub-1B serious specialist | **Partial** | Frozen Qwen3.5-0.8B base revision; rejected 35/39 stage-2, 36/39 stage-3, 33/39 stage-4, and 34/39 stage-5 receipts; stage-6A exact-branch training and its 202-point dev blend were rejected before regression. Stage 7 is frozen as a conservative Stage-3 continuation with 1,052 rights-clear phone-training rows and zero token truncation or held overlap. | Run Stage 7 through development and all frozen regressions. Quantization and sealed-primary evaluation remain forbidden unless one artifact passes every regression gate. |
+| Sub-1B serious specialist | **Partial** | Qwen Stage 7 completed at 33/41 regression gates; Stage 13 failed development and the final Stage 14 failed open selection. See [`reports/QWEN08_PHONE_STAGE7.md`](../reports/QWEN08_PHONE_STAGE7.md) and [`reports/BANKING77_SOURCE_ADMISSION.md`](../reports/BANKING77_SOURCE_ADMISSION.md). | The Qwen continuation line is closed. A future architecture needs its own prospectively frozen experiment; no current adapter satisfies the original core quality requirements. |
 | Scam recall at least 97%, SAFE FPR at most 2%, core-category recall at least 97%, macro F1 above 0.94 stretch | **Pending for a final candidate** | Fail-closed definitions in [`scripts/check_qwen08_full_gates.py`](../scripts/check_qwen08_full_gates.py) and [`scripts/check_primary_v8_gates.py`](../scripts/check_primary_v8_gates.py) | Obtain passing frozen regression and untouched primary receipts from the same final artifact. |
 | Publish calibration, adversarial/OOD behavior, false-positive analysis, latency, RAM, and artifact size | **Partial** | Existing run reports and required-report contract in [`docs/BENCHMARK_PROTOCOL.md`](BENCHMARK_PROTOCOL.md) | Repeat and publish the complete evidence bundle for the accepted quantized model. |
 | Quantized local artifact | **Partial** | Hash-verified upstream Q4 runtime control and native scorer; final merge/export chain in [`Makefile`](../Makefile) | Merge and Q4 export are forbidden until the trained BF16 challenger passes every gate; then quantized parity and quality must pass again. |
@@ -33,8 +33,45 @@ Status meanings:
 
 ## Completion rule
 
-ScamGuard is not complete merely because a LoRA adapter trains, a GGUF loads, or an open regression
-score looks strong. Completion requires the same frozen sub-1B artifact to pass the BF16 regression,
-native quantized parity and quality, the prediction-sealed primary test, laptop and physical-mobile
-measurement, independent human audit, and the release verifier. Only then may the project claim a
-validated release or publish the model to Hugging Face.
+The original goal is still incomplete. Stage 7's regression recall is 96.934%, SAFE FPR is 2.005%,
+credential-theft recall is 90.278%, and opportunity-scam recall is 94.444%. These fail the original
+core requirements even before the additional Qwen-lineage gates are considered. Strong development
+scores, completed training, or runnable packages do not establish success on a final held benchmark.
+
+The current Qwen publication validator remains unchanged. It requires that lineage's frozen BF16,
+quantization, primary-test, desktop/mobile, audit, and release receipts. None of its rejected
+artifacts is newly authorized by this document. The source-of-requirements distinction below must
+be used when freezing a future model's contract so that historical implementation choices are not
+mistaken for user requirements.
+
+## Requirement provenance and experiment boundary
+
+The supplied PRD sections 7, 8, and 12 require representative human review, core-category scam recall
+above 97%, false-positive rate below 2%, same-held-set comparison against larger models, local
+laptop inference, a credible mobile path, and reproducible artifacts. The user subsequently asked
+for under 20 ms and accepted desktop and/or mobile execution. Both remain goals; no claim that the
+current Qwen artifact achieves either is supported.
+
+Several later conditions are project-added experiment decisions:
+
+- The PRD calls macro F1 above 0.94 a **stretch** target. The Qwen gate checker makes it mandatory.
+- The PRD asks for a credible mobile path; the Qwen release checker requires physical evidence on
+  **both** iOS and Android and both platform packages.
+- BANKING77's at-most-three-errors and 0.5% FPR limits are continuation-promotion criteria, stricter
+  than the product's general 2% FPR target. Stage 14 meets 2% on that particular slice but fails
+  the predeclared continuation and regresses other evidence.
+- Exact GGUF verdict parity and the particular Qwen scorer are lineage-specific implementation
+  requirements, not an instruction to deploy every future encoder through GGUF.
+
+These distinctions preserve the historical rejection decisions. They prevent adding requirements
+after results are observed and prevent using relaxed retrospective criteria to declare a winner.
+For the next model, freeze the dataset hashes, inference rule, target hardware, numerical limits,
+required versus diagnostic slices, and finite run budget **before** observing its results. Keep
+every phone, uncertainty, multilingual, and adversarial weakness in the published report even when
+it is diagnostic. Do not aggregate them into an easy headline score.
+
+Remaining work includes a named candidate architecture, completed independent label review, and a
+same-set larger-model comparison. An open baseline can precede the completed human review; a
+release claim cannot. The existing blind audit package can supply the review, and an AI review
+cannot certify its own labels. Repeated training on the current Qwen adapter is closed, and the
+sealed tests remain unopened.

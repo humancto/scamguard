@@ -1,15 +1,50 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from scamguard.linear_baseline import build_pipeline
 from scamguard.metrics import (
     binary_safety_metrics,
     choose_threshold,
     choose_threshold_for_gates,
+    verdict_alert_metrics,
     wilson_interval,
 )
 from training.train_linear import evaluate
+
+
+def test_alert_composition_keeps_uncertain_examples_out_of_binary_precision() -> None:
+    result = verdict_alert_metrics(
+        np.array([0, 1, 1, 2, 2, 0]), np.array([2, 2, 1, 2, 2, 0])
+    )
+    assert result["alerts"] == 4
+    assert result["alerts_by_reference_label"] == {"SAFE": 1, "UNCERTAIN": 1, "SCAM": 2}
+    assert result["binary_subset_precision"] == 2 / 3
+    assert result["alert_fraction_by_reference_label"]["SCAM"] == 0.5
+    assert result["uncertain_to_scam_rate"] == 0.5
+
+
+def test_alert_composition_undefined_denominators_remain_unknown() -> None:
+    empty_alerts = verdict_alert_metrics(np.array([0, 2]), np.array([0, 1]))
+    assert empty_alerts["alerts"] == 0
+    assert empty_alerts["binary_subset_precision"] is None
+    assert empty_alerts["uncertain_to_scam_rate"] is None
+    assert all(
+        value is None for value in empty_alerts["alert_fraction_by_reference_label"].values()
+    )
+    uncertain_only = verdict_alert_metrics(np.array([1]), np.array([2]))
+    assert uncertain_only["binary_subset_precision"] is None
+    assert uncertain_only["alert_fraction_by_reference_label"]["UNCERTAIN"] == 1.0
+
+
+@pytest.mark.parametrize(
+    ("truth", "predicted"),
+    [([], []), ([0], [0, 1]), ([[0]], [[0]]), ([np.nan], [0]), ([0], [3]), ([0.5], [2])],
+)
+def test_alert_composition_rejects_invalid_labels(truth, predicted) -> None:
+    with pytest.raises(ValueError, match="verdict arrays"):
+        verdict_alert_metrics(np.array(truth), np.array(predicted))
 
 
 def test_threshold_selection_honors_fpr_cap_then_maximizes_recall() -> None:

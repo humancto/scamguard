@@ -11,6 +11,9 @@ contamination-controlled benchmark.
 The requirement-by-requirement status, including the still-unproven SOTA, physical-mobile,
 independent-audit, and Hugging Face gates, is tracked in
 [docs/PRD_TRACEABILITY.md](docs/PRD_TRACEABILITY.md).
+The closed Qwen line's uncertainty failure, all-alert versus binary precision, and fixed-SCAM
+macro-F1 ceiling are diagnosed in
+[reports/QWEN08_VERDICT_TRADEOFF.md](reports/QWEN08_VERDICT_TRADEOFF.md).
 
 ## Current model ladder
 

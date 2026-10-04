@@ -373,6 +373,23 @@ def test_qwen_evaluation_reports_source_domains() -> None:
     assert "multiclass_brier_score" in report["calibration"]["after_temperature"]
 
 
+def test_qwen_report_includes_uncertain_alerts_excluded_from_binary_precision() -> None:
+    rows = [
+        {"label": label, "category": "NONE", "source": "test"}
+        for label in ("SAFE", "UNCERTAIN", "SCAM")
+    ]
+    # The recall-first threshold alerts on an UNCERTAIN argmax as well as the scam.
+    probabilities = np.array([[0.9, 0.05, 0.05], [0.1, 0.6, 0.3], [0.05, 0.05, 0.9]])
+    report = evaluate_slice(
+        rows, np.log(probabilities), temperature=1.0, threshold=0.2, safe_threshold=0.5
+    )
+    assert report["binary_safety"]["scam_precision"] == 1.0
+    alerts = report["calibrated_decision"]["alert_composition"]
+    assert alerts["alerts_by_reference_label"] == {"SAFE": 0, "UNCERTAIN": 1, "SCAM": 1}
+    assert alerts["alert_fraction_by_reference_label"]["SCAM"] == 0.5
+    assert alerts["uncertain_to_scam_rate"] == 1.0
+
+
 def test_development_screen_split_contract_is_fail_closed() -> None:
     validate_requested_splits(["dev"], development_screen_only=True)
     validate_requested_splits(["dev", "test"], development_screen_only=False)

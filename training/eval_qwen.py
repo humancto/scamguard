@@ -25,6 +25,7 @@ from scamguard.metrics import (
     choose_threshold,
     choose_threshold_for_gates,
     file_sha256,
+    verdict_alert_metrics,
     wilson_interval,
 )
 from scamguard.prompts import SYSTEM_PROMPT
@@ -573,6 +574,7 @@ def evaluate_slice(
             "accuracy": float(accuracy_score(truth, calibrated)),
             "macro_f1": float(f1_score(truth, calibrated, average="macro", zero_division=0)),
             "confusion": confusion_matrix(truth, calibrated, labels=[0, 1, 2]).tolist(),
+            "alert_composition": verdict_alert_metrics(truth, calibrated),
         }
     scam_categories = sorted({str(row["category"]) for row in rows if row["label"] == "SCAM"})
     result["scam_by_category"] = {}

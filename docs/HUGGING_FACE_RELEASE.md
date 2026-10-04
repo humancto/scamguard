@@ -17,6 +17,14 @@ published measurements.
 
 ## Current evidence, not a release candidate
 
+**Current decision:** the Qwen continuation line closed at Stage 14. Stage 7 completed at 33/41
+regression gates; Stage 13 failed development and Stage 14 failed open selection. See
+[`reports/BANKING77_SOURCE_ADMISSION.md`](../reports/BANKING77_SOURCE_ADMISSION.md) for the terminal
+receipt. No adapter has earned merge, quantization, or publication. The earlier chronology and
+Qwen-specific release procedure below remain reproducibility records, not instructions to restart
+training. [`PRD_TRACEABILITY.md`](PRD_TRACEABILITY.md#requirement-provenance-and-experiment-boundary)
+separates the original requirements from additional decisions in this release contract.
+
 The repository has a pinned 0.8B LoRA configuration and a native MPS training path. The untouched
 base has now been scored on all 6,713 open core and publisher-held examples using the product's
 batch-one, three-candidate, bucket-64 contract: it reaches only 30.32% core test scam recall and

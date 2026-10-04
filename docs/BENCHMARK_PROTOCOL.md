@@ -17,6 +17,13 @@ failure. With the SCAM threshold frozen, a SAFE threshold is selected on the ful
 to maximize three-way macro F1; anything meeting neither threshold abstains as UNCERTAIN. Reports
 retain raw argmax as a diagnostic, but the stretch gate uses this frozen product decision rule.
 
+Binary precision is conditional on reference SAFE/SCAM rows and excludes reference UNCERTAIN.
+It must not be presented as precision over all alerts. New verdict reports also publish
+`calibrated_decision.alert_composition`: the number and reference-label distribution of every SCAM
+alert, the fraction of UNCERTAIN rows alerted on, and the conditional binary precision. An
+UNCERTAIN reference is neither silently counted as SAFE nor asserted to be a confirmed scam.
+Undefined denominators remain null. This reporting addition changes no decisions or release gates.
+
 Qwen verdict scores compare the first tokenizer position where `SAFE`, `UNCERTAIN`, and `SCAM`
 diverge, using one prompt forward pass and three class logits. Historical reports that
 length-normalized each complete label spelling are retained as rejected evidence: unequal token
