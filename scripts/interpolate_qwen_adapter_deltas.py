@@ -5,12 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 import torch
 from safetensors import safe_open
 from safetensors.torch import load_file, save_file
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scamguard.metrics import file_sha256
 from scripts.interpolate_qwen_adapters import normalized_config
