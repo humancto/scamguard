@@ -102,6 +102,22 @@ SOURCES = (
         ),
     ),
     Source(
+        key="international_robocall_transcripts",
+        filename="international_robocalls_text.zip",
+        url=(
+            "https://zenodo.org/api/records/21066049/files/"
+            "text.zip/content"
+        ),
+        sha256="2a5b09a9ea260001f67465bed329dbf51f9e1d82fbe3d11aa1656105ef3a7995",
+        license="CC-BY-NC-4.0",
+        citation="https://doi.org/10.5281/zenodo.21066049",
+        use=(
+            "local noncommercial external diagnostic only; human-verified real robocalls with "
+            "publisher campaign labels treated as silver; excluded from fitting, thresholding, "
+            "public row redistribution, and commercial release artifacts"
+        ),
+    ),
+    Source(
         key="imc25_public_forum_smishing",
         filename="imc25_public_forum_smishing.csv",
         url=(

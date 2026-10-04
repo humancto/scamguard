@@ -13,7 +13,7 @@
 .PHONY: qwen-08b-stage12-freeze qwen-08b-stage12-dev qwen-08b-stage12-selection qwen-08b-stage12-dev-gates qwen-08b-stage12-eval qwen-08b-stage12-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 .PHONY: phone-scam-synthetic-fetch phone-scam-synthetic phone-scam-label-audit schema25-full-call-curriculum encoder-schema25-cache encoder-schema25-preflight encoder-schema25-full-call-curriculum encoder-schema25-gates
-.PHONY: ppone-robocalls
+.PHONY: ppone-robocalls international-robocalls
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -1504,6 +1504,19 @@ ppone-robocalls: fetch
 			--reference data/experiments/schema25-full-call-curriculum/processed \
 			--reference data/processed \
 			--reference data/external/youtube_scam_calls \
+			--reference data/external/scam_dialogue; \
+	fi
+
+international-robocalls: fetch
+	@if [ ! -f data/external/international_robocalls/manifest.json ]; then \
+		$(PYTHON_BIN) scripts/build_international_robocalls.py \
+			--source data/raw/international_robocalls_text.zip \
+			--output data/external/international_robocalls \
+			--report reports/source-audits/international-robocalls.json \
+			--reference data/experiments/schema25-full-call-curriculum/processed \
+			--reference data/processed \
+			--reference data/external/youtube_scam_calls \
+			--reference data/external/ppone_robocalls \
 			--reference data/external/scam_dialogue; \
 	fi
 

@@ -1,6 +1,6 @@
 # Online real-data source research
 
-Research freeze: 2026-09-08. This review treats a large download count as irrelevant unless the
+Research freeze: 2026-10-03. This review treats a large download count as irrelevant unless the
 source has usable rights, row-level provenance, privacy controls, and meaningful novelty after
 family-level overlap removal. Raw and processed corpora are ignored by Git; the public repository
 ships hash-pinned acquisition and audit code, not sensitive message dumps.
@@ -292,6 +292,20 @@ and cannot change the current experiment. The machine-readable decisions are in
 The key conclusion is unchanged: public visibility, a wrapper license, or a large aggregate row
 count does not create clean training rights or independent evidence. These candidates remain a
 schema-v25 contingency until the current 0.8B challenger is audited and measured.
+
+### 2026-10-03 real-call refresh
+
+| Candidate | Verified evidence | Decision |
+|---|---|---|
+| [Scam.ai real scam and spam calls](https://arxiv.org/abs/2609.29528) | The paper reports 10,015 real inbound calls, 6,601 substantive conversations, and an openly downloadable de-identified 1,000-call subset containing 500 scam and 500 predatory-spam calls. It contains no legitimate calls, deliberately selects the longest engagements, and uses silver labels with 75% agreement on the binary scam decision in a 60-call human sample. [Scam.ai's research page](https://scam.ai/research) requires an account and initial deposit, while its [Terms of Service](https://scam.ai/legal/terms) prohibit using the services to build or train a competing product or model. | Exclude from ScamGuard training and model-building evaluation absent separate written permission. The corpus is important evidence that synthetic-trained detectors lose precision on live traffic, but neither public availability nor a paper statement overrides the posted service terms. Do not create an account, pay a deposit, scrape, or download it for this project. |
+| [International Robocalls Dataset](https://doi.org/10.5281/zenodo.21066049) | Zenodo record 21066049 revision 4 releases 8.7 million anonymized CDRs, 677 recordings, and a 14,779-byte text archive. The pinned text ZIP is SHA-256 `2a5b09a9ea260001f67465bed329dbf51f9e1d82fbe3d11aa1656105ef3a7995`; its CSVs contain 841 real honeypot robocall transcripts across 28 campaign clusters, each released recording human-verified as a robocall. The license is CC-BY-NC-4.0 and requires a separate commercial license. | Admit only as a local, noncommercial, reporting-only diagnostic. Copy zero rows into training, threshold selection, commercial artifacts, or the public repository. Treat publisher scam campaigns as silver `SCAM`, spam/telemarketing/unclassified campaigns as `UNCERTAIN`, add no `SAFE` truth, privacy-normalize before output, remove cross-source overlap, and retain one representative per near-template family. |
+| [ICFD-31k](https://github.com/SPELLAILab/ICFD-31k) | The bilingual telephone-fraud transcripts are generated with synthetic identities rather than captured real calls. The repository's data terms permit defensive research but require written permission for commercial deployment. | Exclude from the commercial-capable training corpus. It does not close the real-call gap and its use conditions would propagate a release boundary. |
+| [Sting9](https://sting9.org/dataset) | The dataset page contains conflicting CC0 and ODC-BY-NC statements, and the advertised GitHub download target is unavailable. | Reject until the publisher supplies one authoritative license and a stable, hashable primary artifact. |
+
+The new international source improves independent evidence, not training mass. Its lack of genuine
+legitimate calls means it can measure missed unwanted calls and scam-versus-uncertain behavior but
+cannot measure false alarms. The build and frozen Stage 7 result are documented in
+[`INTERNATIONAL_ROBOCALL_DIAGNOSTIC.md`](INTERNATIONAL_ROBOCALL_DIAGNOSTIC.md).
 
 ## Audited but rejected or quarantined
 

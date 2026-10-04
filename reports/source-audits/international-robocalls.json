@@ -1,0 +1,114 @@
+{
+  "artifacts": {
+    "diagnostic": {
+      "path": "data/external/international_robocalls/international_robocalls_diagnostic.jsonl",
+      "rows": 47,
+      "sha256": "4604d1566dc09a616bf57318359ac2946036606d5ed03acb874b83ff9e5967af"
+    },
+    "quarantine": {
+      "candidate_rows": 64,
+      "conflict_groups": 5,
+      "path": "data/external/international_robocalls/label_conflicts_quarantine.jsonl",
+      "sha256": "a6d52f4297f5d69c493161dd87f72d5fc276d7b3d0e0449f9d85ac982aa832dd"
+    }
+  },
+  "counts": {
+    "campaign_rows": {
+      "ROBOCALL: Bank Fraud Alert Scam": 20,
+      "ROBOCALL: Benefits/Grants Scam": 53,
+      "ROBOCALL: Education/Student Loan Scam": 10,
+      "ROBOCALL: Financial Spam (Generic)": 122,
+      "ROBOCALL: Google Business Listing Scam": 261,
+      "ROBOCALL: Health Insurance Scam": 13,
+      "ROBOCALL: IRS/Tax Scam": 40,
+      "ROBOCALL: Insurance Quote Spam": 40,
+      "ROBOCALL: Legal Threat Scam": 11,
+      "ROBOCALL: Loan/Credit Scam": 1,
+      "ROBOCALL: Loan/Debt Scam (Hindi)": 2,
+      "ROBOCALL: Political Campaign": 40,
+      "ROBOCALL: Telemarketing (Generic)": 88,
+      "ROBOCALL: Unclassified": 102,
+      "ROBOCALL: Vehicle Warranty Scam": 38
+    },
+    "exact_conflict_groups_quarantined": 0,
+    "exact_duplicate_rows_removed": 529,
+    "final_labels": {
+      "SCAM": 19,
+      "UNCERTAIN": 28
+    },
+    "final_rows": 47,
+    "near_conflict_groups_quarantined": 5,
+    "near_overlaps_with_references_removed": 0,
+    "privacy_findings_before_normalization": {
+      "rows_with_email": 0,
+      "rows_with_long_digit_sequence": 25,
+      "rows_with_phone_like": 601,
+      "rows_with_url": 40
+    },
+    "reference_rows": 79021,
+    "region_rows": {
+      "international": 116,
+      "us": 725
+    },
+    "same_label_near_template_rows_removed": 201,
+    "source_rows": 841
+  },
+  "diagnostic_schema_version": 1,
+  "near_template_stats": {
+    "largest_near_template_cluster": 34,
+    "near_template_clusters": 52,
+    "near_template_rows_quarantined": 64,
+    "real_rows_clustered": 312
+  },
+  "policy": {
+    "commercial_use_allowed": false,
+    "individual_scam_ground_truth": false,
+    "one_representative_per_near_template_family": true,
+    "raw_text_written_to_manifest": false,
+    "rows_redistributed": false,
+    "safe_rows_supplied_by_source": 0,
+    "scam_campaigns_mapped_to_scam": [
+      "ROBOCALL: Bank Fraud Alert Scam",
+      "ROBOCALL: Benefits/Grants Scam",
+      "ROBOCALL: Education/Student Loan Scam",
+      "ROBOCALL: Google Business Listing Scam",
+      "ROBOCALL: Health Insurance Scam",
+      "ROBOCALL: IRS/Tax Scam",
+      "ROBOCALL: Legal Threat Scam",
+      "ROBOCALL: Loan/Credit Scam",
+      "ROBOCALL: Loan/Debt Scam (Hindi)",
+      "ROBOCALL: Vehicle Warranty Scam"
+    ],
+    "spam_telemarketing_and_unclassified_mapped_to_uncertain": [
+      "ROBOCALL: Financial Spam (Generic)",
+      "ROBOCALL: Insurance Quote Spam",
+      "ROBOCALL: Political Campaign",
+      "ROBOCALL: Telemarketing (Generic)",
+      "ROBOCALL: Unclassified"
+    ],
+    "used_for_fitting": false,
+    "used_for_promotion_tuning": false,
+    "used_for_threshold": false
+  },
+  "purpose": "fresh noncommercial real-robocall diagnostic; excluded from fitting, threshold selection, promotion tuning, commercial artifacts, and public row redistribution",
+  "source": {
+    "annotation": "each released recording was human-verified as a robocall; campaign and scam labels are publisher silver labels rather than adjudicated scam truth",
+    "archive_observed_rows": {
+      "international": 116,
+      "us": 725
+    },
+    "collection": "real inbound calls to an international honeypot",
+    "doi": "https://doi.org/10.5281/zenodo.21066049",
+    "license": "CC-BY-NC-4.0",
+    "metadata_modified": "2026-07-01T07:00:08.494820+00:00",
+    "metadata_revision": 4,
+    "publisher_md5": "318c485aa38e1760fe7ac3338f20526c",
+    "publisher_reported_rows": {
+      "international": 115,
+      "us": 724
+    },
+    "raw_sha256": "2a5b09a9ea260001f67465bed329dbf51f9e1d82fbe3d11aa1656105ef3a7995",
+    "row_count_discrepancy": "the pinned CSVs each contain one more data row than the Zenodo description",
+    "zenodo_record": 21066049
+  }
+}

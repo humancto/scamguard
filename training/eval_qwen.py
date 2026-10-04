@@ -833,6 +833,13 @@ def main() -> None:
     ppone_path = args.external_data / "ppone_robocalls" / "ppone_validation.jsonl"
     if ppone_path.exists():
         split_paths["ppone_validation"] = ppone_path
+    international_robocalls_path = (
+        args.external_data
+        / "international_robocalls"
+        / "international_robocalls_diagnostic.jsonl"
+    )
+    if international_robocalls_path.exists():
+        split_paths["international_robocalls"] = international_robocalls_path
     primary_test_v8_manifest = None
     if args.primary_test_v8 is not None:
         primary_test_v8_manifest = validate_primary_test_v8(args.primary_test_v8)
@@ -977,7 +984,12 @@ def main() -> None:
             ),
         }
     external_data_manifests = {}
-    for diagnostic in ("chichewa", "scam_dialogue", "taskmaster"):
+    for diagnostic in (
+        "chichewa",
+        "international_robocalls",
+        "scam_dialogue",
+        "taskmaster",
+    ):
         manifest_path = args.external_data / diagnostic / "manifest.json"
         if manifest_path.exists():
             external_data_manifests[diagnostic] = json.loads(manifest_path.read_text())

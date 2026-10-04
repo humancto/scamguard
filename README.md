@@ -82,6 +82,9 @@ The rejected single-adapter Stage 11 factor-interpolation experiment is in
 [reports/QWEN08_STAGE11.md](reports/QWEN08_STAGE11.md).
 The rejected exact-delta, single-adapter Stage 12 experiment is in
 [reports/QWEN08_STAGE12.md](reports/QWEN08_STAGE12.md).
+The newly sourced CC-BY-NC international real-robocall corpus, fail-closed text-only audit, and
+reporting-only Stage 7 diagnostic are in
+[reports/INTERNATIONAL_ROBOCALL_DIAGNOSTIC.md](reports/INTERNATIONAL_ROBOCALL_DIAGNOSTIC.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).
