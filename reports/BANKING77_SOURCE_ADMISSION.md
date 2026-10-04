@@ -93,3 +93,53 @@ After this declaration is committed, run the one frozen open diagnostic with:
 ```bash
 make qwen-08b-stage7-banking77-selection
 ```
+
+## Frozen Stage 7 result
+
+The source declaration, split identities, metrics, and sealed-test prohibition above were committed
+and pushed as `d1283eaaaec88c2d8695b324ed32fbd8930a6dc7` before any model prediction. The one permitted
+selection run then scored all 770 rows on Apple MPS using the identity-checked Stage 7 development
+cache and frozen calibration. No official-test prediction was generated.
+
+| Metric | Frozen result |
+|---|---:|
+| Thresholded SAFE false positives | **8/770 (1.039%)** |
+| SAFE FPR 95% Wilson interval | 0.527–2.037% |
+| Calibrated verdicts | 762 SAFE, 0 UNCERTAIN, 8 SCAM |
+| Raw argmax verdicts | 759 SAFE, 4 UNCERTAIN, 7 SCAM |
+| Binary Brier score | 0.00399 |
+
+The eight false positives are concentrated in five action-bearing intents:
+
+| Intent | False positives / 10 |
+|---|---:|
+| `pin_blocked` | 2 |
+| `request_refund` | 2 |
+| `top_up_reverted` | 2 |
+| `cash_withdrawal_not_recognised` | 1 |
+| `cancel_transfer` | 1 |
+
+Each per-intent denominator is only ten, so these are error-localization counts rather than stable
+intent-level rate estimates. Seven of the eight raw argmaxes were already SCAM. The eighth had a
+SAFE argmax but crossed the frozen low SCAM threshold, so threshold changes would trade away the
+development recall contract and are not an acceptable repair.
+
+- Evaluation report SHA-256:
+  `23129c972fd5fa5ac4f049010f764cbe432181c55b2bb76e20eb0549633dd237`
+- Text-free prediction ledger SHA-256:
+  `d4ae7e49a892cb1057e39cd6c25a5ccb5d329ebd45f8e6e4c6153b3583e03dfc`
+- Adapter SHA-256:
+  `14f1d2bf121e76fa158cea722416994ec9cbfbc545956d24b9693b7808441357`
+- Frozen calibration SHA-256:
+  `a2309cc5479a85efa51ab74219411593a1e8b372888b4b8f97aaa1bf741b078b`
+
+The BF16-plus-LoRA reference measured 93.89 ms median and 108.80 ms p95 on the standard
+50-example development latency loop, with a sampled MPS driver-allocation peak of 2.51 GB. This is
+not the final mobile runtime path.
+
+The point estimate clears the 2% SAFE-FPR target, but the 95% upper interval narrowly exceeds 2%,
+and the failures identify a coherent legitimate financial-action boundary. BANKING77 therefore
+earns a small, split-safe training experiment. That experiment must use only `banking77_fit`, mix
+in scam and uncertainty retention examples, retain the exact Stage 7 development calibration
+contract, and pass the open BANKING77 selection plus every prior regression gate before the sealed
+official test can be considered.

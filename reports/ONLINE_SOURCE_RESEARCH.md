@@ -59,6 +59,9 @@ ships hash-pinned acquisition and audit code, not sensitive message dumps.
   rows provide ten examples per intent; 3,060 official-test families stay sealed. Their hashes and
   the one-run Stage 7 evaluation contract are frozen before predictions in
   `reports/BANKING77_SOURCE_ADMISSION.md`.
+- Frozen result: Stage 7 produces 8/770 SAFE false positives (1.039%, 95% CI 0.527–2.037%), all as
+  calibrated SCAM. The errors fall in five action-bearing intents, so a small retention-balanced
+  fitting experiment is justified; threshold tuning and official-test scoring remain forbidden.
 
 ### Reddit boundary
 
