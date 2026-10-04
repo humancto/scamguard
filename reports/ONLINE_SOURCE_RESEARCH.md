@@ -42,6 +42,24 @@ ships hash-pinned acquisition and audit code, not sensitive message dumps.
   upper bound is 0.374%. This is strong narrow-domain evidence, not proof for action-bearing calls,
   and the corpus remains excluded from fitting and promotion tuning.
 
+### BANKING77: predeclared financial-service SAFE boundary
+
+- Primary artifact: <https://github.com/PolyAI-LDN/task-specific-datasets/tree/57ec275d8078af65b7731c2a98be812d844a6d6b/banking_data>
+- Paper: <https://arxiv.org/abs/2003.04807>
+- Rights: CC-BY-4.0 in the publisher repository; commercial training is permitted with
+  attribution. Raw and derived rows remain local rather than being redistributed.
+- Provenance: 13,083 English online banking customer-service queries over 77 intents. The paper and
+  repository do not say whether the texts are naturally occurring, crowdsourced, or internally
+  authored, so ScamGuard counts them as licensed human-authored queries but not verified real
+  customer communications.
+- Split safety: the official test remains prediction-sealed. Source-wide normalization removes
+  eight train duplicates, one test duplicate, 123 train rows near the official test, one test row
+  overlapping prior ScamGuard data, and 162 same-split near-family variants.
+- Admission: 8,958 independent fitting families remain unused; 770 deterministic open-selection
+  rows provide ten examples per intent; 3,060 official-test families stay sealed. Their hashes and
+  the one-run Stage 7 evaluation contract are frozen before predictions in
+  `reports/BANKING77_SOURCE_ADMISSION.md`.
+
 ### Reddit boundary
 
 The current official <https://redditinc.com/policies/data-api-terms> denies use of Reddit Services

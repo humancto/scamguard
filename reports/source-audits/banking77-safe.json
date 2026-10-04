@@ -1,0 +1,117 @@
+{
+  "artifacts": {
+    "fit": {
+      "path": "data/external/banking77/banking77_fit.jsonl",
+      "rows": 8958,
+      "sha256": "e6baa68cb39cdb005dbf6e0ed27d81645ebdf580ccf83db1a76d5f1cdc7fe48f"
+    },
+    "test_sealed": {
+      "path": "data/external/banking77/banking77_test_sealed.jsonl",
+      "rows": 3060,
+      "sha256": "f7b9e005a01d78be64843f0d2dc249889500179f165b44a1ecda7a5dfeb9f5f9"
+    },
+    "validation": {
+      "path": "data/external/banking77/banking77_validation.jsonl",
+      "rows": 770,
+      "sha256": "efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7"
+    }
+  },
+  "counts": {
+    "declared_intents": 77,
+    "reference_rows": 80092,
+    "test": {
+      "candidate_rows": 3080,
+      "exact_duplicate_rows_removed": 1,
+      "intent_rows_max": 40,
+      "intent_rows_min": 40,
+      "near_overlaps_with_existing_references_removed": 1,
+      "privacy_findings_before_normalization": {
+        "rows_with_email": 0,
+        "rows_with_long_digit_sequence": 0,
+        "rows_with_phone_like": 0,
+        "rows_with_url": 0
+      },
+      "same_family_rows_removed": 18,
+      "sealed_rows": 3060,
+      "source_rows": 3080
+    },
+    "train": {
+      "candidate_rows": 10003,
+      "exact_duplicate_rows_removed": 8,
+      "fit_rows": 8958,
+      "independent_family_representatives": 9728,
+      "intent_rows_max": 187,
+      "intent_rows_min": 35,
+      "near_overlaps_with_existing_references_removed": 0,
+      "near_overlaps_with_official_test_removed": 123,
+      "privacy_findings_before_normalization": {
+        "rows_with_email": 0,
+        "rows_with_long_digit_sequence": 0,
+        "rows_with_phone_like": 0,
+        "rows_with_url": 0
+      },
+      "same_family_rows_removed": 144,
+      "selection_rows": 770,
+      "source_rows": 10003
+    }
+  },
+  "dataset_schema_version": 1,
+  "near_template_stats": {
+    "test": {
+      "largest_near_template_cluster": 3,
+      "near_template_clusters": 3060,
+      "near_template_rows_quarantined": 0,
+      "real_rows_clustered": 3078
+    },
+    "train": {
+      "largest_near_template_cluster": 4,
+      "near_template_clusters": 9728,
+      "near_template_rows_quarantined": 0,
+      "real_rows_clustered": 9872
+    }
+  },
+  "policy": {
+    "attribution_required": true,
+    "commercial_use_allowed": true,
+    "fit_artifact_used_for_fitting": false,
+    "individual_safe_ground_truth_claimed": false,
+    "naturally_occurring_provenance_claimed": false,
+    "official_test_predictions_opened": false,
+    "official_test_used_for_fitting_or_selection": false,
+    "one_representative_per_near_template_family": true,
+    "raw_text_written_to_manifest": false,
+    "rows_redistributed": false,
+    "selection_examples_per_intent": 10,
+    "selection_seed": "scamguard-banking77-selection-v1",
+    "validation_used_for_candidate_selection": true,
+    "validation_used_for_fitting": false,
+    "validation_used_for_threshold": false
+  },
+  "purpose": "licensed human-authored financial-service SAFE boundary source; fitting pool remains unadmitted, validation is selection-only, and official test predictions stay sealed",
+  "source": {
+    "files": [
+      {
+        "filename": "train.csv",
+        "sha256": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b"
+      },
+      {
+        "filename": "test.csv",
+        "sha256": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d"
+      },
+      {
+        "filename": "categories.json",
+        "sha256": "53261da888122daf2d120d925458631d9619e15d82e56052e7a42e535ce32b63"
+      },
+      {
+        "filename": "LICENSE",
+        "sha256": "7e7170e3cebf88a9f60c7b8421418323c09304da1af4d5e90f4da1dc1c8a2661"
+      }
+    ],
+    "license": "CC-BY-4.0",
+    "natural_or_crowdsourced_provenance_documented": false,
+    "paper": "https://arxiv.org/abs/2003.04807",
+    "publisher_description": "online banking customer-service queries over 77 intents",
+    "repository": "PolyAI-LDN/task-specific-datasets",
+    "revision": "57ec275d8078af65b7731c2a98be812d844a6d6b"
+  }
+}

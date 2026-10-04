@@ -88,6 +88,9 @@ reporting-only Stage 7 diagnostic are in
 The rights-pinned Vystadial real-human telephone SAFE diagnostic, 48,254-row source audit, and
 frozen 0/1,024 Stage 7 false-positive result are in
 [reports/VYSTADIAL_SAFE_DIAGNOSTIC.md](reports/VYSTADIAL_SAFE_DIAGNOSTIC.md).
+The pre-prediction BANKING77 financial-service boundary audit, split-safe 770-row open selection,
+8,958-row unused fit pool, and 3,060-family sealed official test are in
+[reports/BANKING77_SOURCE_ADMISSION.md](reports/BANKING77_SOURCE_ADMISSION.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).

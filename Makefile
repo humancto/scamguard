@@ -13,7 +13,7 @@
 .PHONY: qwen-08b-stage12-freeze qwen-08b-stage12-dev qwen-08b-stage12-selection qwen-08b-stage12-dev-gates qwen-08b-stage12-eval qwen-08b-stage12-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 .PHONY: phone-scam-synthetic-fetch phone-scam-synthetic phone-scam-label-audit schema25-full-call-curriculum encoder-schema25-cache encoder-schema25-preflight encoder-schema25-full-call-curriculum encoder-schema25-gates
-.PHONY: ppone-robocalls international-robocalls qwen-08b-stage7-international-robocalls vystadial-safe-calls qwen-08b-stage7-vystadial-safe
+.PHONY: ppone-robocalls international-robocalls qwen-08b-stage7-international-robocalls vystadial-safe-calls qwen-08b-stage7-vystadial-safe banking77-safe qwen-08b-stage7-banking77-selection
 
 PYTHON_BIN ?= .venv/bin/python
 QWEN08_FULL_DATA ?= data/experiments/schema24-annotated-hard-negatives/processed
@@ -96,6 +96,7 @@ QWEN08_PPONE_GATE_REPORT ?= reports/runs/qwen35-08b-ppone-abstention-stage8-regr
 QWEN08_PPONE_EXPERIMENT_ID ?= sg-qwen35-08b-ppone-abstention-stage8-v1
 QWEN08_INTERNATIONAL_ROBOCALL_REPORT ?= reports/runs/qwen35-08b-stage7-international-robocalls.json
 QWEN08_VYSTADIAL_SAFE_REPORT ?= reports/runs/qwen35-08b-stage7-vystadial-safe.json
+QWEN08_BANKING77_REPORT ?= reports/runs/qwen35-08b-stage7-banking77-selection.json
 QWEN08_PPONE_EPOCHS ?= 3
 QWEN08_PPONE_LR ?= 0.0000005
 QWEN08_PPONE_SEED ?= 20260908
@@ -1564,6 +1565,36 @@ qwen-08b-stage7-vystadial-safe: vystadial-safe-calls
 		--frozen-calibration-report reports/runs/qwen35-08b-phone-generalization-stage7-dev.json \
 		--cache-dir reports/runs/qwen35-08b-phone-generalization-stage7-regression.scores \
 		--report "$(QWEN08_VYSTADIAL_SAFE_REPORT)"
+
+banking77-safe:
+	$(PYTHON_BIN) scripts/fetch_banking77.py
+	@if [ ! -f data/external/banking77/manifest.json ]; then \
+		$(PYTHON_BIN) scripts/build_banking77_safe.py \
+			--source data/raw/banking77 \
+			--output data/external/banking77 \
+			--report reports/source-audits/banking77-safe.json \
+			--reference data/experiments/schema25-full-call-curriculum/processed \
+			--reference data/processed \
+			--reference data/external/youtube_scam_calls \
+			--reference data/external/ppone_robocalls \
+			--reference data/external/international_robocalls \
+			--reference data/external/vystadial_safe \
+			--reference data/external/scam_dialogue; \
+	fi
+
+qwen-08b-stage7-banking77-selection: banking77-safe
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only \
+		--adapter artifacts/checkpoints/qwen35-08b-phone-generalization-stage7-lora \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external --splits dev banking77_validation \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --selection-screen-only \
+		--frozen-calibration-report reports/runs/qwen35-08b-phone-generalization-stage7-dev.json \
+		--cache-dir reports/runs/qwen35-08b-phone-generalization-stage7-regression.scores \
+		--report "$(QWEN08_BANKING77_REPORT)"
 
 apptek-callcenter:
 	$(PYTHON_BIN) scripts/fetch_apptek_callcenter.py

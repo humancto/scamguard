@@ -845,6 +845,9 @@ def main() -> None:
     )
     if vystadial_safe_path.exists():
         split_paths["vystadial_safe"] = vystadial_safe_path
+    banking77_path = args.external_data / "banking77" / "banking77_validation.jsonl"
+    if banking77_path.exists():
+        split_paths["banking77_validation"] = banking77_path
     primary_test_v8_manifest = None
     if args.primary_test_v8 is not None:
         primary_test_v8_manifest = validate_primary_test_v8(args.primary_test_v8)
@@ -993,6 +996,7 @@ def main() -> None:
         "chichewa",
         "international_robocalls",
         "vystadial_safe",
+        "banking77",
         "scam_dialogue",
         "taskmaster",
     ):
