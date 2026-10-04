@@ -54,7 +54,7 @@ existing ScamGuard reference. Near clustering removes another 144 train and 18 t
 
 | Artifact | Rows | SHA-256 | Status |
 |---|---:|---|---|
-| Eligible fitting pool | 8,958 | `e6baa68cb39cdb005dbf6e0ed27d81645ebdf580ccf83db1a76d5f1cdc7fe48f` | Unused |
+| Eligible fitting pool | 8,958 | `e6baa68cb39cdb005dbf6e0ed27d81645ebdf580ccf83db1a76d5f1cdc7fe48f` | 388 rows declared for Stage 13; training not yet run |
 | Open balanced selection | 770 | `efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7` | May score once |
 | Official test | 3,060 | `f7b9e005a01d78be64843f0d2dc249889500179f165b44a1ecda7a5dfeb9f5f9` | Prediction-sealed |
 
@@ -143,3 +143,39 @@ earns a small, split-safe training experiment. That experiment must use only `ba
 in scam and uncertainty retention examples, retain the exact Stage 7 development calibration
 contract, and pass the open BANKING77 selection plus every prior regression gate before the sealed
 official test can be considered.
+
+## Frozen Stage 13 experiment recipe
+
+Stage 13 is a targeted continuation from the Stage 7 adapter, not a replacement model and not a
+release candidate. The deterministic curriculum contains 1,400 rows in 993 families:
+
+- 388 BANKING77 fit-only SAFE rows: four per intent across all 77 intents, increased to twenty for
+  each of the five open-error intents above;
+- 385 family-diverse Stage 7 source/verdict anchors;
+- all 356 three-way FTC-pattern action-state examples;
+- 192 SCAM/UNCERTAIN examples across credential, financial-impersonation, government, and payment
+  categories;
+- all 152 licensed CC0 real-call examples; and
+- 48 SAFE plus 48 SCAM phone-boundary families.
+
+After overlap removal between selection reasons, the final label mix is 744 SAFE, 420 SCAM, and
+236 UNCERTAIN examples. The Stage 7 development split is copied byte-for-byte. The builder reads
+the open BANKING77 validation text only for an overlap audit; it copies or transforms zero such
+rows. It does not read the official test text.
+
+The frozen optimization recipe is one epoch from the Stage 7 LoRA, learning rate `1e-6`, effective
+batch size 16, maximum length 640, and seed `20261004`. The token audit covers 4,034 train-plus-dev
+examples, finds zero examples over 640 tokens, and reports a maximum of 638 tokens. Apple MPS
+preflight passed before training.
+
+Promotion is fail-closed. The open BANKING77 slice must fall to at most 3/770 false positives
+(0.5% FPR with Wilson upper bound at most 1.25%), while Stage 7 development macro-F1, phone scam
+recall, audited ordinary-phone SAFE FPR, PPoNE recall/macro-F1/UNCERTAIN recall, Vystadial SAFE FPR,
+and international-robocall recall must not regress. Only a joint pass permits the full regression;
+the official BANKING77 test remains prediction-sealed.
+
+Reproduce the frozen data, token audit, and preflight with:
+
+```bash
+make qwen-08b-stage13-preflight
+```

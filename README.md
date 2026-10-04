@@ -89,8 +89,8 @@ The rights-pinned Vystadial real-human telephone SAFE diagnostic, 48,254-row sou
 frozen 0/1,024 Stage 7 false-positive result are in
 [reports/VYSTADIAL_SAFE_DIAGNOSTIC.md](reports/VYSTADIAL_SAFE_DIAGNOSTIC.md).
 The pre-prediction BANKING77 financial-service boundary audit, split-safe 770-row open selection,
-frozen 8/770 Stage 7 false-positive result, 8,958-row eligible fit pool, and 3,060-family sealed
-official test are in
+frozen 8/770 Stage 7 false-positive result, 8,958-row eligible fit pool, 1,400-row Stage 13
+continuation recipe and strict non-regression gates, and 3,060-family sealed official test are in
 [reports/BANKING77_SOURCE_ADMISSION.md](reports/BANKING77_SOURCE_ADMISSION.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
