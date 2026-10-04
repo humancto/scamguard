@@ -80,6 +80,8 @@ The rejected Stage 9 and Stage 10 receipts, exact promotion failures, and text-f
 audits are in [reports/QWEN08_STAGE9_STAGE10.md](reports/QWEN08_STAGE9_STAGE10.md).
 The rejected single-adapter Stage 11 factor-interpolation experiment is in
 [reports/QWEN08_STAGE11.md](reports/QWEN08_STAGE11.md).
+The frozen exact-delta, single-adapter Stage 12 experiment is in
+[reports/QWEN08_STAGE12.md](reports/QWEN08_STAGE12.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).

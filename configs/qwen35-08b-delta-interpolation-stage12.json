@@ -1,0 +1,59 @@
+{
+  "experiment_id": "sg-qwen35-08b-delta-interpolation-stage12-v1",
+  "run_kind": "post_hoc_single_adapter_exact_delta_interpolation",
+  "role": "exactly retain a weighted mixture of Stage 7 and Stage 10 LoRA deltas in one adapter",
+  "release_eligible": false,
+  "publication_authorized": false,
+  "checkpoint_output": "artifacts/checkpoints/qwen35-08b-delta-interpolation-stage12-lora",
+  "base_model": "Qwen/Qwen3.5-0.8B",
+  "base_model_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+  "method": "linear_lora_delta_concat_v1",
+  "right_weight": 0.5,
+  "left_weight": 0.5,
+  "parent_rank": 16,
+  "output_rank": 32,
+  "parents": {
+    "left": {
+      "stage": 7,
+      "path": "artifacts/checkpoints/qwen35-08b-phone-generalization-stage7-lora",
+      "adapter_sha256": "14f1d2bf121e76fa158cea722416994ec9cbfbc545956d24b9693b7808441357",
+      "config_sha256": "27e4683d15e5335ffa0cb6e11640f0812a29b324a4940adcc3634ec86e2c019b"
+    },
+    "right": {
+      "stage": 10,
+      "path": "artifacts/checkpoints/qwen35-08b-government-evidence-stage10-lora",
+      "adapter_sha256": "3eb2974d7db70d2f859a10d1876a9f25e290bbe487abae27f837dfc949b59cf0",
+      "config_sha256": "cefdc82c9bde541da713975d1d22607f82792e0b1615126577d316e26cf8b7bb"
+    }
+  },
+  "selection": {
+    "status": "post_hoc_hypothesis_after_repeated_open_validation",
+    "fresh_confirmation": false,
+    "development_rows_used": 2634,
+    "prior_open_validation_splits_used": [
+      "ppone_validation",
+      "phone_scam_validation"
+    ],
+    "sealed_splits_used": [],
+    "frozen_reason": "Stage 11 disproved factor interpolation; rank doubling represents the same 0.5 parent-delta mixture exactly without a second runtime adapter",
+    "runtime_adapter_count": 1
+  },
+  "evaluation": {
+    "calibration_split": "dev",
+    "minimum_dev_recall": 0.97,
+    "maximum_dev_safe_fpr": 0.02,
+    "promotion_checker": "scripts/check_qwen_stage9_promotion.py",
+    "all_open_gates_required": true,
+    "full_regression_on_open_gate_failure": false,
+    "ppone_test_sealed": true,
+    "publisher_phone_test_sealed": true,
+    "primary_test_v8_sealed": true
+  },
+  "deployment": {
+    "single_adapter_required": true,
+    "expected_adapter_bytes_upper_bound": 90000000,
+    "quantization_authorized": false,
+    "physical_device_benchmark_authorized": false,
+    "hugging_face_publication_authorized": false
+  }
+}
