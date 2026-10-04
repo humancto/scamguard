@@ -63,5 +63,40 @@ contain long digit sequences. No such value survives the built diagnostic.
 - Machine-readable source audit:
   `reports/source-audits/international-robocalls.json`
 
-The one frozen Stage 7 evaluation remains pending. No model prediction has been inspected while
-freezing these construction rules and metrics.
+The one frozen Stage 7 evaluation is complete. No model prediction was inspected before the source
+construction rules, label mapping, and metrics were committed in
+`813e4dd699bcd6b17f41ae73df1c2847be41537e`.
+
+| Metric | Frozen Stage 7 result |
+|---|---:|
+| Silver SCAM recall | 78.95% (15/19), 95% CI 56.67–91.49% |
+| Exact UNCERTAIN recall | 17.86% (5/28) |
+| Silver SCAM predicted SAFE | 21.05% (4/19) |
+| UNCERTAIN robocalls predicted SAFE | 21.43% (6/28) |
+| All verified robocalls avoiding SAFE | 78.72% (37/47) |
+| Three-verdict macro F1 | 0.2971 |
+
+The calibrated confusion matrix in `SAFE`, `UNCERTAIN`, `SCAM` order is:
+
+```text
+truth UNCERTAIN: 6 SAFE, 5 UNCERTAIN, 17 SCAM
+truth SCAM:      4 SAFE, 0 UNCERTAIN, 15 SCAM
+```
+
+The evaluator's binary `scam_precision=1.0` and `false_positive_rate=0.0` are not meaningful safety
+claims here because the source contains no `SAFE` truth. The actionable finding is the opposite:
+ten independently retained, human-verified robocall families received a `SAFE` verdict. Stage 7
+therefore remains rejected and this source must not become a tuning set.
+
+- Frozen evaluation report SHA-256:
+  `6d391fe3bc72364896e3f1d7a7e1b5b5d2717f5ff6706f0f2f84a15914c057de`
+- Text-free prediction ledger SHA-256:
+  `0720ca2904829776b6ceb9e655268e93d3b898778e7e627e61496879c1bbbaa7`
+- Adapter SHA-256:
+  `14f1d2bf121e76fa158cea722416994ec9cbfbc545956d24b9693b7808441357`
+- Frozen calibration report SHA-256:
+  `a2309cc5479a85efa51ab74219411593a1e8b372888b4b8f97aaa1bf741b078b`
+
+This evidence changes the next experiment boundary. More interpolation against PPoNE and the phone
+validation set is not justified. A future training increment needs a separately licensed source or
+original data collection, while this 47-family diagnostic stays reporting-only and unchanged.
