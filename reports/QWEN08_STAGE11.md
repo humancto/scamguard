@@ -1,4 +1,36 @@
-# Qwen3.5-0.8B Stage 11 preregistration
+# Qwen3.5-0.8B Stage 11 result
+
+## Result
+
+**Reject Stage 11 before the full regression. Keep Stage 7 as the current reference.**
+
+The one-adapter interpolation improved development macro F1 and phone recall, but failed three of
+the eight frozen open gates. In particular, factor-space interpolation did not reproduce the
+score-space diagnostic: PPoNE scam recall remained at Stage 10's 10/12 rather than Stage 7's 11/12,
+PPoNE macro F1 regressed below Stage 7, and PPoNE UNCERTAIN recall returned to 1/21. The full
+regression and every sealed test remain unopened.
+
+| Metric | Stage 7 | Stage 11 | Frozen requirement | Result |
+|---|---:|---:|---:|---|
+| Dev scam recall | 97.08% | 97.08% | at least 97% | pass |
+| Dev SAFE FPR | 0.25% | 0.20% | at most 2% | pass |
+| Dev macro F1 | 0.7856 | 0.8064 | no regression | pass |
+| Phone scam recall | 78.16% (136/174) | 79.31% (138/174) | no regression | pass |
+| Phone ordinary-SAFE FPR | 17.11% (26/152) | 17.11% (26/152) | no regression | pass |
+| PPoNE scam recall | 91.67% (11/12) | 83.33% (10/12) | no regression | **fail** |
+| PPoNE macro F1 | 0.2398 | 0.2323 | at least +0.03 | **fail** |
+| PPoNE UNCERTAIN recall | 4.76% (1/21) | 4.76% (1/21) | at least 3/21 | **fail** |
+
+- Materialized adapter SHA-256:
+  `201e9473a65796667be787b0751d14e93109e8ecfd35e02568f1d01f7fe40cd7`.
+- Interpolation manifest SHA-256:
+  `7ccbbb5095b2aade810a9c020f62441ab074723e23de733cfb4d88fbac19bd4c`.
+- Development report SHA-256:
+  `df1a1c10b81538c7ef5c220d71435a7fc7d4fa3e3c2283ad9b6f5eae44a0ce99`.
+- Open selection report SHA-256:
+  `6926bcb4306f56f27416661d1cef92c7f7d785d50533dda5223c74d7669163f2`.
+- Promotion-gate report SHA-256:
+  `114161156b79662467d2e78e3ee483fdb1f40caa6bc732658ec8fa55c8cb1103`.
 
 ## Decision boundary
 
