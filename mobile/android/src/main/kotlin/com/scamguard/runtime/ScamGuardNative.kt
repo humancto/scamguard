@@ -29,12 +29,16 @@ enum class ScamGuardVerdict {
 }
 
 data class ScamGuardCalibration(
+    val protocolVersion: Long,
     val promptSuffix: String,
     val temperature: Double,
     val scamThreshold: Double,
     val safeThreshold: Double
 ) {
     init {
+        require(protocolVersion == ScamGuardNative.PROTOCOL_VERSION) {
+            "incompatible ScamGuard calibration protocol"
+        }
         require(promptSuffix.startsWith("</message>")) { "prompt suffix must close the message" }
         require(temperature.isFinite() && temperature > 0.0) { "temperature must be positive" }
         require(scamThreshold in 0.0..1.0) { "scam threshold must be in [0, 1]" }
@@ -70,6 +74,17 @@ class ScamGuardNative(
         threads,
         gpuLayers
     )
+
+    init {
+        try {
+            check(nativeInfo(requireHandle())[0] == PROTOCOL_VERSION) {
+                "incompatible ScamGuard native protocol"
+            }
+        } catch (error: Throwable) {
+            close()
+            throw error
+        }
+    }
 
     @Synchronized
     fun info(): ScamGuardRuntimeInfo {
@@ -155,6 +170,7 @@ class ScamGuardNative(
     private external fun nativeDestroy(handle: Long)
 
     companion object {
+        const val PROTOCOL_VERSION = 4L
         init {
             System.loadLibrary("scamguard-jni")
         }

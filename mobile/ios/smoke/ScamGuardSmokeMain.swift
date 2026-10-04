@@ -14,6 +14,7 @@ private struct PackManifest: Decodable {
     }
 
     struct Runtime: Decodable {
+        let protocolVersion: UInt32
         let ctxSize: Int32
         let batchSize: Int32
         let ubatchSize: Int32
@@ -21,6 +22,7 @@ private struct PackManifest: Decodable {
         let gpuLayers: Int32
 
         enum CodingKeys: String, CodingKey {
+            case protocolVersion = "protocol_version"
             case ctxSize = "ctx_size"
             case batchSize = "batch_size"
             case ubatchSize = "ubatch_size"
@@ -41,11 +43,13 @@ private struct PackManifest: Decodable {
 }
 
 private struct Calibration: Decodable {
+    let protocolVersion: UInt32
     let temperature: Double
     let scamThreshold: Double
     let safeThreshold: Double
 
     enum CodingKeys: String, CodingKey {
+        case protocolVersion = "protocol_version"
         case temperature
         case scamThreshold = "scam_threshold"
         case safeThreshold = "safe_threshold"
@@ -112,11 +116,15 @@ private struct ScamGuardSmokeMain {
         guard pack.publicationAuthorized == false else {
             throw ScamGuardRuntimeError.native("smoke control pack cannot authorize publication")
         }
+        guard pack.runtime.protocolVersion == ScamGuardRuntime.protocolVersion else {
+            throw ScamGuardRuntimeError.native("incompatible ScamGuard runtime pack protocol")
+        }
         let calibrationRecord = try decoder.decode(
             Calibration.self,
             from: Data(contentsOf: documents.appendingPathComponent(request.calibration))
         )
         let calibration = try ScamGuardCalibration(
+            protocolVersion: calibrationRecord.protocolVersion,
             promptSuffix: pack.prompt.suffix,
             temperature: calibrationRecord.temperature,
             scamThreshold: calibrationRecord.scamThreshold,

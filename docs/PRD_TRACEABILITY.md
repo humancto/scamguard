@@ -33,6 +33,11 @@ Status meanings:
 
 ## Completion rule
 
+Native protocol 4 corrects chat-token parsing, but a real 41-case probe still fails full token-ID
+parity with the historical training loader. Existing native measurements do not establish the
+corrected runtime's quality or latency. See
+[`reports/GGUF_PROTOCOL4_TOKENIZATION.md`](../reports/GGUF_PROTOCOL4_TOKENIZATION.md).
+
 The original goal is still incomplete. Stage 7's regression recall is 96.934%, SAFE FPR is 2.005%,
 credential-theft recall is 90.278%, and opportunity-scam recall is 94.444%. These fail the original
 core requirements even before the additional Qwen-lineage gates are considered. Strong development

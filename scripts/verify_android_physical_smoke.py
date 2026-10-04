@@ -12,11 +12,19 @@ from pathlib import Path
 from typing import Any, Final
 
 try:
-    from scamguard.gguf_runtime import QwenGGUFVerdictBackend, calibrated_probabilities
+    from scamguard.gguf_runtime import (
+        GGUF_PROTOCOL_VERSION,
+        QwenGGUFVerdictBackend,
+        calibrated_probabilities,
+    )
     from scamguard.metrics import file_sha256
 except ModuleNotFoundError:  # Direct execution places scripts/ on sys.path.
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-    from scamguard.gguf_runtime import QwenGGUFVerdictBackend, calibrated_probabilities
+    from scamguard.gguf_runtime import (
+        GGUF_PROTOCOL_VERSION,
+        QwenGGUFVerdictBackend,
+        calibrated_probabilities,
+    )
     from scamguard.metrics import file_sha256
 
 SCHEMA_VERSION: Final[int] = 1
@@ -109,6 +117,8 @@ def validate_physical_result(
     prefix_tokens: int,
 ) -> list[str]:
     errors: list[str] = []
+    if protocol_version != GGUF_PROTOCOL_VERSION:
+        errors.append("host reference uses an incompatible GGUF protocol")
     unexpected_fields = sorted(set(result) - RESULT_FIELDS)
     if unexpected_fields:
         errors.append(f"Android result has unexpected fields: {unexpected_fields}")
@@ -122,7 +132,7 @@ def validate_physical_result(
         "backend": "llama.cpp CPU",
         "passed": True,
         "prefix_reused": True,
-        "protocol_version": protocol_version,
+        "protocol_version": GGUF_PROTOCOL_VERSION,
         "model_tensor_bytes": model_tensor_bytes,
         "prefix_tokens": prefix_tokens,
         "verdict": verdict,
@@ -210,6 +220,8 @@ def verify(
     assert isinstance(calibration_record, dict)
     assert isinstance(prompt, dict)
     assert isinstance(runtime, dict)
+    if runtime.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        raise ValueError("runtime-pack protocol differs from the current tokenization")
     model = _member(root, model_record, "model")
     runner = _member(root, runner_record, "runner")
     calibration = _member(root, calibration_record, "calibration")

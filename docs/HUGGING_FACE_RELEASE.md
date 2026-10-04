@@ -17,6 +17,12 @@ published measurements.
 
 ## Current evidence, not a release candidate
 
+**Native runtime update:** protocol 4 fixes rendered ChatML parsing; old protocol-3 calibration,
+packs, score caches, and receipts are incompatible. Model-backed checks still find Unicode
+tokenization differences against the historical HF training loader. See
+[`reports/GGUF_PROTOCOL4_TOKENIZATION.md`](../reports/GGUF_PROTOCOL4_TOKENIZATION.md).
+Neither this partial correction nor historical native latency measurements authorize publication.
+
 **Current decision:** the Qwen continuation line closed at Stage 14. Stage 7 completed at 33/41
 regression gates; Stage 13 failed development and Stage 14 failed open selection. See
 [`reports/BANKING77_SOURCE_ADMISSION.md`](../reports/BANKING77_SOURCE_ADMISSION.md) for the terminal

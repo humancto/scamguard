@@ -1,0 +1,1150 @@
+{
+  "artifact_schema_version": 1,
+  "protocol_version": 4,
+  "purpose": "production GGUF tokenization parity with pinned Hugging Face tokenizer",
+  "release_authorized": false,
+  "accuracy_established": false,
+  "latency_established": false,
+  "audit_script_sha256": "4e7be282cfe52bc6ebbe53d79232c2a26e45931ef7c531d0577d30e738249c9b",
+  "native_source_sha256": "5161480b3b8a436c371bec51fb0348d990c180c3d0b42b5d157daf55c868047d",
+  "model": {
+    "path": "artifacts/gguf/Qwen3.5-0.8B-Q4_0.gguf",
+    "sha256": "57d1997790d1744fba5b40a7317df71ea5e2acee28c47e78f0cce39c0703f8cf"
+  },
+  "probe": {
+    "path": "build/native-gguf-verdict/scamguard-gguf-tokenize",
+    "sha256": "908bc3ef24ae8861776cb7275aa50f1e6badcffee353fce291464d5fdf9abc80"
+  },
+  "processor": {
+    "repository": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "file_sha256": {
+      "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "tokenizer_config.json": "49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c",
+      "chat_template.jinja": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80"
+    },
+    "live_tokenizer_class": "Qwen2Tokenizer",
+    "transformers_version": "5.16.0.dev0",
+    "live_normalizer": {
+      "type": "NFC"
+    },
+    "live_pre_tokenizer": {
+      "type": "Sequence",
+      "pretokenizers": [
+        {
+          "type": "Split",
+          "pattern": {
+            "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+          },
+          "behavior": "Isolated",
+          "invert": false
+        },
+        {
+          "type": "ByteLevel",
+          "add_prefix_space": false,
+          "trim_offsets": true,
+          "use_regex": false
+        }
+      ]
+    },
+    "serialized_normalizer": {
+      "type": "NFC"
+    },
+    "serialized_pre_tokenizer": {
+      "type": "Sequence",
+      "pretokenizers": [
+        {
+          "type": "Split",
+          "pattern": {
+            "Regex": "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?[\\p{L}\\p{M}]+|\\p{N}| ?[^\\s\\p{L}\\p{M}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+"
+          },
+          "behavior": "Isolated",
+          "invert": false
+        },
+        {
+          "type": "ByteLevel",
+          "add_prefix_space": false,
+          "trim_offsets": false,
+          "use_regex": false
+        }
+      ]
+    },
+    "live_backend_sha256": "ffb7a28b27dabcc333662fd3e0b0005d9e79a1c22e31453ab5a3017fbd5f25c0"
+  },
+  "fixtures": [
+    {
+      "id": "fixed-prefix",
+      "hf_tokens": 127,
+      "gguf_tokens": 127,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e332dd9ff798234867d42bd56a2eb7c47e5a4f1e3f5eedeadb1c72ee7776489c"
+    },
+    {
+      "id": "empty-question",
+      "hf_tokens": 144,
+      "gguf_tokens": 144,
+      "exact_match": true,
+      "hf_token_ids_sha256": "85ef7b374a789f2454127017f9eb59f93c79834a1a98d396270b748decf92909"
+    },
+    {
+      "id": "empty-SAFE",
+      "hf_tokens": 146,
+      "gguf_tokens": 146,
+      "exact_match": true,
+      "hf_token_ids_sha256": "4cb912b50f4d405d40a9f21bbd5b9cac31871ab945b9ceaf1cc1ec1faf1544a3"
+    },
+    {
+      "id": "empty-UNCERTAIN",
+      "hf_tokens": 148,
+      "gguf_tokens": 148,
+      "exact_match": true,
+      "hf_token_ids_sha256": "14096b66cc30f47eb9acce1260ad5a8f286ef19c0cf19bf93557d62f39a89ea5"
+    },
+    {
+      "id": "empty-SCAM",
+      "hf_tokens": 147,
+      "gguf_tokens": 147,
+      "exact_match": true,
+      "hf_token_ids_sha256": "fcc4642bc74dc301b3f559afc2ccb77addd55fe345f0bcd08b723e7ed59c340e"
+    },
+    {
+      "id": "appointment-question",
+      "hf_tokens": 153,
+      "gguf_tokens": 153,
+      "exact_match": true,
+      "hf_token_ids_sha256": "d4b2dc2225d48eeec9e65b699a00c6d26ea96b222a99cf86236c38a56810a149"
+    },
+    {
+      "id": "appointment-SAFE",
+      "hf_tokens": 155,
+      "gguf_tokens": 155,
+      "exact_match": true,
+      "hf_token_ids_sha256": "10c274a929df81f7bc74eebbf724ba1b5657610d772177d28aae324ed8df212b"
+    },
+    {
+      "id": "appointment-UNCERTAIN",
+      "hf_tokens": 157,
+      "gguf_tokens": 157,
+      "exact_match": true,
+      "hf_token_ids_sha256": "0e5fc31f9060ce26ddd4fe65948837f21c4c277bce9a6a499c6442697892ae76"
+    },
+    {
+      "id": "appointment-SCAM",
+      "hf_tokens": 156,
+      "gguf_tokens": 156,
+      "exact_match": true,
+      "hf_token_ids_sha256": "a7e9679d49976ef8a7bf126443f5c6827a4ec61fc711e1d5f0a07b4945807c2b"
+    },
+    {
+      "id": "credential-question",
+      "hf_tokens": 159,
+      "gguf_tokens": 159,
+      "exact_match": true,
+      "hf_token_ids_sha256": "f8156b41d42293d2bb46d945c38fb894d286b27f1c1c4b1850a9116d3833008c"
+    },
+    {
+      "id": "credential-SAFE",
+      "hf_tokens": 161,
+      "gguf_tokens": 161,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e543093cc7863e22d6fa79986caf4f817f0870a5b089ed23dce6461264b6fd36"
+    },
+    {
+      "id": "credential-UNCERTAIN",
+      "hf_tokens": 163,
+      "gguf_tokens": 163,
+      "exact_match": true,
+      "hf_token_ids_sha256": "27abdc282c3a6ce793a10b937f010651b76d7246bb159655050ee346c087d2aa"
+    },
+    {
+      "id": "credential-SCAM",
+      "hf_tokens": 162,
+      "gguf_tokens": 162,
+      "exact_match": true,
+      "hf_token_ids_sha256": "28e90eda7ab2fbafaa2c96155b5932821c63ad48f96d90c5cbe5c5ea7eee2f2a"
+    },
+    {
+      "id": "ambiguous-question",
+      "hf_tokens": 154,
+      "gguf_tokens": 154,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e49d8a2a5fdfe3d70b6933a0a166325c4d125b251129b8b6cb5366f33938d375"
+    },
+    {
+      "id": "ambiguous-SAFE",
+      "hf_tokens": 156,
+      "gguf_tokens": 156,
+      "exact_match": true,
+      "hf_token_ids_sha256": "91c81ddb4e075a3213626fd328f2ecde93581387bb3eb0acb779d3c2e7a0afa1"
+    },
+    {
+      "id": "ambiguous-UNCERTAIN",
+      "hf_tokens": 158,
+      "gguf_tokens": 158,
+      "exact_match": true,
+      "hf_token_ids_sha256": "1fc4b2561b790d3ce92644255fb0ae9a63856d3c2acc29d4b745eb67c35130a3"
+    },
+    {
+      "id": "ambiguous-SCAM",
+      "hf_tokens": 157,
+      "gguf_tokens": 157,
+      "exact_match": true,
+      "hf_token_ids_sha256": "9a1e30b906acf4cb0b6c2265c1d4f3495d082161ec2bd940b8c7d68b8dd74ca6"
+    },
+    {
+      "id": "hindi-question",
+      "hf_tokens": 166,
+      "gguf_tokens": 158,
+      "exact_match": false,
+      "hf_token_ids_sha256": "e1dc2a17eae9f0ad070fbc40ca72b842f43d2f94344d511d8b2c6d0a6d31f82c"
+    },
+    {
+      "id": "hindi-SAFE",
+      "hf_tokens": 168,
+      "gguf_tokens": 160,
+      "exact_match": false,
+      "hf_token_ids_sha256": "f16c3aaecb0e60c64a04feb53658dd51b940a1094b53d524ce2c1a3a072c22d1"
+    },
+    {
+      "id": "hindi-UNCERTAIN",
+      "hf_tokens": 170,
+      "gguf_tokens": 162,
+      "exact_match": false,
+      "hf_token_ids_sha256": "3a10b58804c644523116c1c07b27a5377f43f77ef765c83ff7a6ea1b170ed073"
+    },
+    {
+      "id": "hindi-SCAM",
+      "hf_tokens": 169,
+      "gguf_tokens": 161,
+      "exact_match": false,
+      "hf_token_ids_sha256": "287e4a68c5ead621c7ca99f30067746a728014166c686a60fb957243eec42b02"
+    },
+    {
+      "id": "chinese-question",
+      "hf_tokens": 148,
+      "gguf_tokens": 148,
+      "exact_match": true,
+      "hf_token_ids_sha256": "365e678ebb2d7e0a65e0e7921396d50385c8bf577d79b7eb64765cc9103cc19f"
+    },
+    {
+      "id": "chinese-SAFE",
+      "hf_tokens": 150,
+      "gguf_tokens": 150,
+      "exact_match": true,
+      "hf_token_ids_sha256": "1432bda23768577562176851fd62a90e629d33c063ee3c55427f2009db8eaffd"
+    },
+    {
+      "id": "chinese-UNCERTAIN",
+      "hf_tokens": 152,
+      "gguf_tokens": 152,
+      "exact_match": true,
+      "hf_token_ids_sha256": "68bd1710038179c81ccc29083b9cf69722f47cdebd416cc3061c118b8778b41c"
+    },
+    {
+      "id": "chinese-SCAM",
+      "hf_tokens": 151,
+      "gguf_tokens": 151,
+      "exact_match": true,
+      "hf_token_ids_sha256": "33d95f2ed979d65031b585fae42a3866dcfa0cde02ca02a43915cbfcdcd48775"
+    },
+    {
+      "id": "decomposed_accent-question",
+      "hf_tokens": 147,
+      "gguf_tokens": 148,
+      "exact_match": false,
+      "hf_token_ids_sha256": "4ea2dd5717330fc17c4413cdea4bced7d8b2fe6705dbd8030cc8dfbe634fb1c2"
+    },
+    {
+      "id": "decomposed_accent-SAFE",
+      "hf_tokens": 149,
+      "gguf_tokens": 150,
+      "exact_match": false,
+      "hf_token_ids_sha256": "ea66ba5ad9e18b246ce44f38baecfcf0afbed213643f1ad053a21ebd21697b0b"
+    },
+    {
+      "id": "decomposed_accent-UNCERTAIN",
+      "hf_tokens": 151,
+      "gguf_tokens": 152,
+      "exact_match": false,
+      "hf_token_ids_sha256": "0307e7bf977ff3d53acc7bb6f72ba30051c1ede0f6af97376ef3b40d6999d916"
+    },
+    {
+      "id": "decomposed_accent-SCAM",
+      "hf_tokens": 150,
+      "gguf_tokens": 151,
+      "exact_match": false,
+      "hf_token_ids_sha256": "8512b497f4b8353afb3c5b61076593fccd72411f0575a975a1d5f4835aacb8f1"
+    },
+    {
+      "id": "unicode-question",
+      "hf_tokens": 175,
+      "gguf_tokens": 168,
+      "exact_match": false,
+      "hf_token_ids_sha256": "69b4025bc850d3002e6dfd125e85ecf206fa790a0560b7b11cd3e986a0ac907a"
+    },
+    {
+      "id": "unicode-SAFE",
+      "hf_tokens": 177,
+      "gguf_tokens": 170,
+      "exact_match": false,
+      "hf_token_ids_sha256": "be6bfe8ef63348980faaa985e932ce1101210ba7d24e3bd8d068461660e5641b"
+    },
+    {
+      "id": "unicode-UNCERTAIN",
+      "hf_tokens": 179,
+      "gguf_tokens": 172,
+      "exact_match": false,
+      "hf_token_ids_sha256": "c4169f1627dd610123c3517a594536f4830544c2343d2089ff88407879e07cc2"
+    },
+    {
+      "id": "unicode-SCAM",
+      "hf_tokens": 178,
+      "gguf_tokens": 171,
+      "exact_match": false,
+      "hf_token_ids_sha256": "d1f19f2476dfaf1400eb9aa3eab8e9c84c8889ded78ffb9cffedaa58513eb408"
+    },
+    {
+      "id": "special_literals-question",
+      "hf_tokens": 156,
+      "gguf_tokens": 156,
+      "exact_match": true,
+      "hf_token_ids_sha256": "ebb69fcfecd75e4626a94ca5ac1b68d5cd0d7c1aa5963e2a1538bdb91f2c389e"
+    },
+    {
+      "id": "special_literals-SAFE",
+      "hf_tokens": 158,
+      "gguf_tokens": 158,
+      "exact_match": true,
+      "hf_token_ids_sha256": "9dcb1b893d27ba81cd4542a12e15ab18f8daf463dfb7ce9245deb9f360ff88f4"
+    },
+    {
+      "id": "special_literals-UNCERTAIN",
+      "hf_tokens": 160,
+      "gguf_tokens": 160,
+      "exact_match": true,
+      "hf_token_ids_sha256": "978cb036ac3eca11911ac47ac35b4d769661ff7090a23518563ccb83c044a2eb"
+    },
+    {
+      "id": "special_literals-SCAM",
+      "hf_tokens": 159,
+      "gguf_tokens": 159,
+      "exact_match": true,
+      "hf_token_ids_sha256": "03fa5e4ad9308012d0aea685b82500578bef62870ea37f238b2aeb7540b0976f"
+    },
+    {
+      "id": "whitespace-question",
+      "hf_tokens": 159,
+      "gguf_tokens": 159,
+      "exact_match": true,
+      "hf_token_ids_sha256": "520b54c38677bb3667da65086ff17d9b1f206124064eb09ac3166931bd00a4fb"
+    },
+    {
+      "id": "whitespace-SAFE",
+      "hf_tokens": 161,
+      "gguf_tokens": 161,
+      "exact_match": true,
+      "hf_token_ids_sha256": "05056ce18f17bcbaf61e1a7e886dea6878558aa508dc231ea1e4a58e87240245"
+    },
+    {
+      "id": "whitespace-UNCERTAIN",
+      "hf_tokens": 163,
+      "gguf_tokens": 163,
+      "exact_match": true,
+      "hf_token_ids_sha256": "dfcdb95421ee082ddaf1970929f2d8392a38e083fcf33319cb83afa04a4a3351"
+    },
+    {
+      "id": "whitespace-SCAM",
+      "hf_tokens": 162,
+      "gguf_tokens": 162,
+      "exact_match": true,
+      "hf_token_ids_sha256": "5db32b3a3c398ab37e7d26b8f7d86c3b4186094c8afab66c2315a6108883f1fd"
+    }
+  ],
+  "tokenization_passed": false,
+  "serialized_reference_fixtures": [
+    {
+      "id": "fixed-prefix",
+      "hf_tokens": 127,
+      "gguf_tokens": 127,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e332dd9ff798234867d42bd56a2eb7c47e5a4f1e3f5eedeadb1c72ee7776489c"
+    },
+    {
+      "id": "empty-question",
+      "hf_tokens": 144,
+      "gguf_tokens": 144,
+      "exact_match": true,
+      "hf_token_ids_sha256": "85ef7b374a789f2454127017f9eb59f93c79834a1a98d396270b748decf92909"
+    },
+    {
+      "id": "empty-SAFE",
+      "hf_tokens": 146,
+      "gguf_tokens": 146,
+      "exact_match": true,
+      "hf_token_ids_sha256": "4cb912b50f4d405d40a9f21bbd5b9cac31871ab945b9ceaf1cc1ec1faf1544a3"
+    },
+    {
+      "id": "empty-UNCERTAIN",
+      "hf_tokens": 148,
+      "gguf_tokens": 148,
+      "exact_match": true,
+      "hf_token_ids_sha256": "14096b66cc30f47eb9acce1260ad5a8f286ef19c0cf19bf93557d62f39a89ea5"
+    },
+    {
+      "id": "empty-SCAM",
+      "hf_tokens": 147,
+      "gguf_tokens": 147,
+      "exact_match": true,
+      "hf_token_ids_sha256": "fcc4642bc74dc301b3f559afc2ccb77addd55fe345f0bcd08b723e7ed59c340e"
+    },
+    {
+      "id": "appointment-question",
+      "hf_tokens": 153,
+      "gguf_tokens": 153,
+      "exact_match": true,
+      "hf_token_ids_sha256": "d4b2dc2225d48eeec9e65b699a00c6d26ea96b222a99cf86236c38a56810a149"
+    },
+    {
+      "id": "appointment-SAFE",
+      "hf_tokens": 155,
+      "gguf_tokens": 155,
+      "exact_match": true,
+      "hf_token_ids_sha256": "10c274a929df81f7bc74eebbf724ba1b5657610d772177d28aae324ed8df212b"
+    },
+    {
+      "id": "appointment-UNCERTAIN",
+      "hf_tokens": 157,
+      "gguf_tokens": 157,
+      "exact_match": true,
+      "hf_token_ids_sha256": "0e5fc31f9060ce26ddd4fe65948837f21c4c277bce9a6a499c6442697892ae76"
+    },
+    {
+      "id": "appointment-SCAM",
+      "hf_tokens": 156,
+      "gguf_tokens": 156,
+      "exact_match": true,
+      "hf_token_ids_sha256": "a7e9679d49976ef8a7bf126443f5c6827a4ec61fc711e1d5f0a07b4945807c2b"
+    },
+    {
+      "id": "credential-question",
+      "hf_tokens": 159,
+      "gguf_tokens": 159,
+      "exact_match": true,
+      "hf_token_ids_sha256": "f8156b41d42293d2bb46d945c38fb894d286b27f1c1c4b1850a9116d3833008c"
+    },
+    {
+      "id": "credential-SAFE",
+      "hf_tokens": 161,
+      "gguf_tokens": 161,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e543093cc7863e22d6fa79986caf4f817f0870a5b089ed23dce6461264b6fd36"
+    },
+    {
+      "id": "credential-UNCERTAIN",
+      "hf_tokens": 163,
+      "gguf_tokens": 163,
+      "exact_match": true,
+      "hf_token_ids_sha256": "27abdc282c3a6ce793a10b937f010651b76d7246bb159655050ee346c087d2aa"
+    },
+    {
+      "id": "credential-SCAM",
+      "hf_tokens": 162,
+      "gguf_tokens": 162,
+      "exact_match": true,
+      "hf_token_ids_sha256": "28e90eda7ab2fbafaa2c96155b5932821c63ad48f96d90c5cbe5c5ea7eee2f2a"
+    },
+    {
+      "id": "ambiguous-question",
+      "hf_tokens": 154,
+      "gguf_tokens": 154,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e49d8a2a5fdfe3d70b6933a0a166325c4d125b251129b8b6cb5366f33938d375"
+    },
+    {
+      "id": "ambiguous-SAFE",
+      "hf_tokens": 156,
+      "gguf_tokens": 156,
+      "exact_match": true,
+      "hf_token_ids_sha256": "91c81ddb4e075a3213626fd328f2ecde93581387bb3eb0acb779d3c2e7a0afa1"
+    },
+    {
+      "id": "ambiguous-UNCERTAIN",
+      "hf_tokens": 158,
+      "gguf_tokens": 158,
+      "exact_match": true,
+      "hf_token_ids_sha256": "1fc4b2561b790d3ce92644255fb0ae9a63856d3c2acc29d4b745eb67c35130a3"
+    },
+    {
+      "id": "ambiguous-SCAM",
+      "hf_tokens": 157,
+      "gguf_tokens": 157,
+      "exact_match": true,
+      "hf_token_ids_sha256": "9a1e30b906acf4cb0b6c2265c1d4f3495d082161ec2bd940b8c7d68b8dd74ca6"
+    },
+    {
+      "id": "hindi-question",
+      "hf_tokens": 158,
+      "gguf_tokens": 158,
+      "exact_match": true,
+      "hf_token_ids_sha256": "e65402f0cd66d20c7a7482f4c6cf3fc4a144161983e10203f2b5be488f962b40"
+    },
+    {
+      "id": "hindi-SAFE",
+      "hf_tokens": 160,
+      "gguf_tokens": 160,
+      "exact_match": true,
+      "hf_token_ids_sha256": "a1942e6c6d59f0de694d1a441b1b2b599cd86512cbf80c32d868aecd8611e392"
+    },
+    {
+      "id": "hindi-UNCERTAIN",
+      "hf_tokens": 162,
+      "gguf_tokens": 162,
+      "exact_match": true,
+      "hf_token_ids_sha256": "c2cb4517df5a42b998394142e24f93953a9231fb4f7d55db65e8a80cb2096e7a"
+    },
+    {
+      "id": "hindi-SCAM",
+      "hf_tokens": 161,
+      "gguf_tokens": 161,
+      "exact_match": true,
+      "hf_token_ids_sha256": "dea318ed7e11e78621786ed6eaae6ff2f9c6b5852f22c498288939a2799d31d5"
+    },
+    {
+      "id": "chinese-question",
+      "hf_tokens": 148,
+      "gguf_tokens": 148,
+      "exact_match": true,
+      "hf_token_ids_sha256": "365e678ebb2d7e0a65e0e7921396d50385c8bf577d79b7eb64765cc9103cc19f"
+    },
+    {
+      "id": "chinese-SAFE",
+      "hf_tokens": 150,
+      "gguf_tokens": 150,
+      "exact_match": true,
+      "hf_token_ids_sha256": "1432bda23768577562176851fd62a90e629d33c063ee3c55427f2009db8eaffd"
+    },
+    {
+      "id": "chinese-UNCERTAIN",
+      "hf_tokens": 152,
+      "gguf_tokens": 152,
+      "exact_match": true,
+      "hf_token_ids_sha256": "68bd1710038179c81ccc29083b9cf69722f47cdebd416cc3061c118b8778b41c"
+    },
+    {
+      "id": "chinese-SCAM",
+      "hf_tokens": 151,
+      "gguf_tokens": 151,
+      "exact_match": true,
+      "hf_token_ids_sha256": "33d95f2ed979d65031b585fae42a3866dcfa0cde02ca02a43915cbfcdcd48775"
+    },
+    {
+      "id": "decomposed_accent-question",
+      "hf_tokens": 147,
+      "gguf_tokens": 148,
+      "exact_match": false,
+      "hf_token_ids_sha256": "4ea2dd5717330fc17c4413cdea4bced7d8b2fe6705dbd8030cc8dfbe634fb1c2"
+    },
+    {
+      "id": "decomposed_accent-SAFE",
+      "hf_tokens": 149,
+      "gguf_tokens": 150,
+      "exact_match": false,
+      "hf_token_ids_sha256": "ea66ba5ad9e18b246ce44f38baecfcf0afbed213643f1ad053a21ebd21697b0b"
+    },
+    {
+      "id": "decomposed_accent-UNCERTAIN",
+      "hf_tokens": 151,
+      "gguf_tokens": 152,
+      "exact_match": false,
+      "hf_token_ids_sha256": "0307e7bf977ff3d53acc7bb6f72ba30051c1ede0f6af97376ef3b40d6999d916"
+    },
+    {
+      "id": "decomposed_accent-SCAM",
+      "hf_tokens": 150,
+      "gguf_tokens": 151,
+      "exact_match": false,
+      "hf_token_ids_sha256": "8512b497f4b8353afb3c5b61076593fccd72411f0575a975a1d5f4835aacb8f1"
+    },
+    {
+      "id": "unicode-question",
+      "hf_tokens": 167,
+      "gguf_tokens": 168,
+      "exact_match": false,
+      "hf_token_ids_sha256": "00601603479cf3efed9a8b43274e13b47153140764912d1c7b5dea4d6c214f32"
+    },
+    {
+      "id": "unicode-SAFE",
+      "hf_tokens": 169,
+      "gguf_tokens": 170,
+      "exact_match": false,
+      "hf_token_ids_sha256": "8d620e6e2017844931c2eb7dea1783bf6c0f3d5f034c502fdba7a76c3a43cce5"
+    },
+    {
+      "id": "unicode-UNCERTAIN",
+      "hf_tokens": 171,
+      "gguf_tokens": 172,
+      "exact_match": false,
+      "hf_token_ids_sha256": "02c1f5c1a5caa57e4f18c1e1d9558843da86c16a1890bdb19ed3f450bddd1759"
+    },
+    {
+      "id": "unicode-SCAM",
+      "hf_tokens": 170,
+      "gguf_tokens": 171,
+      "exact_match": false,
+      "hf_token_ids_sha256": "5372ce9592399a43c4436780f19b38ffd05e770cbf9ceb1f60948143555612ff"
+    },
+    {
+      "id": "special_literals-question",
+      "hf_tokens": 156,
+      "gguf_tokens": 156,
+      "exact_match": true,
+      "hf_token_ids_sha256": "ebb69fcfecd75e4626a94ca5ac1b68d5cd0d7c1aa5963e2a1538bdb91f2c389e"
+    },
+    {
+      "id": "special_literals-SAFE",
+      "hf_tokens": 158,
+      "gguf_tokens": 158,
+      "exact_match": true,
+      "hf_token_ids_sha256": "9dcb1b893d27ba81cd4542a12e15ab18f8daf463dfb7ce9245deb9f360ff88f4"
+    },
+    {
+      "id": "special_literals-UNCERTAIN",
+      "hf_tokens": 160,
+      "gguf_tokens": 160,
+      "exact_match": true,
+      "hf_token_ids_sha256": "978cb036ac3eca11911ac47ac35b4d769661ff7090a23518563ccb83c044a2eb"
+    },
+    {
+      "id": "special_literals-SCAM",
+      "hf_tokens": 159,
+      "gguf_tokens": 159,
+      "exact_match": true,
+      "hf_token_ids_sha256": "03fa5e4ad9308012d0aea685b82500578bef62870ea37f238b2aeb7540b0976f"
+    },
+    {
+      "id": "whitespace-question",
+      "hf_tokens": 159,
+      "gguf_tokens": 159,
+      "exact_match": true,
+      "hf_token_ids_sha256": "520b54c38677bb3667da65086ff17d9b1f206124064eb09ac3166931bd00a4fb"
+    },
+    {
+      "id": "whitespace-SAFE",
+      "hf_tokens": 161,
+      "gguf_tokens": 161,
+      "exact_match": true,
+      "hf_token_ids_sha256": "05056ce18f17bcbaf61e1a7e886dea6878558aa508dc231ea1e4a58e87240245"
+    },
+    {
+      "id": "whitespace-UNCERTAIN",
+      "hf_tokens": 163,
+      "gguf_tokens": 163,
+      "exact_match": true,
+      "hf_token_ids_sha256": "dfcdb95421ee082ddaf1970929f2d8392a38e083fcf33319cb83afa04a4a3351"
+    },
+    {
+      "id": "whitespace-SCAM",
+      "hf_tokens": 162,
+      "gguf_tokens": 162,
+      "exact_match": true,
+      "hf_token_ids_sha256": "5db32b3a3c398ab37e7d26b8f7d86c3b4186094c8afab66c2315a6108883f1fd"
+    }
+  ],
+  "serialized_tokenization_passed": false,
+  "nfc_diagnostic": {
+    "purpose": "NFC applied only to synthetic probe input, not production runtime",
+    "production_normalization_changed": false,
+    "fixtures": [
+      {
+        "id": "fixed-prefix",
+        "hf_tokens": 127,
+        "gguf_tokens": 127,
+        "exact_match": true,
+        "hf_token_ids_sha256": "e332dd9ff798234867d42bd56a2eb7c47e5a4f1e3f5eedeadb1c72ee7776489c"
+      },
+      {
+        "id": "empty-question",
+        "hf_tokens": 144,
+        "gguf_tokens": 144,
+        "exact_match": true,
+        "hf_token_ids_sha256": "85ef7b374a789f2454127017f9eb59f93c79834a1a98d396270b748decf92909"
+      },
+      {
+        "id": "empty-SAFE",
+        "hf_tokens": 146,
+        "gguf_tokens": 146,
+        "exact_match": true,
+        "hf_token_ids_sha256": "4cb912b50f4d405d40a9f21bbd5b9cac31871ab945b9ceaf1cc1ec1faf1544a3"
+      },
+      {
+        "id": "empty-UNCERTAIN",
+        "hf_tokens": 148,
+        "gguf_tokens": 148,
+        "exact_match": true,
+        "hf_token_ids_sha256": "14096b66cc30f47eb9acce1260ad5a8f286ef19c0cf19bf93557d62f39a89ea5"
+      },
+      {
+        "id": "empty-SCAM",
+        "hf_tokens": 147,
+        "gguf_tokens": 147,
+        "exact_match": true,
+        "hf_token_ids_sha256": "fcc4642bc74dc301b3f559afc2ccb77addd55fe345f0bcd08b723e7ed59c340e"
+      },
+      {
+        "id": "appointment-question",
+        "hf_tokens": 153,
+        "gguf_tokens": 153,
+        "exact_match": true,
+        "hf_token_ids_sha256": "d4b2dc2225d48eeec9e65b699a00c6d26ea96b222a99cf86236c38a56810a149"
+      },
+      {
+        "id": "appointment-SAFE",
+        "hf_tokens": 155,
+        "gguf_tokens": 155,
+        "exact_match": true,
+        "hf_token_ids_sha256": "10c274a929df81f7bc74eebbf724ba1b5657610d772177d28aae324ed8df212b"
+      },
+      {
+        "id": "appointment-UNCERTAIN",
+        "hf_tokens": 157,
+        "gguf_tokens": 157,
+        "exact_match": true,
+        "hf_token_ids_sha256": "0e5fc31f9060ce26ddd4fe65948837f21c4c277bce9a6a499c6442697892ae76"
+      },
+      {
+        "id": "appointment-SCAM",
+        "hf_tokens": 156,
+        "gguf_tokens": 156,
+        "exact_match": true,
+        "hf_token_ids_sha256": "a7e9679d49976ef8a7bf126443f5c6827a4ec61fc711e1d5f0a07b4945807c2b"
+      },
+      {
+        "id": "credential-question",
+        "hf_tokens": 159,
+        "gguf_tokens": 159,
+        "exact_match": true,
+        "hf_token_ids_sha256": "f8156b41d42293d2bb46d945c38fb894d286b27f1c1c4b1850a9116d3833008c"
+      },
+      {
+        "id": "credential-SAFE",
+        "hf_tokens": 161,
+        "gguf_tokens": 161,
+        "exact_match": true,
+        "hf_token_ids_sha256": "e543093cc7863e22d6fa79986caf4f817f0870a5b089ed23dce6461264b6fd36"
+      },
+      {
+        "id": "credential-UNCERTAIN",
+        "hf_tokens": 163,
+        "gguf_tokens": 163,
+        "exact_match": true,
+        "hf_token_ids_sha256": "27abdc282c3a6ce793a10b937f010651b76d7246bb159655050ee346c087d2aa"
+      },
+      {
+        "id": "credential-SCAM",
+        "hf_tokens": 162,
+        "gguf_tokens": 162,
+        "exact_match": true,
+        "hf_token_ids_sha256": "28e90eda7ab2fbafaa2c96155b5932821c63ad48f96d90c5cbe5c5ea7eee2f2a"
+      },
+      {
+        "id": "ambiguous-question",
+        "hf_tokens": 154,
+        "gguf_tokens": 154,
+        "exact_match": true,
+        "hf_token_ids_sha256": "e49d8a2a5fdfe3d70b6933a0a166325c4d125b251129b8b6cb5366f33938d375"
+      },
+      {
+        "id": "ambiguous-SAFE",
+        "hf_tokens": 156,
+        "gguf_tokens": 156,
+        "exact_match": true,
+        "hf_token_ids_sha256": "91c81ddb4e075a3213626fd328f2ecde93581387bb3eb0acb779d3c2e7a0afa1"
+      },
+      {
+        "id": "ambiguous-UNCERTAIN",
+        "hf_tokens": 158,
+        "gguf_tokens": 158,
+        "exact_match": true,
+        "hf_token_ids_sha256": "1fc4b2561b790d3ce92644255fb0ae9a63856d3c2acc29d4b745eb67c35130a3"
+      },
+      {
+        "id": "ambiguous-SCAM",
+        "hf_tokens": 157,
+        "gguf_tokens": 157,
+        "exact_match": true,
+        "hf_token_ids_sha256": "9a1e30b906acf4cb0b6c2265c1d4f3495d082161ec2bd940b8c7d68b8dd74ca6"
+      },
+      {
+        "id": "hindi-question",
+        "hf_tokens": 158,
+        "gguf_tokens": 158,
+        "exact_match": true,
+        "hf_token_ids_sha256": "e65402f0cd66d20c7a7482f4c6cf3fc4a144161983e10203f2b5be488f962b40"
+      },
+      {
+        "id": "hindi-SAFE",
+        "hf_tokens": 160,
+        "gguf_tokens": 160,
+        "exact_match": true,
+        "hf_token_ids_sha256": "a1942e6c6d59f0de694d1a441b1b2b599cd86512cbf80c32d868aecd8611e392"
+      },
+      {
+        "id": "hindi-UNCERTAIN",
+        "hf_tokens": 162,
+        "gguf_tokens": 162,
+        "exact_match": true,
+        "hf_token_ids_sha256": "c2cb4517df5a42b998394142e24f93953a9231fb4f7d55db65e8a80cb2096e7a"
+      },
+      {
+        "id": "hindi-SCAM",
+        "hf_tokens": 161,
+        "gguf_tokens": 161,
+        "exact_match": true,
+        "hf_token_ids_sha256": "dea318ed7e11e78621786ed6eaae6ff2f9c6b5852f22c498288939a2799d31d5"
+      },
+      {
+        "id": "chinese-question",
+        "hf_tokens": 148,
+        "gguf_tokens": 148,
+        "exact_match": true,
+        "hf_token_ids_sha256": "365e678ebb2d7e0a65e0e7921396d50385c8bf577d79b7eb64765cc9103cc19f"
+      },
+      {
+        "id": "chinese-SAFE",
+        "hf_tokens": 150,
+        "gguf_tokens": 150,
+        "exact_match": true,
+        "hf_token_ids_sha256": "1432bda23768577562176851fd62a90e629d33c063ee3c55427f2009db8eaffd"
+      },
+      {
+        "id": "chinese-UNCERTAIN",
+        "hf_tokens": 152,
+        "gguf_tokens": 152,
+        "exact_match": true,
+        "hf_token_ids_sha256": "68bd1710038179c81ccc29083b9cf69722f47cdebd416cc3061c118b8778b41c"
+      },
+      {
+        "id": "chinese-SCAM",
+        "hf_tokens": 151,
+        "gguf_tokens": 151,
+        "exact_match": true,
+        "hf_token_ids_sha256": "33d95f2ed979d65031b585fae42a3866dcfa0cde02ca02a43915cbfcdcd48775"
+      },
+      {
+        "id": "decomposed_accent-question",
+        "hf_tokens": 147,
+        "gguf_tokens": 147,
+        "exact_match": true,
+        "hf_token_ids_sha256": "4ea2dd5717330fc17c4413cdea4bced7d8b2fe6705dbd8030cc8dfbe634fb1c2"
+      },
+      {
+        "id": "decomposed_accent-SAFE",
+        "hf_tokens": 149,
+        "gguf_tokens": 149,
+        "exact_match": true,
+        "hf_token_ids_sha256": "ea66ba5ad9e18b246ce44f38baecfcf0afbed213643f1ad053a21ebd21697b0b"
+      },
+      {
+        "id": "decomposed_accent-UNCERTAIN",
+        "hf_tokens": 151,
+        "gguf_tokens": 151,
+        "exact_match": true,
+        "hf_token_ids_sha256": "0307e7bf977ff3d53acc7bb6f72ba30051c1ede0f6af97376ef3b40d6999d916"
+      },
+      {
+        "id": "decomposed_accent-SCAM",
+        "hf_tokens": 150,
+        "gguf_tokens": 150,
+        "exact_match": true,
+        "hf_token_ids_sha256": "8512b497f4b8353afb3c5b61076593fccd72411f0575a975a1d5f4835aacb8f1"
+      },
+      {
+        "id": "unicode-question",
+        "hf_tokens": 167,
+        "gguf_tokens": 167,
+        "exact_match": true,
+        "hf_token_ids_sha256": "00601603479cf3efed9a8b43274e13b47153140764912d1c7b5dea4d6c214f32"
+      },
+      {
+        "id": "unicode-SAFE",
+        "hf_tokens": 169,
+        "gguf_tokens": 169,
+        "exact_match": true,
+        "hf_token_ids_sha256": "8d620e6e2017844931c2eb7dea1783bf6c0f3d5f034c502fdba7a76c3a43cce5"
+      },
+      {
+        "id": "unicode-UNCERTAIN",
+        "hf_tokens": 171,
+        "gguf_tokens": 171,
+        "exact_match": true,
+        "hf_token_ids_sha256": "02c1f5c1a5caa57e4f18c1e1d9558843da86c16a1890bdb19ed3f450bddd1759"
+      },
+      {
+        "id": "unicode-SCAM",
+        "hf_tokens": 170,
+        "gguf_tokens": 170,
+        "exact_match": true,
+        "hf_token_ids_sha256": "5372ce9592399a43c4436780f19b38ffd05e770cbf9ceb1f60948143555612ff"
+      },
+      {
+        "id": "special_literals-question",
+        "hf_tokens": 156,
+        "gguf_tokens": 156,
+        "exact_match": true,
+        "hf_token_ids_sha256": "ebb69fcfecd75e4626a94ca5ac1b68d5cd0d7c1aa5963e2a1538bdb91f2c389e"
+      },
+      {
+        "id": "special_literals-SAFE",
+        "hf_tokens": 158,
+        "gguf_tokens": 158,
+        "exact_match": true,
+        "hf_token_ids_sha256": "9dcb1b893d27ba81cd4542a12e15ab18f8daf463dfb7ce9245deb9f360ff88f4"
+      },
+      {
+        "id": "special_literals-UNCERTAIN",
+        "hf_tokens": 160,
+        "gguf_tokens": 160,
+        "exact_match": true,
+        "hf_token_ids_sha256": "978cb036ac3eca11911ac47ac35b4d769661ff7090a23518563ccb83c044a2eb"
+      },
+      {
+        "id": "special_literals-SCAM",
+        "hf_tokens": 159,
+        "gguf_tokens": 159,
+        "exact_match": true,
+        "hf_token_ids_sha256": "03fa5e4ad9308012d0aea685b82500578bef62870ea37f238b2aeb7540b0976f"
+      },
+      {
+        "id": "whitespace-question",
+        "hf_tokens": 159,
+        "gguf_tokens": 159,
+        "exact_match": true,
+        "hf_token_ids_sha256": "520b54c38677bb3667da65086ff17d9b1f206124064eb09ac3166931bd00a4fb"
+      },
+      {
+        "id": "whitespace-SAFE",
+        "hf_tokens": 161,
+        "gguf_tokens": 161,
+        "exact_match": true,
+        "hf_token_ids_sha256": "05056ce18f17bcbaf61e1a7e886dea6878558aa508dc231ea1e4a58e87240245"
+      },
+      {
+        "id": "whitespace-UNCERTAIN",
+        "hf_tokens": 163,
+        "gguf_tokens": 163,
+        "exact_match": true,
+        "hf_token_ids_sha256": "dfcdb95421ee082ddaf1970929f2d8392a38e083fcf33319cb83afa04a4a3351"
+      },
+      {
+        "id": "whitespace-SCAM",
+        "hf_tokens": 162,
+        "gguf_tokens": 162,
+        "exact_match": true,
+        "hf_token_ids_sha256": "5db32b3a3c398ab37e7d26b8f7d86c3b4186094c8afab66c2315a6108883f1fd"
+      }
+    ],
+    "serialized_tokenization_passed": true
+  },
+  "runner": {
+    "path": "build/native-gguf-verdict/scamguard-gguf-verdict",
+    "sha256": "9f23f328ba4f9f685b93a913959da4611e9f64fdb5e135c06b82271afd41dc40"
+  },
+  "inference_smoke": {
+    "purpose": "synthetic functional smoke only; no calibrated verdict or latency claim",
+    "prefix_tokens": 127,
+    "fixtures": [
+      {
+        "id": "empty",
+        "uncached_raw_scores": [
+          -2.68301544274,
+          -0.554076767814,
+          -1.95465240563
+        ],
+        "cached_raw_scores": [
+          -2.68339134159,
+          -0.553840407752,
+          -1.95445037784
+        ],
+        "maximum_absolute_score_difference": 0.0003758988500002225,
+        "uncached_argmax": "UNCERTAIN",
+        "cached_argmax": "UNCERTAIN",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "appointment",
+        "uncached_raw_scores": [
+          -0.744245056307,
+          -1.20345640579,
+          -2.64993429581
+        ],
+        "cached_raw_scores": [
+          -0.744245056307,
+          -1.20345640579,
+          -2.64993429581
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "SAFE",
+        "cached_argmax": "SAFE",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "credential",
+        "uncached_raw_scores": [
+          -2.27588185418,
+          -0.858738986135,
+          -1.10242375481
+        ],
+        "cached_raw_scores": [
+          -2.27588185418,
+          -0.858738986135,
+          -1.10242375481
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "UNCERTAIN",
+        "cached_argmax": "UNCERTAIN",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "ambiguous",
+        "uncached_raw_scores": [
+          -3.636458528,
+          -0.223446977094,
+          -3.36584581132
+        ],
+        "cached_raw_scores": [
+          -3.636458528,
+          -0.223446977094,
+          -3.36584581132
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "UNCERTAIN",
+        "cached_argmax": "UNCERTAIN",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "hindi",
+        "uncached_raw_scores": [
+          -2.51674044694,
+          -1.01691592302,
+          -0.733680373091
+        ],
+        "cached_raw_scores": [
+          -2.51674044694,
+          -1.01691592302,
+          -0.733680373091
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "SCAM",
+        "cached_argmax": "SCAM",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "chinese",
+        "uncached_raw_scores": [
+          -1.25651003918,
+          -0.87403323254,
+          -1.58346201977
+        ],
+        "cached_raw_scores": [
+          -1.25651003918,
+          -0.87403323254,
+          -1.58346201977
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "UNCERTAIN",
+        "cached_argmax": "UNCERTAIN",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "decomposed_accent",
+        "uncached_raw_scores": [
+          -2.75717993182,
+          -0.657641128715,
+          -1.43353338641
+        ],
+        "cached_raw_scores": [
+          -2.75717993182,
+          -0.657641128715,
+          -1.43353338641
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "UNCERTAIN",
+        "cached_argmax": "UNCERTAIN",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "unicode",
+        "uncached_raw_scores": [
+          -2.09627449972,
+          -1.00709069234,
+          -0.845505838217
+        ],
+        "cached_raw_scores": [
+          -2.09627449972,
+          -1.00709069234,
+          -0.845505838217
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "SCAM",
+        "cached_argmax": "SCAM",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "special_literals",
+        "uncached_raw_scores": [
+          -0.292580903988,
+          -2.8190034046,
+          -2.21887523077
+        ],
+        "cached_raw_scores": [
+          -0.292580903988,
+          -2.8190034046,
+          -2.21887523077
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "SAFE",
+        "cached_argmax": "SAFE",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      },
+      {
+        "id": "whitespace",
+        "uncached_raw_scores": [
+          -3.91741273156,
+          -0.304972622304,
+          -2.02794358483
+        ],
+        "cached_raw_scores": [
+          -3.91741273156,
+          -0.304972622304,
+          -2.02794358483
+        ],
+        "maximum_absolute_score_difference": 0.0,
+        "uncached_argmax": "UNCERTAIN",
+        "cached_argmax": "UNCERTAIN",
+        "argmax_match": true,
+        "token_count_match": true,
+        "prefix_reused": true
+      }
+    ],
+    "passed": true
+  },
+  "passed": false
+}

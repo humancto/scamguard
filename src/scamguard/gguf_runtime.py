@@ -23,6 +23,8 @@ LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 PACK_MANIFEST_NAME = "scamguard_gguf_pack.json"
 GGUF_BACKEND_TYPE = "qwen_gguf_verdict_branch_token"
 GGUF_SCORING_VERSION = "qwen-verdict-branch-token-v1"
+# Protocol 4 parses rendered ChatML special tokens without adding implicit BOS/EOS.
+GGUF_PROTOCOL_VERSION = 4
 QWEN35_08B_PROCESSOR = "Qwen/Qwen3.5-0.8B"
 QWEN35_08B_PROCESSOR_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
 FROZEN_PROMPT_PREFIX = (
@@ -142,7 +144,7 @@ class PersistentGGUFScorer:
         try:
             ready_line = self._readline(startup_timeout_seconds)
             match = READY.fullmatch(ready_line.rstrip("\n"))
-            if match is None or int(match.group(1)) != 3:
+            if match is None or int(match.group(1)) != GGUF_PROTOCOL_VERSION:
                 raise RuntimeError(f"invalid GGUF runner readiness record: {ready_line!r}")
             self.protocol_version = int(match.group(1))
             self.loaded_model_bytes = int(match.group(2))
@@ -279,6 +281,8 @@ class QwenGGUFVerdictBackend:
         if file_sha256(runner) != expected_runner_sha256:
             raise ValueError("GGUF runner SHA-256 differs from the pinned runtime")
         record: dict[str, Any] = json.loads(calibration.read_text(encoding="utf-8"))
+        if record.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+            raise ValueError("GGUF calibration protocol differs from the current tokenization")
         if tuple(record.get("labels", ())) != LABELS:
             raise ValueError("GGUF calibration label order is incompatible")
         if record.get("safe_threshold_semantics") != "minimum_safe_probability":
@@ -485,7 +489,7 @@ def load_gguf_runtime_pack(path: str | Path) -> QwenGGUFVerdictBackend:
     ):
         raise ValueError("GGUF runtime-pack runner is not portable for this machine")
     expected_runtime = {
-        "protocol_version": 3,
+        "protocol_version": GGUF_PROTOCOL_VERSION,
         "message_batch_size": 1,
         "candidate_batch_size": 3,
         "scoring_mode": "branch_token",

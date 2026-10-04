@@ -47,10 +47,14 @@ class ScamGuardSmokeActivity : Activity() {
         }
         val prompt = pack.getJSONObject("prompt")
         val runtime = pack.getJSONObject("runtime")
+        check(runtime.getLong("protocol_version") == ScamGuardNative.PROTOCOL_VERSION) {
+            "incompatible ScamGuard runtime pack protocol"
+        }
         val calibrationRecord = JSONObject(
             File(root, request.getString("calibration")).readText(Charsets.UTF_8)
         )
         val calibration = ScamGuardCalibration(
+            protocolVersion = calibrationRecord.getLong("protocol_version"),
             promptSuffix = prompt.getString("suffix"),
             temperature = calibrationRecord.getDouble("temperature"),
             scamThreshold = calibrationRecord.getDouble("scam_threshold"),

@@ -7,8 +7,30 @@ from pathlib import Path
 
 import pytest
 
+from benchmarks.benchmark_native_gguf_prefix import validate_calibration_identity
 from benchmarks.benchmark_routed_gguf_runtime import validate_quantized_evidence
 from scamguard.gguf_runtime import PersistentGGUFScorer, calibrated_probabilities
+from training.eval_gguf_native import runtime_config_record
+
+
+@pytest.mark.parametrize("protocol", [None, 3, 4])
+def test_prefix_benchmark_requires_current_calibration(protocol: int | None) -> None:
+    calibration = {"model_sha256": "model", "runner_sha256": "runner"}
+    if protocol is not None:
+        calibration["protocol_version"] = protocol
+    if protocol == 4:
+        validate_calibration_identity(
+            calibration, model_sha256="model", runner_sha256="runner"
+        )
+        with pytest.raises(ValueError, match="runner_sha256"):
+            validate_calibration_identity(
+                calibration, model_sha256="model", runner_sha256="different"
+            )
+    else:
+        with pytest.raises(ValueError, match="protocol_version"):
+            validate_calibration_identity(
+                calibration, model_sha256="model", runner_sha256="runner"
+            )
 
 
 def test_calibrated_probabilities_are_stable_and_normalized() -> None:
@@ -28,7 +50,7 @@ def test_persistent_scorer_validates_and_parses_native_protocol(tmp_path: Path) 
 
             prefix_enabled = "--prefix-hex" in sys.argv
             prefix_tokens = 7 if prefix_enabled else 0
-            print(f"READY\\t3\\t1234\\t640\\t{prefix_tokens}", flush=True)
+            print(f"READY\\t4\\t1234\\t640\\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
@@ -80,11 +102,12 @@ def test_quantized_evidence_must_bind_model_ledger_calibration_and_runtime(
     model.write_bytes(b"model")
     predictions.write_text("{}\n", encoding="utf-8")
     calibration.write_text(
-        '{"temperature":2.0,"scam_threshold":0.4,"safe_threshold":0.6}\n',
+        '{"protocol_version":4,"temperature":2.0,"scam_threshold":0.4,"safe_threshold":0.6}\n',
         encoding="utf-8",
     )
     digest = hashlib.sha256(model.read_bytes()).hexdigest()
     report = {
+        "protocol_version": 4,
         "model": str(model),
         "model_sha256": digest,
         "temperature": 2.0,
@@ -101,13 +124,13 @@ def test_quantized_evidence_must_bind_model_ledger_calibration_and_runtime(
             "exact_calibrated_verdict_parity": True,
             "release_gate_passed": True,
         },
-        "runtime_config": {
-            "ctx_size": 640,
-            "batch_size": 640,
-            "ubatch_size": 128,
-            "n_gpu_layers": 99,
-            "parallel": 1,
-        },
+        "runtime_config": runtime_config_record(
+            ctx_size=640,
+            batch_size=640,
+            ubatch_size=128,
+            threads=4,
+            n_gpu_layers=99,
+        ),
     }
 
     validate_quantized_evidence(
@@ -134,3 +157,17 @@ def test_quantized_evidence_must_bind_model_ledger_calibration_and_runtime(
             ubatch_size=128,
             n_gpu_layers=99,
         )
+
+
+def test_persistent_scorer_rejects_protocol3_readiness(tmp_path: Path) -> None:
+    runner = tmp_path / "stale-runner"
+    runner.write_text(
+        '#!/usr/bin/env python3\nprint("READY\\t3\\t1234\\t640\\t0", flush=True)\n',
+        encoding="utf-8",
+    )
+    runner.chmod(0o755)
+    model = tmp_path / "model.gguf"
+    model.write_bytes(b"gguf")
+
+    with pytest.raises(RuntimeError, match="invalid GGUF runner readiness"):
+        PersistentGGUFScorer(runner=runner, model=model)

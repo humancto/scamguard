@@ -11,7 +11,7 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scamguard.gguf_runtime import GGUF_SCORING_VERSION
+from scamguard.gguf_runtime import GGUF_PROTOCOL_VERSION, GGUF_SCORING_VERSION
 from scamguard.metrics import file_sha256
 from training.eval_qwen import validate_primary_test_v8
 
@@ -55,7 +55,7 @@ def freeze(
     if (
         regression.get("model_sha256") != model_sha256
         or regression.get("runner_sha256") != runner_sha256
-        or regression.get("protocol_version") != 3
+        or regression.get("protocol_version") != GGUF_PROTOCOL_VERSION
         or regression.get("scoring_mode") != "branch_token"
         or regression.get("scoring_version") != GGUF_SCORING_VERSION
         or regression.get("quantization_parity", {}).get("release_gate_passed") is not True
@@ -108,7 +108,7 @@ def freeze(
         ),
         "primary_test_v8": str(primary_test),
         "primary_test_v8_sha256": file_sha256(primary_test),
-        "protocol_version": 3,
+        "protocol_version": GGUF_PROTOCOL_VERSION,
         "scoring_version": GGUF_SCORING_VERSION,
         "threshold_refit_after_primary_forbidden": True,
         "publication_authorized": False,

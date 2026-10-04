@@ -11,6 +11,7 @@ import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
 
+from scamguard.gguf_runtime import GGUF_PROTOCOL_VERSION
 from scamguard.metrics import file_sha256
 
 PACKAGE_SCHEMA_VERSION = 1
@@ -51,7 +52,7 @@ def verify_mobile_package(
             "publication_authorized": False,
             "architecture": "arm64",
             "native_abi_version": 1,
-            "protocol_version": 3,
+            "protocol_version": GGUF_PROTOCOL_VERSION,
             "scoring_mode": "branch_token",
             "scoring_version": "qwen-verdict-branch-token-v1",
         }
@@ -204,7 +205,7 @@ def build_mobile_package(
         "architecture": "arm64",
         "minimum_os_version": minimum_os_version,
         "native_abi_version": 1,
-        "protocol_version": 3,
+        "protocol_version": GGUF_PROTOCOL_VERSION,
         "scoring_mode": "branch_token",
         "scoring_version": "qwen-verdict-branch-token-v1",
         "source": {

@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from scamguard.gguf_runtime import (
     FROZEN_PROMPT_PREFIX,
     FROZEN_PROMPT_PREFIX_SHA256,
@@ -85,7 +87,7 @@ def physical_mobile_report(
                         ].read_bytes()
                     ).hexdigest(),
                     "offline": True,
-                    "protocol_version": 3,
+                    "protocol_version": 4,
                     "scoring_mode": "branch_token",
                     "scoring_version": "qwen-verdict-branch-token-v1",
                     "prefix_cache_enabled": True,
@@ -138,7 +140,12 @@ def physical_mobile_report(
     }
 
 
-def valid_manifest(tmp_path: Path) -> dict[str, object]:
+def valid_manifest(
+    tmp_path: Path,
+    *,
+    calibration_protocol: int | None = 4,
+    quantized_protocol: int | None = 4,
+) -> dict[str, object]:
     artifacts = []
     artifact_paths: dict[str, Path] = {}
     for role in (
@@ -151,7 +158,15 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
         "tokenizer",
     ):
         path = tmp_path / f"{role}.bin"
-        path.write_bytes(f"artifact:{role}".encode())
+        if role == "runtime_calibration":
+            calibration_record = (
+                {"protocol_version": calibration_protocol}
+                if calibration_protocol is not None
+                else {}
+            )
+            path.write_text(json.dumps(calibration_record), encoding="utf-8")
+        else:
+            path.write_bytes(f"artifact:{role}".encode())
         artifact_paths[role] = path
         artifacts.append(evidence(path, role, tmp_path))
     runtime_pack = tmp_path / "scamguard_gguf_pack.json"
@@ -197,7 +212,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                     "processor_revision": QWEN35_08B_PROCESSOR_REVISION,
                 },
                 "runtime": {
-                    "protocol_version": 3,
+                    "protocol_version": 4,
                     "message_batch_size": 1,
                     "candidate_batch_size": 3,
                     "scoring_mode": "branch_token",
@@ -346,6 +361,11 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
     quantized.write_text(
         json.dumps(
             {
+                **(
+                    {"protocol_version": quantized_protocol}
+                    if quantized_protocol is not None
+                    else {}
+                ),
                 "model_sha256": hashlib.sha256(
                     artifact_paths["gguf_model"].read_bytes()
                 ).hexdigest(),
@@ -405,7 +425,7 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
                         "model_sha256": hashlib.sha256(
                             artifact_paths["gguf_model"].read_bytes()
                         ).hexdigest(),
-                        "protocol_version": 3,
+                        "protocol_version": 4,
                         "message_batch_size": 1,
                         "candidate_batch_size": 3,
                         "scoring_mode": "branch_token",
@@ -547,6 +567,28 @@ def valid_manifest(tmp_path: Path) -> dict[str, object]:
 
 def test_complete_release_is_authorized(tmp_path: Path) -> None:
     assert validate_release_manifest(valid_manifest(tmp_path), tmp_path) == []
+
+
+@pytest.mark.parametrize("protocol", [None, 3])
+def test_release_rejects_hash_bound_stale_calibration(
+    tmp_path: Path, protocol: int | None
+) -> None:
+    manifest = valid_manifest(tmp_path, calibration_protocol=protocol)
+
+    assert validate_release_manifest(manifest, tmp_path) == [
+        "runtime_calibration protocol_version must equal 4"
+    ]
+
+
+@pytest.mark.parametrize("protocol", [None, 3])
+def test_release_rejects_hash_bound_stale_quantized_quality(
+    tmp_path: Path, protocol: int | None
+) -> None:
+    manifest = valid_manifest(tmp_path, quantized_protocol=protocol)
+
+    assert validate_release_manifest(manifest, tmp_path) == [
+        "quantized_quality protocol_version must equal 4"
+    ]
 
 
 def test_smoke_run_and_failed_gate_are_rejected(tmp_path: Path) -> None:

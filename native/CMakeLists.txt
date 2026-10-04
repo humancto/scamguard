@@ -47,4 +47,15 @@ if(BUILD_TESTING)
   add_executable(scamguard-gguf-c-abi-smoke tests/c_api_smoke.c)
   target_link_libraries(scamguard-gguf-c-abi-smoke PRIVATE scamguard-gguf)
   add_test(NAME scamguard-gguf-c-abi-smoke COMMAND scamguard-gguf-c-abi-smoke)
+
+  # Vocabulary-only probe for exact HF/GGUF token parity checks. It links the
+  # production tokenizer helper and performs no model inference.
+  add_executable(scamguard-gguf-tokenize tests/tokenize_probe.cpp)
+  target_link_libraries(scamguard-gguf-tokenize PRIVATE scamguard-gguf)
+  target_compile_features(scamguard-gguf-tokenize PRIVATE cxx_std_17)
+  if(MSVC)
+    target_compile_options(scamguard-gguf-tokenize PRIVATE /W4)
+  else()
+    target_compile_options(scamguard-gguf-tokenize PRIVATE -Wall -Wextra -Wpedantic)
+  endif()
 endif()

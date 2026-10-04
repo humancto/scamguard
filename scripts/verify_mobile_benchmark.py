@@ -13,11 +13,13 @@ from pathlib import Path
 from typing import Any, Final
 
 try:
+    from scamguard.gguf_runtime import GGUF_PROTOCOL_VERSION
     from scamguard.metrics import file_sha256
 except ModuleNotFoundError:  # Direct execution places scripts/ on sys.path.
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from scamguard.gguf_runtime import GGUF_PROTOCOL_VERSION
     from scamguard.metrics import file_sha256
 
 SCHEMA_VERSION: Final[int] = 1
@@ -190,8 +192,10 @@ def _validate_run(
         errors.append(f"{prefix}.runtime.accelerator must be recorded")
     if runtime.get("offline") is not True:
         errors.append(f"{prefix}.runtime.offline must be true")
-    if runtime.get("protocol_version") != 3:
-        errors.append(f"{prefix}.runtime.protocol_version must equal 3")
+    if runtime.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        errors.append(
+            f"{prefix}.runtime.protocol_version must equal {GGUF_PROTOCOL_VERSION}"
+        )
     if runtime.get("scoring_mode") != "branch_token":
         errors.append(f"{prefix}.runtime.scoring_mode must equal branch_token")
     if runtime.get("scoring_version") != "qwen-verdict-branch-token-v1":

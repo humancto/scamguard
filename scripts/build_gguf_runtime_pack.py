@@ -16,6 +16,7 @@ from scamguard.gguf_runtime import (
     FROZEN_PROMPT_PREFIX,
     FROZEN_PROMPT_SUFFIX,
     GGUF_BACKEND_TYPE,
+    GGUF_PROTOCOL_VERSION,
     GGUF_SCORING_VERSION,
     LABELS,
     PACK_MANIFEST_NAME,
@@ -52,6 +53,8 @@ def prompt_fragments(processor: Any) -> tuple[str, str]:
 
 
 def normalized_calibration(source: dict[str, Any], source_sha256: str) -> dict[str, Any]:
+    if source.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        raise ValueError("calibration source must bind the current GGUF protocol")
     score_cache = source.get("score_cache")
     if not isinstance(score_cache, dict):
         score_cache = {}
@@ -61,6 +64,7 @@ def normalized_calibration(source: dict[str, Any], source_sha256: str) -> dict[s
     record = {
         "artifact_schema_version": 1,
         "backend_type": GGUF_BACKEND_TYPE,
+        "protocol_version": GGUF_PROTOCOL_VERSION,
         "labels": list(source.get("labels") or LABELS),
         "temperature": source.get("temperature"),
         "scam_threshold": source.get("scam_threshold"),
@@ -237,7 +241,7 @@ def build_pack(
             "processor_revision": processor_revision,
         },
         "runtime": {
-            "protocol_version": 3,
+            "protocol_version": GGUF_PROTOCOL_VERSION,
             "ctx_size": 640,
             "batch_size": 640,
             "ubatch_size": 128,

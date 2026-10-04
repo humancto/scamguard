@@ -21,7 +21,7 @@ from benchmarks.benchmark_routed_transformers_runtime import (
     read_jsonl,
     trace_requests,
 )
-from scamguard.gguf_runtime import QwenGGUFVerdictBackend
+from scamguard.gguf_runtime import GGUF_PROTOCOL_VERSION, QwenGGUFVerdictBackend
 from scamguard.metrics import file_sha256
 from scamguard.model import TransformersBackend
 from training.eval_routed import (
@@ -76,6 +76,8 @@ def validate_quantized_evidence(
     ubatch_size: int,
     n_gpu_layers: int,
 ) -> None:
+    if report.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        raise ValueError("quantized report protocol differs from the current tokenization")
     if report.get("model_sha256") != model_sha256:
         raise ValueError("quantized report identifies a different GGUF model")
     if Path(str(report.get("model", ""))).expanduser().resolve() != model.resolve():
@@ -87,6 +89,8 @@ def validate_quantized_evidence(
     if calibration_record.get("sha256") != file_sha256(calibration):
         raise ValueError("quantized report reused a different calibration artifact")
     calibration_payload = json.loads(calibration.read_text(encoding="utf-8"))
+    if calibration_payload.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        raise ValueError("quantized calibration protocol differs from the current tokenization")
     for field in ("temperature", "scam_threshold", "safe_threshold"):
         if float(report.get(field, float("nan"))) != float(calibration_payload[field]):
             raise ValueError(f"quantized report calibration mismatch: {field}")

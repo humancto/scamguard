@@ -16,6 +16,7 @@ from scamguard.gguf_runtime import (
     FROZEN_PROMPT_PREFIX_SHA256,
     FROZEN_PROMPT_SUFFIX,
     FROZEN_PROMPT_SUFFIX_SHA256,
+    GGUF_PROTOCOL_VERSION,
     PACK_MANIFEST_NAME,
     QWEN35_08B_PROCESSOR,
     QWEN35_08B_PROCESSOR_REVISION,
@@ -353,6 +354,17 @@ def _validate_report_contents(
     quantized = _json_report(
         report_paths.get("quantized_quality"), "quantized_quality", errors
     )
+    if quantized.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        errors.append(
+            f"quantized_quality protocol_version must equal {GGUF_PROTOCOL_VERSION}"
+        )
+    runtime_calibration = _json_report(
+        artifact_paths.get("runtime_calibration"), "runtime_calibration", errors
+    )
+    if runtime_calibration.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        errors.append(
+            f"runtime_calibration protocol_version must equal {GGUF_PROTOCOL_VERSION}"
+        )
     mobile = _json_report(report_paths.get("mobile_benchmark"), "mobile_benchmark", errors)
     routed = _json_report(report_paths.get("routed_runtime"), "routed_runtime", errors)
     label_audit = _json_report(report_paths.get("label_audit"), "label_audit", errors)
@@ -581,8 +593,10 @@ def _validate_report_contents(
         errors.append("routed native runner SHA-256 differs from runtime_binary artifact")
     if gguf_path and native_runtime.get("model_sha256") != file_sha256(gguf_path):
         errors.append("routed native model SHA-256 differs from GGUF artifact")
-    if native_runtime.get("protocol_version") != 3:
-        errors.append("routed native runtime protocol_version must equal 3")
+    if native_runtime.get("protocol_version") != GGUF_PROTOCOL_VERSION:
+        errors.append(
+            f"routed native runtime protocol_version must equal {GGUF_PROTOCOL_VERSION}"
+        )
     if native_runtime.get("scoring_mode") != "branch_token":
         errors.append("routed native runtime scoring_mode must equal branch_token")
     if native_runtime.get("scoring_version") != "qwen-verdict-branch-token-v1":
@@ -690,7 +704,7 @@ def _validate_runtime_pack(artifact_paths: dict[str, Path], errors: list[str]) -
             errors.append(f"runtime pack prompt mismatch: {field}")
     runtime = _mapping(record.get("runtime"), "runtime pack runtime", errors)
     expected_runtime = {
-        "protocol_version": 3,
+        "protocol_version": GGUF_PROTOCOL_VERSION,
         "message_batch_size": 1,
         "candidate_batch_size": 3,
         "scoring_mode": "branch_token",

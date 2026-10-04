@@ -43,7 +43,7 @@ def fixture(tmp_path: Path) -> dict[str, Path]:
             {
                 "model_sha256": file_sha256(paths["model"]),
                 "runner_sha256": file_sha256(paths["runner"]),
-                "protocol_version": 3,
+                "protocol_version": 4,
                 "scoring_mode": "branch_token",
                 "scoring_version": "qwen-verdict-branch-token-v1",
                 "quantization_parity": {"release_gate_passed": True},

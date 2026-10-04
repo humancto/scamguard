@@ -70,7 +70,7 @@ def valid_report() -> dict[str, object]:
                     "accelerator": "Metal" if platform_name == "iOS" else "CPU",
                     "runtime_package_sha256": HASHES[platform_name],
                     "offline": True,
-                    "protocol_version": 3,
+                    "protocol_version": 4,
                     "scoring_mode": "branch_token",
                     "scoring_version": "qwen-verdict-branch-token-v1",
                     "prefix_cache_enabled": True,

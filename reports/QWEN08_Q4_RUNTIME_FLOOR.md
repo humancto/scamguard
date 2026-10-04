@@ -1,5 +1,10 @@
 # Qwen3.5-0.8B upstream Q4 runtime floor
 
+**Historical evidence notice:** protocol 4 corrected native ChatML token parsing after these runs.
+The native measurements below do not establish corrected-runtime quality, parity, or latency.
+The new model-backed tokenizer audit still fails Unicode parity; see
+[`GGUF_PROTOCOL4_TOKENIZATION.md`](GGUF_PROTOCOL4_TOKENIZATION.md). Original receipts are preserved.
+
 ## Decision
 
 Qwen3.5-0.8B is small enough to ship as an optional local specialist, but it is not the under-20-ms

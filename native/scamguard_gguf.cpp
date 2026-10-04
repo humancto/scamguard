@@ -59,21 +59,33 @@ void clear_error(char * destination, size_t capacity) noexcept {
     if (destination != nullptr && capacity > 0) destination[0] = '\0';
 }
 
-std::vector<llama_token> tokenize(const llama_vocab * vocab, std::string_view text) {
+}  // namespace
+
+namespace scamguard::detail {
+
+// Internal helper also linked by the model-backed vocabulary probe. Match the
+// HF path: text is already chat-rendered, so do not add BOS/EOS, and do recognize
+// its control tokens. Literal special tokens in message text follow that same
+// tokenizer behavior; this is tokenization parity, not an injection policy.
+std::vector<llama_token> tokenize_rendered_chat(const llama_vocab * vocab, std::string_view text) {
     if (text.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
         throw std::runtime_error("input exceeds tokenizer length limit");
     }
     const int32_t length = static_cast<int32_t>(text.size());
-    const int32_t required = -llama_tokenize(vocab, text.data(), length, nullptr, 0, true, false);
+    const int32_t required = -llama_tokenize(vocab, text.data(), length, nullptr, 0, false, true);
     if (required <= 0) throw std::runtime_error("tokenizer did not return a positive token count");
     std::vector<llama_token> tokens(static_cast<size_t>(required));
     const int32_t written = llama_tokenize(
-        vocab, text.data(), length, tokens.data(), static_cast<int32_t>(tokens.size()), true, false);
+        vocab, text.data(), length, tokens.data(), static_cast<int32_t>(tokens.size()), false, true);
     if (written != required) {
         throw std::runtime_error("tokenizer output size changed between calls");
     }
     return tokens;
 }
+
+}  // namespace scamguard::detail
+
+namespace {
 
 void clear_batch(llama_batch & batch) { batch.n_tokens = 0; }
 
@@ -177,7 +189,7 @@ internal_score_result score_request(sg_gguf_runtime & runtime, std::string_view 
     for (size_t answer = 0; answer < k_answers.size(); ++answer) {
         std::string candidate(question);
         candidate.append(k_answers[answer]);
-        sequences[answer] = tokenize(runtime.vocab, candidate);
+        sequences[answer] = scamguard::detail::tokenize_rendered_chat(runtime.vocab, candidate);
         maximum_candidate_tokens = std::max(maximum_candidate_tokens, sequences[answer].size());
         if (sequences[answer].size() > static_cast<size_t>(runtime.configured_context_size)) {
             throw std::runtime_error("request exceeds the configured per-sequence context");
@@ -363,7 +375,8 @@ sg_gguf_status sg_gguf_runtime_create(
             static_cast<int32_t>(context_params.n_ctx), 0, static_cast<int32_t>(context_params.n_seq_max));
         created->batch_initialized = true;
         if (prefix_bytes > 0) {
-            created->cached_prefix = tokenize(created->vocab, std::string_view(prefix_utf8, prefix_bytes));
+            created->cached_prefix = scamguard::detail::tokenize_rendered_chat(
+                created->vocab, std::string_view(prefix_utf8, prefix_bytes));
         }
         initialize_prefix_cache(created->context, created->batch, created->cached_prefix, created->batch_size);
         *runtime = created.release();

@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from benchmarks.benchmark_routed_transformers_runtime import summarize
 from scamguard.decision import calibrated_verdict
 from scamguard.gguf_runtime import (
+    GGUF_PROTOCOL_VERSION,
     LABELS,
     PersistentGGUFScorer,
     calibrated_probabilities,
@@ -46,6 +47,18 @@ def fixed_prefix(processor: Any) -> str:
     if rendered.count(marker) != 1:
         raise ValueError("Qwen chat template does not preserve the runtime message marker")
     return rendered.split(marker, maxsplit=1)[0]
+
+
+def validate_calibration_identity(
+    calibration: dict[str, Any], *, model_sha256: str, runner_sha256: str
+) -> None:
+    for field, expected in {
+        "protocol_version": GGUF_PROTOCOL_VERSION,
+        "model_sha256": model_sha256,
+        "runner_sha256": runner_sha256,
+    }.items():
+        if calibration.get(field) != expected:
+            raise ValueError(f"prefix benchmark calibration identity differs: {field}")
 
 
 def score_parity(
@@ -127,6 +140,10 @@ def main() -> None:
         raise ValueError("native runner SHA-256 differs from --runner-sha256")
     if file_sha256(args.model) != args.model_sha256:
         raise ValueError("GGUF model SHA-256 differs from --model-sha256")
+    calibration = json.loads(args.calibration_report.read_text(encoding="utf-8"))
+    validate_calibration_identity(
+        calibration, model_sha256=args.model_sha256, runner_sha256=args.runner_sha256
+    )
 
     from transformers import AutoProcessor
 
@@ -166,7 +183,6 @@ def main() -> None:
         ]
         loaded_prefix_tokens = cached.loaded_prefix_tokens
 
-    calibration = json.loads(args.calibration_report.read_text(encoding="utf-8"))
     first_cached = cached_results[: len(rows)]
     parity = score_parity(
         [result.raw_scores for result in reference_results],
@@ -195,7 +211,7 @@ def main() -> None:
         "runtime": {
             "runner": str(args.runner),
             "runner_sha256": args.runner_sha256,
-            "protocol_version": 2,
+            "protocol_version": GGUF_PROTOCOL_VERSION,
             "ctx_size_per_sequence": args.ctx_size,
             "batch_size": args.batch_size,
             "ubatch_size": args.ubatch_size,

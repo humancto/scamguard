@@ -17,9 +17,10 @@ from scamguard.gguf_runtime import (
     QWEN35_08B_PROCESSOR_REVISION,
     load_gguf_runtime_pack,
 )
+from scamguard.metrics import file_sha256
 from scamguard.scanner import Scanner, scan
 from scamguard.taxonomy import Verdict
-from scripts.build_gguf_runtime_pack import build_pack
+from scripts.build_gguf_runtime_pack import build_pack, normalized_calibration
 
 
 def fake_runner(path: Path) -> None:
@@ -30,7 +31,7 @@ def fake_runner(path: Path) -> None:
             import sys
 
             prefix_tokens = 141 if "--prefix-hex" in sys.argv else 0
-            print(f"READY\t3\t563036064\t640\t{prefix_tokens}", flush=True)
+            print(f"READY\t4\t563036064\t640\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
@@ -61,6 +62,7 @@ def runtime_pack(tmp_path: Path) -> Path:
     calibration.write_text(
         json.dumps(
             {
+                "protocol_version": 4,
                 "temperature": 1.0,
                 "scam_threshold": 0.8,
                 "safe_threshold": 0.6,
@@ -117,6 +119,41 @@ def test_pack_loader_rejects_tampered_model(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="model hash differs"):
         load_gguf_runtime_pack(pack)
+
+
+def test_pack_loader_rejects_protocol3_manifest(tmp_path: Path) -> None:
+    pack = runtime_pack(tmp_path)
+    manifest_path = pack / PACK_MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["runtime"]["protocol_version"] = 3
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="contract mismatch: protocol_version"):
+        load_gguf_runtime_pack(pack)
+
+
+@pytest.mark.parametrize("protocol", [None, 3])
+def test_pack_rejects_stale_calibration_with_valid_file_hash(
+    tmp_path: Path, protocol: int | None
+) -> None:
+    pack = runtime_pack(tmp_path)
+    calibration_path = pack / "scamguard_calibration.json"
+    calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
+    if protocol is None:
+        del calibration["protocol_version"]
+    else:
+        calibration["protocol_version"] = protocol
+    calibration_path.write_text(json.dumps(calibration), encoding="utf-8")
+    manifest_path = pack / PACK_MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["calibration"]["sha256"] = file_sha256(calibration_path)
+    manifest["calibration"]["bytes"] = calibration_path.stat().st_size
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="calibration protocol differs"):
+        load_gguf_runtime_pack(pack)
+    with pytest.raises(ValueError, match="current GGUF protocol"):
+        normalized_calibration(calibration, file_sha256(calibration_path))
 
 
 def test_pack_loader_rejects_path_escape_and_self_authorization(tmp_path: Path) -> None:

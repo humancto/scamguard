@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate a quantized ScamGuard GGUF through the protocol-v3 native scorer."""
+"""Evaluate a quantized ScamGuard GGUF through the current native scorer."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from scamguard.gguf_runtime import (
     FROZEN_PROMPT_PREFIX,
     FROZEN_PROMPT_SUFFIX,
     GGUF_BACKEND_TYPE,
+    GGUF_PROTOCOL_VERSION,
     GGUF_SCORING_VERSION,
     PersistentGGUFScorer,
 )
@@ -40,7 +41,21 @@ from training.eval_qwen import (
     validate_primary_test_v8,
 )
 
-PROTOCOL_VERSION = 3
+PROTOCOL_VERSION = GGUF_PROTOCOL_VERSION
+
+
+def runtime_config_record(
+    *, ctx_size: int, batch_size: int, ubatch_size: int, threads: int, n_gpu_layers: int
+) -> dict[str, Any]:
+    return {
+        "ctx_size": ctx_size,
+        "batch_size": batch_size,
+        "ubatch_size": ubatch_size,
+        "threads": threads,
+        "n_gpu_layers": n_gpu_layers,
+        "parallel": 1,
+        "prefix_cache_enabled": True,
+    }
 
 
 def cache_identity(
@@ -77,6 +92,8 @@ def cache_identity(
 def load_cache(
     directory: Path, split: str, identity: dict[str, Any]
 ) -> tuple[np.ndarray, list[float]] | None:
+    if identity.get("protocol_version") != PROTOCOL_VERSION:
+        return None
     metadata_path = directory / f"{split}.json"
     scores_path = directory / f"{split}.npy"
     if not metadata_path.is_file() or not scores_path.is_file():
@@ -417,14 +434,13 @@ def main() -> None:
             "sequence_bucket_size": 64,
             "scoring_version": GGUF_SCORING_VERSION,
         },
-        "runtime_config": {
-            "ctx_size": args.ctx_size,
-            "batch_size": args.batch_size,
-            "ubatch_size": args.ubatch_size,
-            "threads": args.threads,
-            "n_gpu_layers": args.n_gpu_layers,
-            "prefix_cache_enabled": True,
-        },
+        "runtime_config": runtime_config_record(
+            ctx_size=args.ctx_size,
+            batch_size=args.batch_size,
+            ubatch_size=args.ubatch_size,
+            threads=args.threads,
+            n_gpu_layers=args.n_gpu_layers,
+        ),
         "latency": {
             split: {
                 "samples": len(timings),

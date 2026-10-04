@@ -32,11 +32,15 @@ public struct ScamGuardCalibration: Sendable {
     public let safeThreshold: Double
 
     public init(
+        protocolVersion: UInt32,
         promptSuffix: String,
         temperature: Double,
         scamThreshold: Double,
         safeThreshold: Double
     ) throws {
+        guard protocolVersion == ScamGuardRuntime.protocolVersion else {
+            throw ScamGuardRuntimeError.native("incompatible ScamGuard calibration protocol")
+        }
         guard promptSuffix.hasPrefix("</message>"), temperature.isFinite, temperature > 0,
               (0 ... 1).contains(scamThreshold), (0 ... 1).contains(safeThreshold) else {
             throw ScamGuardRuntimeError.native("invalid ScamGuard calibration")
@@ -70,6 +74,7 @@ public enum ScamGuardRuntimeError: Error, LocalizedError {
 }
 
 public final class ScamGuardRuntime: @unchecked Sendable {
+    public static let protocolVersion: UInt32 = 4
     private let lock = NSLock()
     private let promptPrefix: String
     private var runtime: OpaquePointer?
@@ -109,6 +114,13 @@ public final class ScamGuardRuntime: @unchecked Sendable {
         }
         guard status == SG_GGUF_OK, let created else {
             throw ScamGuardRuntimeError.native(String(cString: error))
+        }
+        var info = sg_gguf_runtime_info()
+        sg_gguf_runtime_info_init(&info)
+        guard sg_gguf_runtime_get_info(created, &info, &error, error.count) == SG_GGUF_OK,
+              info.protocol_version == Self.protocolVersion else {
+            sg_gguf_runtime_destroy(created)
+            throw ScamGuardRuntimeError.native("incompatible ScamGuard native protocol")
         }
         promptPrefix = prefix
         runtime = created

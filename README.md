@@ -15,6 +15,12 @@ The closed Qwen line's uncertainty failure, all-alert versus binary precision, a
 macro-F1 ceiling are diagnosed in
 [reports/QWEN08_VERDICT_TRADEOFF.md](reports/QWEN08_VERDICT_TRADEOFF.md).
 
+**Runtime correction:** native protocol 4 fixes ChatML control-token parsing and rejects old
+protocol-3 calibration/packs. Real tokenizer checks still fail on Unicode because historical HF
+loader behavior and native normalization differ. Native timing/score entries below are historical
+controls, not evidence for a validated corrected deployment. See
+[reports/GGUF_PROTOCOL4_TOKENIZATION.md](reports/GGUF_PROTOCOL4_TOKENIZATION.md).
+
 ## Current model ladder
 
 | Track | Role | Approximate mobile package | Decision |
