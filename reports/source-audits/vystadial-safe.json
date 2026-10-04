@@ -1,0 +1,82 @@
+{
+  "artifacts": {
+    "diagnostic": {
+      "path": "data/external/vystadial_safe/vystadial_safe_diagnostic.jsonl",
+      "rows": 1024,
+      "sha256": "0a2c9a8e1e100fddd338d22acf2dc4ee85401ac40710199196e7171d1b463042"
+    }
+  },
+  "counts": {
+    "candidate_rows": 46750,
+    "duration_max_seconds": 49.152000427246094,
+    "duration_min_seconds": 0.6399999856948853,
+    "duration_seconds": 150411.392195,
+    "exact_duplicate_rows_removed": 35599,
+    "final_labels": {
+      "SAFE": 1024
+    },
+    "final_rows": 1024,
+    "final_rows_per_speaker_max": 63,
+    "final_rows_per_speaker_min": 2,
+    "final_unique_speakers": 30,
+    "near_overlaps_with_references_removed": 4,
+    "near_template_representatives": 7718,
+    "privacy_findings_before_normalization": {
+      "rows_empty_after_normalization": 1504,
+      "rows_with_email": 0,
+      "rows_with_long_digit_sequence": 0,
+      "rows_with_phone_like": 0,
+      "rows_with_url": 0
+    },
+    "reference_rows": 79068,
+    "same_family_rows_removed": 3429,
+    "sample_cap_rows_removed": 6694,
+    "source_rows": 48254,
+    "source_rows_per_speaker_max": 7655,
+    "source_rows_per_speaker_min": 9,
+    "unique_speakers": 30
+  },
+  "diagnostic_schema_version": 1,
+  "near_template_stats": {
+    "largest_near_template_cluster": 1387,
+    "near_template_clusters": 7718,
+    "near_template_rows_quarantined": 0,
+    "real_rows_clustered": 11147
+  },
+  "policy": {
+    "attribution_required": true,
+    "audio_redistributed": false,
+    "commercial_use_allowed": true,
+    "individual_safe_ground_truth": true,
+    "one_representative_per_near_template_family": true,
+    "raw_text_written_to_manifest": false,
+    "rows_redistributed": false,
+    "sample_seed": "scamguard-vystadial-safe-diagnostic-v1",
+    "share_alike_required": true,
+    "speaker_balanced_deterministic_cap": 1024,
+    "used_for_fitting": false,
+    "used_for_promotion_tuning": false,
+    "used_for_threshold": false
+  },
+  "purpose": "fresh real-human legitimate telephone-utterance SAFE diagnostic; excluded from fitting, calibration, and promotion tuning until the frozen Stage 7 result is recorded",
+  "source": {
+    "annotation": "upstream human orthographic transcript, unchanged by the derivative",
+    "collection": "crowdworkers called a statistical telephone dialogue system to find a dining venue",
+    "derivative_repository": "BrunoHays/vystadial-telephony-en",
+    "derivative_revision": "b7454512a3547c829be201d9afceb64af8c28e61",
+    "license": "CC-BY-SA-3.0",
+    "primary": "https://www.openslr.org/6/",
+    "shards": [
+      {
+        "filename": "test-00000-of-00002.parquet",
+        "rows": 24127,
+        "sha256": "399e6e1f13846b1bbad1ddb60df552c443137db56b86f7153d1a0b6e76b5844c"
+      },
+      {
+        "filename": "test-00001-of-00002.parquet",
+        "rows": 24127,
+        "sha256": "3c7108edc251d5f7d95c2bbab53c1716b7d9c2ebe6d6670142602cec2b24fb92"
+      }
+    ]
+  }
+}

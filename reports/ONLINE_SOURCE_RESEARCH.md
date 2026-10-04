@@ -24,6 +24,24 @@ ships hash-pinned acquisition and audit code, not sensitive message dumps.
   respectively, but classify almost every ambiguous row as SCAM or SAFE instead of UNCERTAIN.
   This is evidence for a narrow abstention curriculum, not a publishable source benchmark.
 
+### Vystadial English calls: frozen legitimate-call diagnostic
+
+- Primary artifact: <https://www.openslr.org/6/>; pinned processed derivative:
+  <https://huggingface.co/datasets/BrunoHays/vystadial-telephony-en/tree/b7454512a3547c829be201d9afceb64af8c28e61>
+- Rights: CC-BY-SA-3.0. Commercial use is permitted with attribution and share-alike, but the
+  training-weight implications require a separate release decision. ScamGuard therefore uses it
+  only for local evaluation and redistributes neither rows nor audio.
+- Provenance: real human telephone utterances recorded while crowdworkers interacted with a benign
+  restaurant-finding dialogue system. The derivative retains the upstream human orthographic text
+  unchanged and removes low-quality/tag-only recordings.
+- Admission: 48,254 source rows from 30 speakers become a 1,024-family, speaker-balanced SAFE
+  diagnostic after short-row rejection, privacy normalization, exact and near-template collapse,
+  and overlap removal against 79,068 existing rows. The diagnostic hash is
+  `0a2c9a8e1e100fddd338d22acf2dc4ee85401ac40710199196e7171d1b463042`.
+- Frozen finding: Stage 7 produces zero thresholded false positives in 1,024 rows; the 95% Wilson
+  upper bound is 0.374%. This is strong narrow-domain evidence, not proof for action-bearing calls,
+  and the corpus remains excluded from fitting and promotion tuning.
+
 ### Reddit boundary
 
 The current official <https://redditinc.com/policies/data-api-terms> denies use of Reddit Services

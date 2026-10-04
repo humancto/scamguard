@@ -2367,6 +2367,7 @@ train = [
     { name = "huggingface-hub" },
     { name = "openpyxl" },
     { name = "pandas" },
+    { name = "pyarrow" },
     { name = "requests" },
 ]
 
@@ -2388,6 +2389,7 @@ requires-dist = [
     { name = "pandas", marker = "extra == 'train'", specifier = ">=2.2,<3" },
     { name = "peft", marker = "extra == 'qwen'", specifier = ">=0.14,<1" },
     { name = "protobuf", marker = "extra == 'neural'", specifier = ">=5,<7" },
+    { name = "pyarrow", marker = "extra == 'train'", specifier = ">=16,<26" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3,<10" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6,<8" },
     { name = "requests", marker = "extra == 'train'", specifier = ">=2.32,<3" },

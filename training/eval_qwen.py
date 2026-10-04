@@ -840,6 +840,11 @@ def main() -> None:
     )
     if international_robocalls_path.exists():
         split_paths["international_robocalls"] = international_robocalls_path
+    vystadial_safe_path = (
+        args.external_data / "vystadial_safe" / "vystadial_safe_diagnostic.jsonl"
+    )
+    if vystadial_safe_path.exists():
+        split_paths["vystadial_safe"] = vystadial_safe_path
     primary_test_v8_manifest = None
     if args.primary_test_v8 is not None:
         primary_test_v8_manifest = validate_primary_test_v8(args.primary_test_v8)
@@ -987,6 +992,7 @@ def main() -> None:
     for diagnostic in (
         "chichewa",
         "international_robocalls",
+        "vystadial_safe",
         "scam_dialogue",
         "taskmaster",
     ):
