@@ -81,3 +81,4 @@ def test_stage13_promotion_rejects_four_banking_false_positives(
     assert result["gates"]["banking_fpr_absolute"] is False
     assert result["gates"]["banking_fpr_ci95_upper"] is False
     assert result["gates"]["banking_false_positive_budget"] is False
+    assert result["next_action"] == "reject banking candidate before full regression"

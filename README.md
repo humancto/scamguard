@@ -38,6 +38,7 @@ independent-audit, and Hugging Face gates, is tracked in
 | Qwen3.5-0.8B, schema-v24 AI-internal LoRA | trained specialist; rejected before quantization | 41.3 MB adapter plus BF16 base | primary regression is 99.66% recall / 0.115% FPR, but macro F1 is 0.7407, MultiDoGO complete-call FPR is 5.69%, and BothBosu is 65.96% recall / 3.27% FPR; 29/39 gates pass |
 | Qwen3.5-0.8B, stage-3 boundary recovery | strongest 0.8B adapter; rejected before quantization | 60.4 MB adapter plus BF16 base | 36/39 gates; 99.83% held recall / 4.07% FPR / 0.7370 macro F1, MultiDoGO call FPR 1.12%, BothBosu recall 58.16%; 93.54/99.11 ms BF16 median/p95 |
 | Qwen3.5-0.8B, stage-7 phone generalization | rejected continuation | 60 MiB adapter plus BF16 base | 33/41 gates; phone diagnostic reached 78.16% recall / 15.88% FPR; fresh diagnostics find 15/19 international silver scams but assign SAFE to 10/47 verified robocalls, Vystadial has 0/1,024 SAFE false positives, and BANKING77 has 8/770; no quantization or publication |
+| Qwen3.5-0.8B, stage-14 banking boundary | terminal rejected continuation | 60 MiB adapter plus BF16 base | BANKING77 improved only from 8/770 to 7/770 false alarms, missing the frozen ≤3 budget; phone recall fell from 78.16% to 77.59% and international recall from 78.95% to 73.68%; the 0.8B training line is closed with no quantization or publication |
 | Qwen3.5-0.8B, stage-8 PPoNE abstention screen | three rejected continuations | 60 MiB adapter plus BF16 base | all preserve the dev safety contract; 2e-6 recovers 4/21 open PPoNE UNCERTAIN rows but loses one open PPoNE scam and regresses phone FPR; none earns the frozen promotion, so sealed tests remain unopened |
 | Qwen3.5-0.8B, stage-5 precision recovery | rejected continuation | 60.4 MB adapter plus BF16 base | 34/39 gates; dev contract fails at 93.19% recall, held FPR 4.75%, macro F1 0.7164, BothBosu 77.30% recall / 6.54% FPR; no merge, quantization, or publication |
 | Qwen3.5-0.8B, stage-6A verdict-branch focal/KL | rejected on dev; regression not opened | 60.4 MB adapter plus BF16 base | 96.89% dev recall / 1.04% FPR / 0.7164 macro F1; one true UNCERTAIN recovered but one scam miss, one SAFE alarm, and five SAFE deferrals added; 202-point Stage-3 blend found no improvement |
@@ -89,8 +90,8 @@ The rights-pinned Vystadial real-human telephone SAFE diagnostic, 48,254-row sou
 frozen 0/1,024 Stage 7 false-positive result are in
 [reports/VYSTADIAL_SAFE_DIAGNOSTIC.md](reports/VYSTADIAL_SAFE_DIAGNOSTIC.md).
 The pre-prediction BANKING77 financial-service boundary audit, split-safe 770-row open selection,
-frozen 8/770 Stage 7 false-positive result, 8,958-row eligible fit pool, 1,400-row Stage 13
-continuation recipe and strict non-regression gates, and 3,060-family sealed official test are in
+frozen 8/770 Stage 7 false-positive result, 8,958-row eligible fit pool, Stage 13/14 continuation
+rejections and strict non-regression gates, and 3,060-family sealed official test are in
 [reports/BANKING77_SOURCE_ADMISSION.md](reports/BANKING77_SOURCE_ADMISSION.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency

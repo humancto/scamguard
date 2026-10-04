@@ -206,3 +206,37 @@ additional learning rates against the repeatedly opened development set.
 
 - Stage 14 frozen config SHA-256:
   `12dda7733c70c650ea33743e9165294f43a4f4f6aafac84af95bdf7864b0355e`
+
+## Terminal Stage 14 result
+
+Stage 14 completed its frozen one-epoch Apple MPS run and exactly recovered the Stage 7 development
+screen: 499/514 scam recall (97.08%), 5/2,008 SAFE false positives (0.249%), and 0.7856
+calibrated macro-F1. It therefore earned the single open selection run. It did not earn the full
+regression, quantization, sealed BANKING77 test, or publication.
+
+On the 770-row BANKING77 selection, Stage 14 reduced false positives from 8 to 7 (1.039% to
+0.909%), but missed all three frozen absolute gates: at most 3 false positives, at most 0.5% FPR,
+and at most 1.25% for the Wilson 95% upper bound. The observed upper bound was 1.865%. It also
+regressed phone scam recall from 78.16% to 77.59% and international-robocall recall from 78.95% to
+73.68%. PPoNE metrics and the 0/1,024 Vystadial SAFE result were unchanged; ordinary-phone SAFE
+FPR improved from 17.11% to 15.79%.
+
+The candidate therefore fails the joint promotion contract. The full regression is intentionally
+not opened, and the publisher's 3,060-row BANKING77 official test remains prediction-sealed. The
+0.8B training line stops here: no Stage 15, threshold search, merge, GGUF quantization, physical
+device release claim, or Hugging Face publication is authorized for this checkpoint. Stage 7
+remains the reference adapter, but it is also a rejected research artifact rather than a releasable
+model.
+
+- Stage 14 adapter SHA-256:
+  `96b7c6e53a76e5ce2356ec8b2e168a01add23e32f053fc3a4d5ed63b373a6606`
+- Training receipt SHA-256:
+  `0bf0953d56b3cad01656da200a0fb8ba04a15a48b2a27af0ef292bc3ce8abd5e`
+- Development report SHA-256:
+  `64871bc7ca17e061b4b7b177a86d0b9104c26175d9658f690ca01bbb77296fb1`
+- Open selection report SHA-256:
+  `7d342626cd572c9dc4b49fc20c4ad353b42e9a9c1823a88706da175776e7d5e0`
+- Text-free selection ledger SHA-256:
+  `0844a66040c8711dd643f80a126742006ee01acca5ff804129d22cabf6a82947`
+- Promotion-gate report SHA-256:
+  `4c27a1ff4b1a7dbe417e4b69abf85208d6d301073f5a01a26b8cf1c4ef509a50`

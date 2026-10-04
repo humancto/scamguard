@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate the Stage 13 banking-boundary candidate against frozen Stage 7 evidence."""
+"""Gate a banking-boundary candidate against frozen Stage 7 evidence."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def check(
         or audit.get("policy", {}).get("automatic_relabeling_allowed") is not False
         or audit.get("policy", {}).get("test_inspected") is not False
     ):
-        raise ValueError("candidate lacks the frozen Stage 13 selection contract")
+        raise ValueError("candidate lacks the frozen banking selection contract")
     validate_ledger_binding(candidate, candidate_predictions)
     validate_ledger_binding(stage7, stage7_predictions)
     labels, high_risk = phone_index(audit)
@@ -208,7 +208,7 @@ def check(
         "next_action": (
             "run frozen full regression without opening BANKING77 official test"
             if passed
-            else "reject Stage 13 candidate before full regression"
+            else "reject banking candidate before full regression"
         ),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
