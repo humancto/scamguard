@@ -1,9 +1,10 @@
-# Qwen3.5-0.8B Stage 9 result and Stage 10 preregistration
+# Qwen3.5-0.8B Stage 9 and Stage 10 results
 
 ## Decision
 
-**Reject Stage 9 before the full regression. Keep Stage 7 as the current reference. Do not merge,
-quantize, package, inspect the sealed PPoNE or publisher-phone tests, or publish Stage 9.**
+**Reject Stage 9 and Stage 10 before the full regression. Keep Stage 7 as the current reference.
+Do not merge, quantize, package, inspect the sealed PPoNE or publisher-phone tests, or publish either
+candidate.**
 
 Stage 9 validated the data-quality hypothesis but did not satisfy the frozen open-promotion
 contract. Its development quality and phone scam recall improved, but it lost one additional PPoNE
@@ -60,7 +61,7 @@ uses independent official navigation and asks for no secret.
 The binding PPoNE regression is an identity-investigation robocall with coercive consequences and
 an in-call digit action. The evidence contrast—not the learning rate—is the next intervention.
 
-## Stage 10 frozen design
+## Stage 10 design receipt
 
 Stage 10 restarts from Stage 7 rather than continuing from rejected Stage 9. It holds the one-epoch
 `2e-6` recipe constant and changes only the curriculum. Its new Apache-2.0 source contains 96
@@ -88,7 +89,58 @@ Frozen identities:
 - experiment config:
   `5f14910bc43b3166bf75722cd4796b543aef09e424f3bb4719c0883b4a759ad0`.
 
-Stage 10 uses the unchanged Stage 9 promotion checker. It must pass every development, PPoNE, and
-quality-stratified phone gate before a full regression. PPoNE test, publisher-phone test, primary
-sealed evaluation, quantization, physical-device benchmarking, independent human review, and
-Hugging Face publication remain downstream and unauthorized.
+Stage 10 uses the unchanged Stage 9 promotion logic. It must pass every development, PPoNE, and
+quality-stratified phone gate before a full regression.
+
+## Stage 10 result
+
+Stage 10 completed the frozen one-epoch MPS run, but failed one of eight open promotion gates. The
+matched-evidence curriculum improved development macro F1, phone recall, ordinary-phone SAFE FPR,
+PPoNE macro F1, and PPoNE UNCERTAIN recall relative to Stage 7. It nevertheless retained Stage 9's
+one-SCAM PPoNE regression: 10/12 detected versus Stage 7's 11/12. That non-regression gate is
+binding, so the full regression was not run.
+
+- Stage 10 adapter SHA-256:
+  `3eb2974d7db70d2f859a10d1876a9f25e290bbe487abae27f837dfc949b59cf0`.
+- Adapter configuration SHA-256:
+  `cefdc82c9bde541da713975d1d22607f82792e0b1615126577d316e26cf8b7bb`.
+- Training receipt SHA-256:
+  `5f28c320c04d0c435a9a447442c0ca81156c43beae205bbb1748242f5c1fd4cc`.
+- Runtime: 1,411 seconds including the trainer development pass; final train loss `0.03531` and
+  trainer eval loss `0.03374`.
+- Development report SHA-256:
+  `73cf728ea5d60728bd9f6cf78964f1873d2681d4ca22653290dab7bef17ee1e7`.
+- Open selection report SHA-256:
+  `da23314cf38e638d86a46560b853178c67619aa955aa1242c8e385e073c8b747`.
+- Promotion-gate report SHA-256:
+  `9a9d783e4ee8330a66b533337410751f46e67bdc47d33e30a4c8306e6ba09c01`.
+
+| Metric | Stage 7 | Stage 10 | Frozen requirement | Result |
+|---|---:|---:|---:|---|
+| Dev scam recall | 97.08% | 97.08% | at least 97% | pass |
+| Dev SAFE FPR | 0.25% | 0.15% | at most 2% | pass |
+| Dev macro F1 | 0.7856 | 0.8479 | no regression | pass |
+| Phone scam recall | 78.16% (136/174) | 78.74% (137/174) | no regression | pass |
+| Phone ordinary-SAFE FPR | 17.11% (26/152) | 16.45% (25/152) | no regression | pass |
+| PPoNE scam recall | 91.67% (11/12) | 83.33% (10/12) | no regression | **fail** |
+| PPoNE macro F1 | 0.2398 | 0.2984 | at least +0.03 | pass |
+| PPoNE UNCERTAIN recall | 4.76% (1/21) | 14.29% (3/21) | at least 3/21 | pass |
+
+The publisher-phone diagnostic is unchanged at 27/170 SAFE alarms. Stage 10 shifts one error from
+the ordinary stratum into the 18-row high-risk caller-action stratum: 25/152 ordinary alarms and
+2/18 high-risk alarms, versus Stage 7's 26/152 and 1/18. No publisher label is rewritten.
+
+The text-free transition audit records the same aggregate topology as Stage 9: four changed PPoNE
+verdicts (two improved, one retained error, one SCAM regression) and five changed phone decisions
+(three improved SCAM calls, two SAFE regressions). This is evidence that adding more matched
+government-call wording did not move the remaining PPoNE decision boundary; another lexical replay
+iteration would not be justified by the result.
+
+- PPoNE transition report SHA-256:
+  `f02df68066ece23b025d157a9a4059734487e17ededf0acf78b20aed18e2da69`.
+- Phone transition report SHA-256:
+  `b66fad266e98ba6727976deedc66a7e8ac8e3fc5332093734f6fa6501a3c139a`.
+
+PPoNE test, publisher-phone test, primary sealed evaluation, quantization, physical-device
+benchmarking, independent human review, and Hugging Face publication remain downstream and
+unauthorized.

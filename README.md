@@ -76,8 +76,8 @@ the resulting next-experiment boundary are in
 [reports/QWEN08_PPONE_STAGE8.md](reports/QWEN08_PPONE_STAGE8.md).
 The caller-turn-aware publisher-label audit and exact Stage 7/Stage 8b transition localization are
 in [reports/PHONE_SOURCE_LABEL_QUALITY.md](reports/PHONE_SOURCE_LABEL_QUALITY.md).
-The rejected Stage 9 receipt, exact promotion failures, and frozen matched-evidence Stage 10 design
-are in [reports/QWEN08_STAGE9_STAGE10.md](reports/QWEN08_STAGE9_STAGE10.md).
+The rejected Stage 9 and Stage 10 receipts, exact promotion failures, and text-free transition
+audits are in [reports/QWEN08_STAGE9_STAGE10.md](reports/QWEN08_STAGE9_STAGE10.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).

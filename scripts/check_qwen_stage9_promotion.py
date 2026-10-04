@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply the frozen Stage 9 promotion contract with a quality-stratified phone FPR."""
+"""Apply the shared frozen promotion contract with a quality-stratified phone FPR."""
 
 from __future__ import annotations
 
@@ -73,10 +73,10 @@ def check(
         or audit.get("policy", {}).get("automatic_relabeling_allowed") is not False
         or audit.get("policy", {}).get("test_inspected") is not False
     ):
-        raise ValueError("Stage 9 requires frozen selection and text-free phone-audit reports")
+        raise ValueError("candidate requires frozen selection and text-free phone-audit reports")
     required = {"dev", "phone_scam_validation", "ppone_validation"}
     if not required <= candidate.keys():
-        raise ValueError("Stage 9 selection report is missing a required split")
+        raise ValueError("candidate selection report is missing a required split")
     validate_ledger_binding(candidate, candidate_predictions)
     validate_ledger_binding(stage7, stage7_predictions)
 
@@ -189,7 +189,7 @@ def check(
         "next_action": (
             "run frozen full regression without opening source tests"
             if passed
-            else "reject Stage 9 candidate before full regression"
+            else "reject candidate before full regression"
         ),
     }
     output.parent.mkdir(parents=True, exist_ok=True)

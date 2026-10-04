@@ -123,6 +123,7 @@ def test_stage9_promotion_ignores_only_predeclared_risky_safe_stratum(
     inputs = create_inputs(tmp_path)
     result = check(*inputs)
     assert result["passed"] is True
+    assert result["next_action"] == "run frozen full regression without opening source tests"
     assert result["phone_label_audit"]["publisher_labels_changed"] == 0
     assert result["candidate_metrics"]["phone_other_safe_fpr"] == 0.5
     assert result["candidate_metrics"]["phone_high_risk_safe_alarm_rate_diagnostic"] == 1.0
@@ -134,4 +135,5 @@ def test_stage9_promotion_rejects_new_alarm_on_other_safe_stratum(
     inputs = create_inputs(tmp_path, regression=True)
     result = check(*inputs)
     assert result["passed"] is False
+    assert result["next_action"] == "reject candidate before full regression"
     assert result["gates"]["phone_other_safe_fpr_non_regression"] is False
