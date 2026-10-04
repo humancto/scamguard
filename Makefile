@@ -11,7 +11,8 @@
 .PHONY: government-evidence-contrasts qwen-08b-stage10-data qwen-08b-stage10-token-audit qwen-08b-stage10-freeze qwen-08b-stage10-preflight qwen-08b-stage10 qwen-08b-stage10-dev qwen-08b-stage10-selection qwen-08b-stage10-dev-gates qwen-08b-stage10-eval qwen-08b-stage10-gates
 .PHONY: qwen-08b-stage11-freeze qwen-08b-stage11-dev qwen-08b-stage11-selection qwen-08b-stage11-dev-gates qwen-08b-stage11-eval qwen-08b-stage11-gates
 .PHONY: qwen-08b-stage12-freeze qwen-08b-stage12-dev qwen-08b-stage12-selection qwen-08b-stage12-dev-gates qwen-08b-stage12-eval qwen-08b-stage12-gates
-.PHONY: qwen-08b-stage13-data qwen-08b-stage13-token-audit qwen-08b-stage13-freeze qwen-08b-stage13-preflight qwen-08b-stage13 qwen-08b-stage13-dev qwen-08b-stage13-selection qwen-08b-stage13-selection-gates qwen-08b-stage13-eval qwen-08b-stage13-gates
+.PHONY: qwen-08b-stage13-data qwen-08b-stage13-token-audit qwen-08b-stage13-freeze qwen-08b-stage13-preflight qwen-08b-stage13 qwen-08b-stage13-dev qwen-08b-stage13-dev-gates qwen-08b-stage13-selection qwen-08b-stage13-selection-gates qwen-08b-stage13-eval qwen-08b-stage13-gates
+.PHONY: qwen-08b-stage14-freeze qwen-08b-stage14-preflight qwen-08b-stage14 qwen-08b-stage14-dev qwen-08b-stage14-dev-gates qwen-08b-stage14-selection qwen-08b-stage14-selection-gates qwen-08b-stage14-eval qwen-08b-stage14-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 .PHONY: phone-scam-synthetic-fetch phone-scam-synthetic phone-scam-label-audit schema25-full-call-curriculum encoder-schema25-cache encoder-schema25-preflight encoder-schema25-full-call-curriculum encoder-schema25-gates
 .PHONY: ppone-robocalls international-robocalls qwen-08b-stage7-international-robocalls vystadial-safe-calls qwen-08b-stage7-vystadial-safe banking77-safe qwen-08b-stage7-banking77-selection
@@ -146,6 +147,7 @@ QWEN08_STAGE13_TOKEN_AUDIT ?= reports/runs/qwen35-08b-banking-boundary-stage13-t
 QWEN08_STAGE13_CONFIG ?= configs/qwen35-08b-banking-boundary-stage13.json
 QWEN08_STAGE13_OUTPUT ?= artifacts/checkpoints/qwen35-08b-banking-boundary-stage13-lora
 QWEN08_STAGE13_DEV_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage13-dev.json
+QWEN08_STAGE13_DEV_GATE_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage13-dev-gates.json
 QWEN08_STAGE13_SELECTION_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage13-selection.json
 QWEN08_STAGE13_SELECTION_GATE_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage13-selection-gates.json
 QWEN08_STAGE13_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage13-regression.json
@@ -154,6 +156,18 @@ QWEN08_STAGE13_EXPERIMENT_ID ?= sg-qwen35-08b-banking-boundary-stage13-v1
 QWEN08_STAGE13_EPOCHS ?= 1
 QWEN08_STAGE13_LR ?= 0.000001
 QWEN08_STAGE13_SEED ?= 20261004
+QWEN08_STAGE14_CONFIG ?= configs/qwen35-08b-banking-boundary-stage14-low-lr.json
+QWEN08_STAGE14_OUTPUT ?= artifacts/checkpoints/qwen35-08b-banking-boundary-stage14-low-lr-lora
+QWEN08_STAGE14_DEV_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage14-low-lr-dev.json
+QWEN08_STAGE14_DEV_GATE_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage14-low-lr-dev-gates.json
+QWEN08_STAGE14_SELECTION_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage14-low-lr-selection.json
+QWEN08_STAGE14_SELECTION_GATE_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage14-low-lr-selection-gates.json
+QWEN08_STAGE14_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage14-low-lr-regression.json
+QWEN08_STAGE14_GATE_REPORT ?= reports/runs/qwen35-08b-banking-boundary-stage14-low-lr-regression-gates.json
+QWEN08_STAGE14_EXPERIMENT_ID ?= sg-qwen35-08b-banking-boundary-stage14-low-lr-v1
+QWEN08_STAGE14_EPOCHS ?= 1
+QWEN08_STAGE14_LR ?= 0.0000005
+QWEN08_STAGE14_SEED ?= 20261004
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -1694,7 +1708,13 @@ qwen-08b-stage13-dev: qwen-08b-stage13
 		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
 		--report "$(QWEN08_STAGE13_DEV_REPORT)"
 
-qwen-08b-stage13-selection: qwen-08b-stage13-dev
+qwen-08b-stage13-dev-gates: qwen-08b-stage13-dev
+	$(PYTHON_BIN) scripts/check_qwen_dev_promotion.py \
+		--candidate "$(QWEN08_STAGE13_DEV_REPORT)" \
+		--baseline "$(QWEN08_PHONE_REPORT)" \
+		--output "$(QWEN08_STAGE13_DEV_GATE_REPORT)"
+
+qwen-08b-stage13-selection: qwen-08b-stage13-dev-gates
 	$(PYTHON_BIN) training/eval_qwen.py \
 		--model Qwen/Qwen3.5-0.8B \
 		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
@@ -1739,6 +1759,111 @@ qwen-08b-stage13-gates: qwen-08b-stage13-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_STAGE13_REPORT)" \
 		--output "$(QWEN08_STAGE13_GATE_REPORT)"
+
+qwen-08b-stage14-freeze: qwen-08b-stage13-token-audit
+	@if [ ! -f "$(QWEN08_STAGE14_CONFIG)" ]; then \
+		$(PYTHON_BIN) scripts/freeze_qwen08_call_robustness.py \
+			--curriculum "$(QWEN08_STAGE13_DATA)" \
+			--token-audit "$(QWEN08_STAGE13_TOKEN_AUDIT)" \
+			--initial-adapter "$(QWEN08_PHONE_OUTPUT)" \
+			--source-report "$(QWEN08_BANKING77_REPORT)" \
+			--output "$(QWEN08_STAGE14_CONFIG)" \
+			--checkpoint-output "$(QWEN08_STAGE14_OUTPUT)" \
+			--experiment-id "$(QWEN08_STAGE14_EXPERIMENT_ID)" \
+			--expected-curriculum-kind qwen_banking_boundary_stage13_curriculum \
+			--role "reduced-step banking SAFE-boundary continuation after Stage 13 dev rejection" \
+			--seed "$(QWEN08_STAGE14_SEED)" --learning-rate "$(QWEN08_STAGE14_LR)" \
+			--epochs "$(QWEN08_STAGE14_EPOCHS)"; \
+	fi
+
+qwen-08b-stage14-preflight: qwen-08b-stage14-freeze
+	$(PYTHON_BIN) training/train_qwen_lora.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --experiment-config "$(QWEN08_STAGE14_CONFIG)" \
+		--data "$(QWEN08_STAGE13_DATA)/qwen_sft" \
+		--initial-adapter "$(QWEN08_PHONE_OUTPUT)" \
+		--epochs "$(QWEN08_STAGE14_EPOCHS)" --batch-size 4 --eval-batch-size 4 \
+		--gradient-accumulation 4 --learning-rate "$(QWEN08_STAGE14_LR)" --max-length 640 \
+		--sampling-strategy group_by_length --seed "$(QWEN08_STAGE14_SEED)" --require-mps \
+		--output "$(QWEN08_STAGE14_OUTPUT)" --preflight-only
+
+qwen-08b-stage14: qwen-08b-stage14-preflight
+	@if [ ! -f "$(QWEN08_STAGE14_OUTPUT)/adapter_model.safetensors" ]; then \
+		$(PYTHON_BIN) training/train_qwen_lora.py \
+			--model Qwen/Qwen3.5-0.8B \
+			--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+			--local-files-only --experiment-config "$(QWEN08_STAGE14_CONFIG)" \
+			--data "$(QWEN08_STAGE13_DATA)/qwen_sft" \
+			--initial-adapter "$(QWEN08_PHONE_OUTPUT)" \
+			--epochs "$(QWEN08_STAGE14_EPOCHS)" --batch-size 4 --eval-batch-size 4 \
+			--gradient-accumulation 4 --learning-rate "$(QWEN08_STAGE14_LR)" --max-length 640 \
+			--sampling-strategy group_by_length --seed "$(QWEN08_STAGE14_SEED)" --require-mps \
+			--output "$(QWEN08_STAGE14_OUTPUT)"; \
+	fi
+
+qwen-08b-stage14-dev: qwen-08b-stage14
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_STAGE14_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external --splits dev \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
+		--report "$(QWEN08_STAGE14_DEV_REPORT)"
+
+qwen-08b-stage14-dev-gates: qwen-08b-stage14-dev
+	$(PYTHON_BIN) scripts/check_qwen_dev_promotion.py \
+		--candidate "$(QWEN08_STAGE14_DEV_REPORT)" \
+		--baseline "$(QWEN08_PHONE_REPORT)" \
+		--output "$(QWEN08_STAGE14_DEV_GATE_REPORT)"
+
+qwen-08b-stage14-selection: qwen-08b-stage14-dev-gates
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_STAGE14_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external \
+		--splits dev banking77_validation phone_scam_validation ppone_validation vystadial_safe international_robocalls \
+		--frozen-calibration-report "$(QWEN08_STAGE14_DEV_REPORT)" \
+		--cache-dir "$(QWEN08_STAGE14_DEV_REPORT:.json=.scores)" \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --selection-screen-only \
+		--report "$(QWEN08_STAGE14_SELECTION_REPORT)"
+
+qwen-08b-stage14-selection-gates: qwen-08b-stage14-selection
+	$(PYTHON_BIN) scripts/check_qwen_banking_promotion.py \
+		--candidate "$(QWEN08_STAGE14_SELECTION_REPORT)" \
+		--candidate-predictions "$(QWEN08_STAGE14_SELECTION_REPORT:.json=.predictions.jsonl)" \
+		--stage7-full "$(QWEN08_PHONE_REPORT)" \
+		--stage7-predictions "$(QWEN08_PHONE_REPORT:.json=.predictions.jsonl)" \
+		--stage7-ppone reports/runs/qwen35-08b-stage7-ppone-open.json \
+		--stage7-banking "$(QWEN08_BANKING77_REPORT)" \
+		--stage7-vystadial "$(QWEN08_VYSTADIAL_SAFE_REPORT)" \
+		--stage7-international "$(QWEN08_INTERNATIONAL_ROBOCALL_REPORT)" \
+		--phone-audit reports/source-audits/phone-scam-label-quality.json \
+		--output "$(QWEN08_STAGE14_SELECTION_GATE_REPORT)"
+
+qwen-08b-stage14-eval: qwen-08b-stage14-selection-gates
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_STAGE14_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external \
+		--splits $(QWEN08_FULL_EVAL_SPLITS) phone_scam_validation ppone_validation banking77_validation vystadial_safe international_robocalls \
+		--frozen-calibration-report "$(QWEN08_STAGE14_DEV_REPORT)" \
+		--cache-dir "$(QWEN08_STAGE14_DEV_REPORT:.json=.scores)" \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps \
+		--report "$(QWEN08_STAGE14_REPORT)"
+
+qwen-08b-stage14-gates: qwen-08b-stage14-eval
+	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
+		--report "$(QWEN08_STAGE14_REPORT)" \
+		--output "$(QWEN08_STAGE14_GATE_REPORT)"
 
 apptek-callcenter:
 	$(PYTHON_BIN) scripts/fetch_apptek_callcenter.py

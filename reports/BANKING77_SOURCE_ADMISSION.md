@@ -54,7 +54,7 @@ existing ScamGuard reference. Near clustering removes another 144 train and 18 t
 
 | Artifact | Rows | SHA-256 | Status |
 |---|---:|---|---|
-| Eligible fitting pool | 8,958 | `e6baa68cb39cdb005dbf6e0ed27d81645ebdf580ccf83db1a76d5f1cdc7fe48f` | 388 rows declared for Stage 13; training not yet run |
+| Eligible fitting pool | 8,958 | `e6baa68cb39cdb005dbf6e0ed27d81645ebdf580ccf83db1a76d5f1cdc7fe48f` | 388 rows used by Stage 13/14; official test still sealed |
 | Open balanced selection | 770 | `efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7` | May score once |
 | Official test | 3,060 | `f7b9e005a01d78be64843f0d2dc249889500179f165b44a1ecda7a5dfeb9f5f9` | Prediction-sealed |
 
@@ -179,3 +179,30 @@ Reproduce the frozen data, token audit, and preflight with:
 ```bash
 make qwen-08b-stage13-preflight
 ```
+
+## Stage 13 development rejection and Stage 14 freeze
+
+Stage 13 completed one epoch on Apple MPS, but it failed the development screen before any
+candidate prediction was made on BANKING77 validation. Scam recall stayed at 499/514 (97.08%),
+while SAFE false positives increased from 5 to 6 and calibrated development macro-F1 fell from
+0.7856 to 0.7517. The direct continuation is therefore rejected; no Stage 13 BANKING77, phone,
+PPoNE, Vystadial, international-robocall, full-regression, or sealed-test result exists.
+
+- Stage 13 adapter SHA-256:
+  `2862864817351ae09d2b3a4cf9832b612731bafb36d934a067c8a0d7ae2cfb93`
+- Training receipt SHA-256:
+  `bd20209f713b10f54eca6213dbe5dbeafd1ffb73785e35b423e83df3e5e9194b`
+- Development report SHA-256:
+  `d16b1f9bb75afaf7dbcb5583937958d397d7afa57021eef12f324eefc4ed6b20`
+- Frozen config SHA-256:
+  `0fce65aeeb5aba053965005d1a1cb7b8e276563693663a850523d53f08ea6bce`
+
+Stage 14 is one final reduced-step continuation using the identical curriculum, seed, batch shape,
+and Stage 7 parent; only the learning rate changes from `1e-6` to `5e-7`. This is a direct test of
+the evidence-supported hypothesis that Stage 13 moved too far from the retained Stage 7 boundary.
+The Stage 14 recipe is frozen before training and must pass the development-only gate before any
+open selection split can be scored. If it fails, the BANKING77 line stops rather than searching
+additional learning rates against the repeatedly opened development set.
+
+- Stage 14 frozen config SHA-256:
+  `12dda7733c70c650ea33743e9165294f43a4f4f6aafac84af95bdf7864b0355e`
