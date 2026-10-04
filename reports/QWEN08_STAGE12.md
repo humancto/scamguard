@@ -1,4 +1,43 @@
-# Qwen3.5-0.8B Stage 12 preregistration
+# Qwen3.5-0.8B Stage 12 result
+
+## Result
+
+**Reject Stage 12 before the full regression. Keep Stage 7 as the current reference and stop the
+interpolation line of experiments.**
+
+Exact delta interpolation recovered Stage 7's 11/12 PPoNE scam recall and increased phone scam
+recall to 140/174. It did not recover the intended abstention behavior: PPoNE macro F1 improved by
+only 0.0062 instead of the required 0.03, and PPoNE UNCERTAIN recall stayed at 1/21 instead of 3/21.
+It also added three ordinary-phone SAFE alarms, reaching 29/152 versus Stage 7's 26/152. Five of
+eight gates passed; all three failures are binding.
+
+| Metric | Stage 7 | Stage 12 | Frozen requirement | Result |
+|---|---:|---:|---:|---|
+| Dev scam recall | 97.08% | 97.08% | at least 97% | pass |
+| Dev SAFE FPR | 0.25% | 0.25% | at most 2% | pass |
+| Dev macro F1 | 0.7856 | 0.7880 | no regression | pass |
+| Phone scam recall | 78.16% (136/174) | 80.46% (140/174) | no regression | pass |
+| Phone ordinary-SAFE FPR | 17.11% (26/152) | 19.08% (29/152) | no regression | **fail** |
+| PPoNE scam recall | 91.67% (11/12) | 91.67% (11/12) | no regression | pass |
+| PPoNE macro F1 | 0.2398 | 0.2460 | at least +0.03 | **fail** |
+| PPoNE UNCERTAIN recall | 4.76% (1/21) | 4.76% (1/21) | at least 3/21 | **fail** |
+
+- Materialized adapter SHA-256:
+  `d2647c4b34d956ac6017cc3c070c167f00b0f269a8ef4ee152f6ff5a0a1b3f7c`.
+- Adapter size: 86,640,085 bytes.
+- Interpolation manifest SHA-256:
+  `5e82c271813015888540e304f7dbf2163314e3642c4062144556d8afee1d2ecb`.
+- Development report SHA-256:
+  `62703faa30429d46be1020e09a5b34aeef38550682cc787e7ebcf3531c3559b2`.
+- Open selection report SHA-256:
+  `67b61bec86f3028b8b20e773defa9ee8d7db3dd278a2fc8b8a3fa15896653956`.
+- Promotion-gate report SHA-256:
+  `4edbd2b74754a366bea436b42b0ef6094b404b7aba04dc71159aa713aabd0710`.
+
+The exact-delta construction worked as designed; the quality hypothesis did not. Further weights
+would be direct tuning to repeatedly opened PPoNE and phone validation rows. The next experiment
+must use new rights-clear training evidence and a new independently held development slice, not
+another interpolation search.
 
 ## Decision boundary
 
