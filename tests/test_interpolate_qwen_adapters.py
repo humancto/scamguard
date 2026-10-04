@@ -9,6 +9,7 @@ import pytest
 import torch
 from safetensors.torch import load_file, save_file
 
+from scamguard.metrics import file_sha256
 from scripts.interpolate_qwen_adapters import interpolate
 
 
@@ -44,6 +45,53 @@ def test_interpolation_is_single_adapter_with_hash_bound_parents(tmp_path: Path)
     assert manifest["regression_splits_used_for_weight_selection"] == 0
     assert manifest["sealed_primary_test_v8_opened"] is False
     assert manifest["quantization_authorized"] is False
+
+
+def test_interpolation_records_prior_open_selection_context(tmp_path: Path) -> None:
+    left = adapter(tmp_path / "left", 2.0)
+    right = adapter(tmp_path / "right", 6.0)
+    config = tmp_path / "experiment.json"
+    config.write_text(
+        json.dumps(
+            {
+                "method": "linear_lora_weight_space_v1",
+                "right_weight": 0.5,
+                "left_weight": 0.5,
+                "checkpoint_output": str(tmp_path / "output"),
+                "parents": {
+                    side: {
+                        "path": str(path),
+                        "adapter_sha256": file_sha256(
+                            path / "adapter_model.safetensors"
+                        ),
+                        "config_sha256": file_sha256(path / "adapter_config.json"),
+                    }
+                    for side, path in (("left", left), ("right", right))
+                },
+                "selection": {
+                    "prior_open_validation_splits_used": ["open_a", "open_b"]
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    manifest = interpolate(
+        left,
+        right,
+        tmp_path / "output",
+        right_weight=0.5,
+        selection_split="dev_and_prior_open_validation",
+        regression_splits_used_for_weight_selection=2,
+        selection_note="Post-hoc mobile hypothesis; not fresh confirmation.",
+        experiment_config=config,
+    )
+
+    assert manifest["selection_split"] == "dev_and_prior_open_validation"
+    assert manifest["regression_splits_used_for_weight_selection"] == 2
+    assert manifest["selection_note"] == (
+        "Post-hoc mobile hypothesis; not fresh confirmation."
+    )
+    assert manifest["experiment_config"]["sha256"] == file_sha256(config)
 
 
 def test_interpolation_rejects_overwrite_weight_and_contract_drift(tmp_path: Path) -> None:

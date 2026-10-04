@@ -9,6 +9,7 @@
 .PHONY: qwen-08b-ppone-stage8-data qwen-08b-ppone-stage8-token-audit qwen-08b-ppone-stage8-freeze qwen-08b-ppone-stage8-preflight qwen-08b-ppone-stage8 qwen-08b-ppone-stage8-dev qwen-08b-ppone-stage8-selection qwen-08b-ppone-stage8-dev-gates qwen-08b-ppone-stage8-transition-audit qwen-08b-ppone-stage8-eval qwen-08b-ppone-stage8-gates
 .PHONY: qwen-08b-stage9-data qwen-08b-stage9-token-audit qwen-08b-stage9-freeze qwen-08b-stage9-preflight qwen-08b-stage9 qwen-08b-stage9-dev qwen-08b-stage9-selection qwen-08b-stage9-dev-gates qwen-08b-stage9-eval qwen-08b-stage9-gates
 .PHONY: government-evidence-contrasts qwen-08b-stage10-data qwen-08b-stage10-token-audit qwen-08b-stage10-freeze qwen-08b-stage10-preflight qwen-08b-stage10 qwen-08b-stage10-dev qwen-08b-stage10-selection qwen-08b-stage10-dev-gates qwen-08b-stage10-eval qwen-08b-stage10-gates
+.PHONY: qwen-08b-stage11-freeze qwen-08b-stage11-dev qwen-08b-stage11-selection qwen-08b-stage11-dev-gates qwen-08b-stage11-eval qwen-08b-stage11-gates
 .PHONY: mobile-benchmark-check mobile-ios-xcframework mobile-ios-simulator-smoke-build mobile-ios-simulator-smoke-run mobile-ios-simulator-smoke-verify mobile-android-jni mobile-android-smoke-apk mobile-android-physical-smoke-run mobile-android-physical-smoke-verify mobile-ios-package mobile-android-package
 .PHONY: phone-scam-synthetic-fetch phone-scam-synthetic phone-scam-label-audit schema25-full-call-curriculum encoder-schema25-cache encoder-schema25-preflight encoder-schema25-full-call-curriculum encoder-schema25-gates
 .PHONY: ppone-robocalls
@@ -121,6 +122,13 @@ QWEN08_STAGE10_EXPERIMENT_ID ?= sg-qwen35-08b-government-evidence-stage10-v1
 QWEN08_STAGE10_EPOCHS ?= 1
 QWEN08_STAGE10_LR ?= 0.000002
 QWEN08_STAGE10_SEED ?= 20261003
+QWEN08_STAGE11_CONFIG ?= configs/qwen35-08b-retention-interpolation-stage11.json
+QWEN08_STAGE11_OUTPUT ?= artifacts/checkpoints/qwen35-08b-retention-interpolation-stage11-lora
+QWEN08_STAGE11_DEV_REPORT ?= reports/runs/qwen35-08b-retention-interpolation-stage11-dev.json
+QWEN08_STAGE11_SELECTION_REPORT ?= reports/runs/qwen35-08b-retention-interpolation-stage11-selection.json
+QWEN08_STAGE11_DEV_GATE_REPORT ?= reports/runs/qwen35-08b-retention-interpolation-stage11-dev-gates.json
+QWEN08_STAGE11_REPORT ?= reports/runs/qwen35-08b-retention-interpolation-stage11-regression.json
+QWEN08_STAGE11_GATE_REPORT ?= reports/runs/qwen35-08b-retention-interpolation-stage11-regression-gates.json
 QWEN08_FULL_REPORT ?= reports/runs/qwen35-08b-schema24-full.json
 QWEN08_FULL_GATE_REPORT ?= reports/runs/qwen35-08b-schema24-full-gates.json
 QWEN08_FULL_EVAL_SPLITS ?= dev test ood_financial forum_validation ood_wspr ood_forum ood_azsc call_state_validation call_window_validation multidogo_call_validation multidogo_state_validation ftc_pattern_validation multidogo_annotation_dev multidogo_annotation_test ood_chichewa scam_dialogue_validation taskmaster_validation
@@ -1244,6 +1252,70 @@ qwen-08b-stage10-gates: qwen-08b-stage10-eval
 	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
 		--report "$(QWEN08_STAGE10_REPORT)" \
 		--output "$(QWEN08_STAGE10_GATE_REPORT)"
+
+qwen-08b-stage11-freeze:
+	@if [ ! -f "$(QWEN08_STAGE11_OUTPUT)/adapter_model.safetensors" ]; then \
+		$(PYTHON_BIN) scripts/interpolate_qwen_adapters.py \
+			--left "$(QWEN08_PHONE_OUTPUT)" --right "$(QWEN08_STAGE10_OUTPUT)" \
+			--right-weight 0.5 --output "$(QWEN08_STAGE11_OUTPUT)" \
+			--selection-split dev_and_prior_open_validation \
+			--regression-splits-used-for-weight-selection 2 \
+			--selection-note "Post-hoc mobile hypothesis; not fresh confirmation." \
+			--experiment-config "$(QWEN08_STAGE11_CONFIG)"; \
+	fi
+
+qwen-08b-stage11-dev: qwen-08b-stage11-freeze
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_STAGE11_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external --splits dev \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --development-screen-only \
+		--report "$(QWEN08_STAGE11_DEV_REPORT)"
+
+qwen-08b-stage11-selection: qwen-08b-stage11-dev
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_STAGE11_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external --splits dev ppone_validation phone_scam_validation \
+		--frozen-calibration-report "$(QWEN08_STAGE11_DEV_REPORT)" \
+		--cache-dir "$(QWEN08_STAGE11_DEV_REPORT:.json=.scores)" \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps --selection-screen-only \
+		--report "$(QWEN08_STAGE11_SELECTION_REPORT)"
+
+qwen-08b-stage11-dev-gates: qwen-08b-stage11-selection
+	$(PYTHON_BIN) scripts/check_qwen_stage9_promotion.py \
+		--candidate "$(QWEN08_STAGE11_SELECTION_REPORT)" \
+		--candidate-predictions "$(QWEN08_STAGE11_SELECTION_REPORT:.json=.predictions.jsonl)" \
+		--stage7-full "$(QWEN08_PHONE_REPORT)" \
+		--stage7-predictions "$(QWEN08_PHONE_REPORT:.json=.predictions.jsonl)" \
+		--stage7-ppone reports/runs/qwen35-08b-stage7-ppone-open.json \
+		--phone-audit reports/source-audits/phone-scam-label-quality.json \
+		--output "$(QWEN08_STAGE11_DEV_GATE_REPORT)"
+
+qwen-08b-stage11-eval: qwen-08b-stage11-dev-gates
+	$(PYTHON_BIN) training/eval_qwen.py \
+		--model Qwen/Qwen3.5-0.8B \
+		--revision 2fc06364715b967f1860aea9cf38778875588b17 \
+		--local-files-only --adapter "$(QWEN08_STAGE11_OUTPUT)" \
+		--data data/experiments/schema25-full-call-curriculum/processed \
+		--external-data data/external \
+		--splits $(QWEN08_FULL_EVAL_SPLITS) phone_scam_validation ppone_validation \
+		--frozen-calibration-report "$(QWEN08_STAGE11_DEV_REPORT)" \
+		--cache-dir "$(QWEN08_STAGE11_DEV_REPORT:.json=.scores)" \
+		--batch-size 1 --sequence-bucket-size 64 --scoring-mode branch_token \
+		--min-recall-for-threshold 0.97 --require-mps \
+		--report "$(QWEN08_STAGE11_REPORT)"
+
+qwen-08b-stage11-gates: qwen-08b-stage11-eval
+	$(PYTHON_BIN) scripts/check_qwen08_full_gates.py \
+		--report "$(QWEN08_STAGE11_REPORT)" \
+		--output "$(QWEN08_STAGE11_GATE_REPORT)"
 
 qwen-08b-call-robustness-merge: qwen-08b-call-robustness-gates
 	$(PYTHON_BIN) training/merge_qwen_adapter.py \

@@ -78,6 +78,8 @@ The caller-turn-aware publisher-label audit and exact Stage 7/Stage 8b transitio
 in [reports/PHONE_SOURCE_LABEL_QUALITY.md](reports/PHONE_SOURCE_LABEL_QUALITY.md).
 The rejected Stage 9 and Stage 10 receipts, exact promotion failures, and text-free transition
 audits are in [reports/QWEN08_STAGE9_STAGE10.md](reports/QWEN08_STAGE9_STAGE10.md).
+The frozen single-adapter Stage 11 retention-interpolation experiment is in
+[reports/QWEN08_STAGE11.md](reports/QWEN08_STAGE11.md).
 
 The complete 2B evaluation, confidence intervals, OOD failures, paired DeBERTa comparison, latency
 scope, and artifact hashes are in [reports/QWEN2B_REFERENCE.md](reports/QWEN2B_REFERENCE.md).
