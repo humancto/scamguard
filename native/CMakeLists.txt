@@ -15,9 +15,14 @@ set(LLAMA_BUILD_COMMON OFF CACHE BOOL "" FORCE)
 
 add_subdirectory("${LLAMA_CPP_DIR}" llama.cpp-build EXCLUDE_FROM_ALL)
 
-add_library(scamguard-gguf STATIC scamguard_gguf.cpp)
+add_library(scamguard-utf8proc STATIC vendor/utf8proc/utf8proc.c)
+target_include_directories(scamguard-utf8proc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/vendor/utf8proc")
+target_compile_definitions(scamguard-utf8proc PUBLIC UTF8PROC_STATIC)
+set_target_properties(scamguard-utf8proc PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+add_library(scamguard-gguf STATIC scamguard_gguf.cpp unicode_nfc.cpp)
 target_include_directories(scamguard-gguf PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(scamguard-gguf PUBLIC llama ggml)
+target_link_libraries(scamguard-gguf PUBLIC llama ggml PRIVATE scamguard-utf8proc)
 target_compile_features(scamguard-gguf PUBLIC cxx_std_17)
 set_target_properties(scamguard-gguf PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -44,6 +49,12 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(scamguard-unicode-nfc-test tests/unicode_nfc_test.cpp unicode_nfc.cpp)
+  target_include_directories(scamguard-unicode-nfc-test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+  target_link_libraries(scamguard-unicode-nfc-test PRIVATE scamguard-utf8proc)
+  target_compile_features(scamguard-unicode-nfc-test PRIVATE cxx_std_17)
+  add_test(NAME scamguard-unicode-nfc-test COMMAND scamguard-unicode-nfc-test)
+
   add_executable(scamguard-gguf-c-abi-smoke tests/c_api_smoke.c)
   target_link_libraries(scamguard-gguf-c-abi-smoke PRIVATE scamguard-gguf)
   add_test(NAME scamguard-gguf-c-abi-smoke COMMAND scamguard-gguf-c-abi-smoke)

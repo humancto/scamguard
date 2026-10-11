@@ -15,6 +15,8 @@ from scamguard.gguf_runtime import (
     PACK_MANIFEST_NAME,
     QWEN35_08B_PROCESSOR,
     QWEN35_08B_PROCESSOR_REVISION,
+    UTF8PROC_LICENSE_MEMBER,
+    UTF8PROC_LICENSE_SHA256,
     load_gguf_runtime_pack,
 )
 from scamguard.metrics import file_sha256
@@ -31,7 +33,7 @@ def fake_runner(path: Path) -> None:
             import sys
 
             prefix_tokens = 141 if "--prefix-hex" in sys.argv else 0
-            print(f"READY\t4\t563036064\t640\t{prefix_tokens}", flush=True)
+            print(f"READY\t5\t563036064\t640\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
@@ -62,7 +64,7 @@ def runtime_pack(tmp_path: Path) -> Path:
     calibration.write_text(
         json.dumps(
             {
-                "protocol_version": 4,
+                "protocol_version": 5,
                 "temperature": 1.0,
                 "scam_threshold": 0.8,
                 "safe_threshold": 0.6,
@@ -98,6 +100,7 @@ def runtime_pack(tmp_path: Path) -> Path:
 
 def test_pack_runs_through_persistent_scanner_and_one_call_helper(tmp_path: Path) -> None:
     pack = runtime_pack(tmp_path)
+    assert file_sha256(pack / UTF8PROC_LICENSE_MEMBER) == UTF8PROC_LICENSE_SHA256
 
     with Scanner(model_path=str(pack)) as scanner:
         first_process = scanner.backend.scorer.process_id  # type: ignore[attr-defined]
@@ -121,18 +124,48 @@ def test_pack_loader_rejects_tampered_model(tmp_path: Path) -> None:
         load_gguf_runtime_pack(pack)
 
 
-def test_pack_loader_rejects_protocol3_manifest(tmp_path: Path) -> None:
+@pytest.mark.parametrize("change", ["missing", "tampered", "rehashed", "unrecorded"])
+def test_pack_loader_requires_the_pinned_utf8proc_license(
+    tmp_path: Path, change: str
+) -> None:
+    pack = runtime_pack(tmp_path)
+    license_path = pack / UTF8PROC_LICENSE_MEMBER
+    manifest_path = pack / PACK_MANIFEST_NAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if change == "missing":
+        license_path.unlink()
+    elif change == "unrecorded":
+        del manifest["licenses"]
+    else:
+        license_path.write_text("different license", encoding="utf-8")
+        if change == "rehashed":
+            manifest["licenses"]["utf8proc"].update(
+                sha256=file_sha256(license_path), bytes=license_path.stat().st_size
+            )
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises((ValueError, FileNotFoundError), match="utf8proc license"):
+        load_gguf_runtime_pack(pack)
+
+
+@pytest.mark.parametrize("protocol", [None, 3, 4])
+def test_pack_loader_rejects_stale_protocol_manifest(
+    tmp_path: Path, protocol: int | None
+) -> None:
     pack = runtime_pack(tmp_path)
     manifest_path = pack / PACK_MANIFEST_NAME
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest["runtime"]["protocol_version"] = 3
+    if protocol is None:
+        del manifest["runtime"]["protocol_version"]
+    else:
+        manifest["runtime"]["protocol_version"] = protocol
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     with pytest.raises(ValueError, match="contract mismatch: protocol_version"):
         load_gguf_runtime_pack(pack)
 
 
-@pytest.mark.parametrize("protocol", [None, 3])
+@pytest.mark.parametrize("protocol", [None, 3, 4])
 def test_pack_rejects_stale_calibration_with_valid_file_hash(
     tmp_path: Path, protocol: int | None
 ) -> None:

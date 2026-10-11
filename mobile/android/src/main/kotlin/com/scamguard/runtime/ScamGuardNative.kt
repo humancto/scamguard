@@ -170,7 +170,7 @@ class ScamGuardNative(
     private external fun nativeDestroy(handle: Long)
 
     companion object {
-        const val PROTOCOL_VERSION = 4L
+        const val PROTOCOL_VERSION = 5L
         init {
             System.loadLibrary("scamguard-jni")
         }

@@ -13,9 +13,12 @@ from scamguard.gguf_runtime import (
     FROZEN_PROMPT_SUFFIX_SHA256,
     QWEN35_08B_PROCESSOR,
     QWEN35_08B_PROCESSOR_REVISION,
+    UTF8PROC_LICENSE_MEMBER,
+    UTF8PROC_LICENSE_SHA256,
 )
 from scamguard.prompts import SYSTEM_PROMPT
 from scripts.audit_protocol import AUDIT_PROTOCOL_VERSION, audit_protocol_sha256
+from scripts.build_gguf_runtime_pack import UTF8PROC_LICENSE_SOURCE
 from scripts.verify_huggingface_release import validate_release_manifest
 from scripts.verify_mobile_benchmark import (
     mobile_sample_id,
@@ -87,7 +90,7 @@ def physical_mobile_report(
                         ].read_bytes()
                     ).hexdigest(),
                     "offline": True,
-                    "protocol_version": 4,
+                    "protocol_version": 5,
                     "scoring_mode": "branch_token",
                     "scoring_version": "qwen-verdict-branch-token-v1",
                     "prefix_cache_enabled": True,
@@ -143,8 +146,8 @@ def physical_mobile_report(
 def valid_manifest(
     tmp_path: Path,
     *,
-    calibration_protocol: int | None = 4,
-    quantized_protocol: int | None = 4,
+    calibration_protocol: int | None = 5,
+    quantized_protocol: int | None = 5,
 ) -> dict[str, object]:
     artifacts = []
     artifact_paths: dict[str, Path] = {}
@@ -170,6 +173,9 @@ def valid_manifest(
         artifact_paths[role] = path
         artifacts.append(evidence(path, role, tmp_path))
     runtime_pack = tmp_path / "scamguard_gguf_pack.json"
+    utf8proc_license = tmp_path / UTF8PROC_LICENSE_MEMBER
+    utf8proc_license.parent.mkdir(parents=True)
+    utf8proc_license.write_bytes(UTF8PROC_LICENSE_SOURCE.read_bytes())
     runtime_pack.write_text(
         json.dumps(
             {
@@ -177,6 +183,13 @@ def valid_manifest(
                 "backend_type": "qwen_gguf_verdict_branch_token",
                 "purpose": "release_candidate",
                 "publication_authorized": False,
+                "licenses": {
+                    "utf8proc": {
+                        "path": UTF8PROC_LICENSE_MEMBER,
+                        "sha256": UTF8PROC_LICENSE_SHA256,
+                        "bytes": utf8proc_license.stat().st_size,
+                    }
+                },
                 "model": {
                     "path": artifact_paths["gguf_model"].name,
                     "sha256": hashlib.sha256(
@@ -212,7 +225,7 @@ def valid_manifest(
                     "processor_revision": QWEN35_08B_PROCESSOR_REVISION,
                 },
                 "runtime": {
-                    "protocol_version": 4,
+                    "protocol_version": 5,
                     "message_batch_size": 1,
                     "candidate_batch_size": 3,
                     "scoring_mode": "branch_token",
@@ -425,7 +438,7 @@ def valid_manifest(
                         "model_sha256": hashlib.sha256(
                             artifact_paths["gguf_model"].read_bytes()
                         ).hexdigest(),
-                        "protocol_version": 4,
+                        "protocol_version": 5,
                         "message_batch_size": 1,
                         "candidate_batch_size": 3,
                         "scoring_mode": "branch_token",
@@ -569,25 +582,35 @@ def test_complete_release_is_authorized(tmp_path: Path) -> None:
     assert validate_release_manifest(valid_manifest(tmp_path), tmp_path) == []
 
 
-@pytest.mark.parametrize("protocol", [None, 3])
+def test_release_requires_the_packaged_utf8proc_license(tmp_path: Path) -> None:
+    manifest = valid_manifest(tmp_path)
+    (tmp_path / UTF8PROC_LICENSE_MEMBER).unlink()
+
+    errors = validate_release_manifest(manifest, tmp_path)
+
+    assert len(errors) == 1
+    assert errors[0].startswith("runtime pack license: GGUF pack utf8proc license is missing")
+
+
+@pytest.mark.parametrize("protocol", [None, 3, 4])
 def test_release_rejects_hash_bound_stale_calibration(
     tmp_path: Path, protocol: int | None
 ) -> None:
     manifest = valid_manifest(tmp_path, calibration_protocol=protocol)
 
     assert validate_release_manifest(manifest, tmp_path) == [
-        "runtime_calibration protocol_version must equal 4"
+        "runtime_calibration protocol_version must equal 5"
     ]
 
 
-@pytest.mark.parametrize("protocol", [None, 3])
+@pytest.mark.parametrize("protocol", [None, 3, 4])
 def test_release_rejects_hash_bound_stale_quantized_quality(
     tmp_path: Path, protocol: int | None
 ) -> None:
     manifest = valid_manifest(tmp_path, quantized_protocol=protocol)
 
     assert validate_release_manifest(manifest, tmp_path) == [
-        "quantized_quality protocol_version must equal 4"
+        "quantized_quality protocol_version must equal 5"
     ]
 
 

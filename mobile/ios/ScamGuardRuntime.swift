@@ -74,7 +74,7 @@ public enum ScamGuardRuntimeError: Error, LocalizedError {
 }
 
 public final class ScamGuardRuntime: @unchecked Sendable {
-    public static let protocolVersion: UInt32 = 4
+    public static let protocolVersion: UInt32 = 5
     private let lock = NSLock()
     private let promptPrefix: String
     private var runtime: OpaquePointer?

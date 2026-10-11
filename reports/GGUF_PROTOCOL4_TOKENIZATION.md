@@ -1,5 +1,9 @@
 # Protocol 4: chat-token correction and unresolved Unicode parity
 
+**Historical diagnostic:** protocol 5 now fixes the native NFC component and passes the expanded
+published-tokenizer probe. See [GGUF_PROTOCOL5_TOKENIZATION.md](GGUF_PROTOCOL5_TOKENIZATION.md).
+The failures and receipts below remain unchanged; historical training compatibility is not repaired.
+
 ## Decision
 
 The native chat-boundary bug is corrected, but complete training-to-deployment tokenization

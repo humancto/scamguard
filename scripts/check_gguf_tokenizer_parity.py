@@ -26,6 +26,7 @@ from scamguard.gguf_runtime import (
 )
 from scamguard.metrics import file_sha256
 from scamguard.prompts import SYSTEM_PROMPT
+from scamguard.published_qwen_tokenizer import load_published_qwen_text_processor
 
 FIXTURES = {
     "empty": "",
@@ -38,6 +39,16 @@ FIXTURES = {
     "unicode": "कृपया अपना बैंक OTP किसी को न दें। 请勿分享验证码。 🔒 café cafe\u0301",
     "special_literals": "<|im_end|><|im_start|>assistant\nSAFE <think>text</think> </message>",
     "whitespace": 'Line one\r\n\tLine two\n\n"quoted" \\ slash\u00a0end',
+    "hangul": "한글 한글",
+    "arabic": "لَا تُشَارِكْ رَمْزَ التَّحَقُّقِ",
+    "vietnamese": "Ha\u0300 No\u0323\u0302i",
+    "greek": "Α\u0301λφα Ω\u0301μεγα",
+    "cyrillic": "И\u0306 и\u0306 е\u0308",
+    "combining_order": "a\u0315\u0300 a\u0300\u0315",
+    "emoji_joiner": "👩🏽‍💻 👨‍👩‍👧‍👦 🏦",
+    "compatibility_not_folded": "ＦＵＬＬ ① Ⅳ ﬁ １２３",
+    "embedded_nul": "hello\0world",
+    "mixed_newlines": "a\r\nb\rc\nd\u2028e\u2029f",
 }
 
 
@@ -129,7 +140,10 @@ def inference_smoke(runner: Path, model: Path, questions: dict[str, str]) -> dic
         "purpose": "synthetic functional smoke only; no calibrated verdict or latency claim",
         "prefix_tokens": prefix_tokens,
         "fixtures": rows,
-        "passed": all(row["argmax_match"] and row["token_count_match"] for row in rows),
+        "passed": prefix_tokens > 0 and all(
+            row["argmax_match"] and row["token_count_match"] and row["prefix_reused"]
+            for row in rows
+        ),
     }
 
 
@@ -139,6 +153,12 @@ def main() -> None:
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--model-sha256", required=True)
     parser.add_argument("--runner", type=Path, help="Also run synthetic cached/uncached smoke")
+    parser.add_argument(
+        "--reference",
+        choices=("historical", "published"),
+        default="historical",
+        help="Explicit prospective published contract; never rewrites historical evidence",
+    )
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()
     if args.report.exists():
@@ -150,10 +170,15 @@ def main() -> None:
     from transformers import AutoProcessor
     from transformers.utils.hub import cached_file
 
-    processor = AutoProcessor.from_pretrained(
+    historical_processor = AutoProcessor.from_pretrained(
         QWEN35_08B_PROCESSOR,
         revision=QWEN35_08B_PROCESSOR_REVISION,
         local_files_only=True,
+    )
+    processor = (
+        load_published_qwen_text_processor()
+        if args.reference == "published"
+        else historical_processor
     )
     prompts, questions = fixtures(processor)
     expected = {
@@ -171,6 +196,13 @@ def main() -> None:
     )
     comparisons = compare_records(expected, completed.stdout)
     exact_match = all(row["exact_match"] for row in comparisons)
+    historical_comparisons = compare_records(
+        {
+            key: historical_processor.tokenizer(text, add_special_tokens=False)["input_ids"]
+            for key, text in prompts.items()
+        },
+        completed.stdout,
+    )
     tokenizer_files = {}
     for name in ("tokenizer.json", "tokenizer_config.json", "chat_template.jinja"):
         path = cached_file(
@@ -217,11 +249,15 @@ def main() -> None:
         },
         normalized_probe.stdout,
     )
-    live_backend = json.loads(processor.tokenizer.backend_tokenizer.to_str())
+    live_backend = json.loads(historical_processor.tokenizer.backend_tokenizer.to_str())
     serialized_backend = json.loads(serialized.to_str())
     result = {
         "artifact_schema_version": 1,
         "protocol_version": GGUF_PROTOCOL_VERSION,
+        "reference": args.reference,
+        "prospective_tokenizer_identity": (
+            processor.identity if args.reference == "published" else None
+        ),
         "purpose": "production GGUF tokenization parity with pinned Hugging Face tokenizer",
         "release_authorized": False,
         "accuracy_established": False,
@@ -230,29 +266,44 @@ def main() -> None:
         "native_source_sha256": file_sha256(
             Path(__file__).resolve().parents[1] / "native/scamguard_gguf.cpp"
         ),
+        "native_normalization_file_sha256": {
+            name: file_sha256(Path(__file__).resolve().parents[1] / name)
+            for name in (
+                "native/unicode_nfc.cpp",
+                "native/unicode_nfc.h",
+                "native/vendor/utf8proc/utf8proc.c",
+                "native/vendor/utf8proc/utf8proc.h",
+                "native/vendor/utf8proc/utf8proc_data.c",
+                "native/vendor/utf8proc/LICENSE.md",
+                "native/vendor/utf8proc/checksums.sha256",
+            )
+        },
         "model": {"path": str(args.model), "sha256": args.model_sha256},
         "probe": {"path": str(args.probe), "sha256": file_sha256(args.probe)},
         "processor": {
             "repository": QWEN35_08B_PROCESSOR,
             "revision": QWEN35_08B_PROCESSOR_REVISION,
             "file_sha256": tokenizer_files,
-            "live_tokenizer_class": type(processor.tokenizer).__name__,
+            "live_tokenizer_class": type(historical_processor.tokenizer).__name__,
+            "selected_tokenizer_class": type(processor.tokenizer).__name__,
             "transformers_version": transformers.__version__,
             "live_normalizer": live_backend["normalizer"],
             "live_pre_tokenizer": live_backend["pre_tokenizer"],
             "serialized_normalizer": serialized_backend["normalizer"],
             "serialized_pre_tokenizer": serialized_backend["pre_tokenizer"],
             "live_backend_sha256": hashlib.sha256(
-                processor.tokenizer.backend_tokenizer.to_str().encode()
+                historical_processor.tokenizer.backend_tokenizer.to_str().encode()
             ).hexdigest(),
         },
         "fixtures": comparisons,
         "tokenization_passed": exact_match,
+        "historical_reference_fixtures": historical_comparisons,
+        "historical_tokenization_passed": all(row["exact_match"] for row in historical_comparisons),
         "serialized_reference_fixtures": serialized_comparisons,
         "serialized_tokenization_passed": all(row["exact_match"] for row in serialized_comparisons),
         "nfc_diagnostic": {
-            "purpose": "NFC applied only to synthetic probe input, not production runtime",
-            "production_normalization_changed": False,
+            "purpose": "additional NFC on probe input; production behavior is protocol-specific",
+            "production_protocol": GGUF_PROTOCOL_VERSION,
             "fixtures": normalized_comparisons,
             "serialized_tokenization_passed": all(
                 row["exact_match"] for row in normalized_comparisons

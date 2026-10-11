@@ -7,21 +7,24 @@ the selected adapter, and only then convert and quantize it. The
 [`ggml-org/Qwen3.5-0.8B-GGUF`](https://huggingface.co/ggml-org/Qwen3.5-0.8B-GGUF) repository is an
 Apache-2.0 deployment conversion of that base—not the object to fine-tune.
 
-The upstream Q4_0 control is now hash-verified at 563,036,064 bytes and benchmarked through native
-arm64 llama.cpp. Its exact verdict scorer misses both the strict 20 ms fast path and, narrowly, the
-formal 50 ms laptop boundary; this freezes Qwen as a routed specialist. Those control measurements
-do not establish trained ScamGuard accuracy, post-merge memory, or mobile performance. The release
+The upstream Q4_0 control is hash-verified at 563,036,064 bytes. Historical measurements through
+native arm64 llama.cpp missed both the strict 20 ms fast path and, narrowly, the formal 50 ms laptop
+boundary, which froze Qwen as a routed specialist. Those measurements predate the tokenizer
+corrections below and do not establish corrected-runtime latency, trained ScamGuard accuracy,
+post-merge memory, or mobile performance. The release
 will test `Q4_K_M` and `Q5_K_M` and publish the smallest quantization that retains the frozen
 model's decisions and gates. Fast-path, specialist, and routed end-to-end latency remain separate
 published measurements.
 
 ## Current evidence, not a release candidate
 
-**Native runtime update:** protocol 4 fixes rendered ChatML parsing; old protocol-3 calibration,
-packs, score caches, and receipts are incompatible. Model-backed checks still find Unicode
-tokenization differences against the historical HF training loader. See
-[`reports/GGUF_PROTOCOL4_TOKENIZATION.md`](../reports/GGUF_PROTOCOL4_TOKENIZATION.md).
-Neither this partial correction nor historical native latency measurements authorize publication.
+**Native runtime update:** protocol 5 adds NFC normalization to the rendered ChatML correction;
+old calibration, packs, score caches, and receipts are incompatible. The 81-case model-backed probe
+passes against the pinned published tokenizer, while the historical HF training loader still
+differs. The explicit prospective loader does not change historical training/evaluation inputs.
+See [`reports/GGUF_PROTOCOL5_TOKENIZATION.md`](../reports/GGUF_PROTOCOL5_TOKENIZATION.md).
+Neither this runtime correction nor historical native measurements authorize publication. Packages
+must also preserve the pinned utf8proc license; release verification checks its exact hash.
 
 **Current decision:** the Qwen continuation line closed at Stage 14. Stage 7 completed at 33/41
 regression gates; Stage 13 failed development and Stage 14 failed open selection. See

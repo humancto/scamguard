@@ -20,6 +20,7 @@ from scamguard.gguf_runtime import (
     PACK_MANIFEST_NAME,
     QWEN35_08B_PROCESSOR,
     QWEN35_08B_PROCESSOR_REVISION,
+    validate_gguf_pack_licenses,
 )
 from scamguard.metrics import file_sha256
 from scamguard.prompts import SYSTEM_PROMPT
@@ -666,6 +667,10 @@ def _validate_runtime_pack(artifact_paths: dict[str, Path], errors: list[str]) -
         errors.append("runtime pack must not self-authorize publication")
 
     root = manifest_path.parent.resolve()
+    try:
+        validate_gguf_pack_licenses(root, record)
+    except (ValueError, OSError) as error:
+        errors.append(f"runtime pack license: {error}")
     bindings = {
         "model": "gguf_model",
         "runner": "runtime_binary",

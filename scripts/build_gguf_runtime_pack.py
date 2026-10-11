@@ -22,11 +22,16 @@ from scamguard.gguf_runtime import (
     PACK_MANIFEST_NAME,
     QWEN35_08B_PROCESSOR,
     QWEN35_08B_PROCESSOR_REVISION,
+    UTF8PROC_LICENSE_MEMBER,
+    UTF8PROC_LICENSE_SHA256,
 )
 from scamguard.metrics import file_sha256
 from scamguard.prompts import SYSTEM_PROMPT
 
 PACK_SCHEMA_VERSION = 1
+UTF8PROC_LICENSE_SOURCE = (
+    Path(__file__).resolve().parents[1] / "native/vendor/utf8proc/LICENSE.md"
+)
 
 
 def prompt_fragments(processor: Any) -> tuple[str, str]:
@@ -172,9 +177,11 @@ def build_pack(
 ) -> dict[str, Any]:
     if output.exists():
         raise FileExistsError(f"refusing to overwrite GGUF runtime pack: {output}")
-    for path in (model, runner, calibration_source):
+    for path in (model, runner, calibration_source, UTF8PROC_LICENSE_SOURCE):
         if not path.is_file():
             raise FileNotFoundError(path)
+    if file_sha256(UTF8PROC_LICENSE_SOURCE) != UTF8PROC_LICENSE_SHA256:
+        raise ValueError("vendored utf8proc license differs from the pinned license")
     if model.suffix.casefold() != ".gguf":
         raise ValueError("runtime-pack model must use the .gguf extension")
     if not runner.stat().st_mode & 0o111:
@@ -198,8 +205,11 @@ def build_pack(
     model_output = output / model.name
     runner_output = output / "scamguard-gguf-verdict"
     calibration_output = output / "scamguard_calibration.json"
+    license_output = output / UTF8PROC_LICENSE_MEMBER
+    license_output.parent.mkdir(parents=True)
     shutil.copy2(model, model_output)
     shutil.copy2(runner, runner_output)
+    shutil.copy2(UTF8PROC_LICENSE_SOURCE, license_output)
     calibration_output.write_text(
         json.dumps(calibration, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -209,6 +219,13 @@ def build_pack(
         "backend_type": GGUF_BACKEND_TYPE,
         "purpose": purpose,
         "publication_authorized": False,
+        "licenses": {
+            "utf8proc": {
+                "path": UTF8PROC_LICENSE_MEMBER,
+                "sha256": file_sha256(license_output),
+                "bytes": license_output.stat().st_size,
+            }
+        },
         "model": {
             "path": model_output.name,
             "sha256": file_sha256(model_output),

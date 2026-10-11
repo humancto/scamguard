@@ -13,12 +13,12 @@ from scamguard.gguf_runtime import PersistentGGUFScorer, calibrated_probabilitie
 from training.eval_gguf_native import runtime_config_record
 
 
-@pytest.mark.parametrize("protocol", [None, 3, 4])
+@pytest.mark.parametrize("protocol", [None, 3, 4, 5])
 def test_prefix_benchmark_requires_current_calibration(protocol: int | None) -> None:
     calibration = {"model_sha256": "model", "runner_sha256": "runner"}
     if protocol is not None:
         calibration["protocol_version"] = protocol
-    if protocol == 4:
+    if protocol == 5:
         validate_calibration_identity(
             calibration, model_sha256="model", runner_sha256="runner"
         )
@@ -50,7 +50,7 @@ def test_persistent_scorer_validates_and_parses_native_protocol(tmp_path: Path) 
 
             prefix_enabled = "--prefix-hex" in sys.argv
             prefix_tokens = 7 if prefix_enabled else 0
-            print(f"READY\\t4\\t1234\\t640\\t{prefix_tokens}", flush=True)
+            print(f"READY\\t5\\t1234\\t640\\t{prefix_tokens}", flush=True)
             for line in sys.stdin:
                 line = line.rstrip("\\n")
                 if line == "QUIT":
@@ -102,12 +102,12 @@ def test_quantized_evidence_must_bind_model_ledger_calibration_and_runtime(
     model.write_bytes(b"model")
     predictions.write_text("{}\n", encoding="utf-8")
     calibration.write_text(
-        '{"protocol_version":4,"temperature":2.0,"scam_threshold":0.4,"safe_threshold":0.6}\n',
+        '{"protocol_version":5,"temperature":2.0,"scam_threshold":0.4,"safe_threshold":0.6}\n',
         encoding="utf-8",
     )
     digest = hashlib.sha256(model.read_bytes()).hexdigest()
     report = {
-        "protocol_version": 4,
+        "protocol_version": 5,
         "model": str(model),
         "model_sha256": digest,
         "temperature": 2.0,
@@ -159,10 +159,14 @@ def test_quantized_evidence_must_bind_model_ledger_calibration_and_runtime(
         )
 
 
-def test_persistent_scorer_rejects_protocol3_readiness(tmp_path: Path) -> None:
+@pytest.mark.parametrize("protocol", [3, 4])
+def test_persistent_scorer_rejects_stale_protocol_readiness(
+    tmp_path: Path, protocol: int
+) -> None:
     runner = tmp_path / "stale-runner"
     runner.write_text(
-        '#!/usr/bin/env python3\nprint("READY\\t3\\t1234\\t640\\t0", flush=True)\n',
+        '#!/usr/bin/env python3\n'
+        f'print("READY\\t{protocol}\\t1234\\t640\\t0", flush=True)\n',
         encoding="utf-8",
     )
     runner.chmod(0o755)

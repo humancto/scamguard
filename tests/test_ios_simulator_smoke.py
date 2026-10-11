@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from scripts.verify_ios_simulator_smoke import validate_simulator_result
 
 
@@ -22,7 +24,7 @@ def valid_result() -> dict[str, object]:
         "prefix_reused": True,
         "prefix_tokens": 141,
         "model_tensor_bytes": 552_074_496,
-        "protocol_version": 4,
+        "protocol_version": 5,
     }
 
 
@@ -32,7 +34,7 @@ def validate(result: dict[str, object]) -> list[str]:
         raw_scores=(-3.0, -2.0, -3.0),
         probabilities=(0.3, 0.4, 0.3),
         verdict="SAFE",
-        protocol_version=4,
+        protocol_version=5,
         model_tensor_bytes=552_074_496,
         prefix_tokens=141,
     )
@@ -40,6 +42,17 @@ def validate(result: dict[str, object]) -> list[str]:
 
 def test_matching_cpu_parity_diagnostic_passes() -> None:
     assert validate(valid_result()) == []
+
+
+@pytest.mark.parametrize("protocol", [None, 3, 4])
+def test_stale_protocol_result_is_rejected(protocol: int | None) -> None:
+    result = valid_result()
+    if protocol is None:
+        del result["protocol_version"]
+    else:
+        result["protocol_version"] = protocol
+
+    assert validate(result) == ["protocol_version must equal 5"]
 
 
 def test_physical_claim_or_probability_drift_is_rejected() -> None:
@@ -65,7 +78,7 @@ def test_timing_prefix_and_protocol_are_required() -> None:
 
     assert "native_elapsed_ms must be finite and positive" in errors
     assert "prefix_reused must equal True" in errors
-    assert "protocol_version must equal 4" in errors
+    assert "protocol_version must equal 5" in errors
 
 
 def test_unexpected_message_text_field_is_rejected() -> None:

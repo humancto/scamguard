@@ -23,8 +23,10 @@ LABELS = ("SAFE", "UNCERTAIN", "SCAM")
 PACK_MANIFEST_NAME = "scamguard_gguf_pack.json"
 GGUF_BACKEND_TYPE = "qwen_gguf_verdict_branch_token"
 GGUF_SCORING_VERSION = "qwen-verdict-branch-token-v1"
-# Protocol 4 parses rendered ChatML special tokens without adding implicit BOS/EOS.
-GGUF_PROTOCOL_VERSION = 4
+# Protocol 5 adds NFC normalization to the protocol-4 rendered ChatML tokenization.
+GGUF_PROTOCOL_VERSION = 5
+UTF8PROC_LICENSE_MEMBER = "licenses/utf8proc/LICENSE.md"
+UTF8PROC_LICENSE_SHA256 = "3b510150d34f248a221bb88e1d811238d6c6c18b51231822c42974c39bb07256"
 QWEN35_08B_PROCESSOR = "Qwen/Qwen3.5-0.8B"
 QWEN35_08B_PROCESSOR_REVISION = "2fc06364715b967f1860aea9cf38778875588b17"
 FROZEN_PROMPT_PREFIX = (
@@ -441,6 +443,19 @@ def _pack_member(root: Path, section: dict[str, Any], role: str) -> Path:
     return resolved
 
 
+def validate_gguf_pack_licenses(root: Path, record: dict[str, Any]) -> None:
+    licenses = record.get("licenses")
+    license_record = licenses.get("utf8proc") if isinstance(licenses, dict) else None
+    if not isinstance(license_record, dict):
+        raise ValueError("GGUF runtime pack lacks the utf8proc license record")
+    if (
+        license_record.get("path") != UTF8PROC_LICENSE_MEMBER
+        or license_record.get("sha256") != UTF8PROC_LICENSE_SHA256
+    ):
+        raise ValueError("GGUF runtime-pack utf8proc license identity is incompatible")
+    _pack_member(root, license_record, "utf8proc license")
+
+
 def load_gguf_runtime_pack(path: str | Path) -> QwenGGUFVerdictBackend:
     """Load a self-contained GGUF pack without a Transformers runtime dependency."""
 
@@ -500,6 +515,7 @@ def load_gguf_runtime_pack(path: str | Path) -> QwenGGUFVerdictBackend:
     for field, expected in expected_runtime.items():
         if runtime.get(field) != expected:
             raise ValueError(f"GGUF runtime-pack contract mismatch: {field}")
+    validate_gguf_pack_licenses(root, record)
     integer_runtime = {
         field: runtime.get(field)
         for field in (

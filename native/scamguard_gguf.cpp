@@ -1,4 +1,5 @@
 #include "scamguard_gguf.h"
+#include "unicode_nfc.h"
 
 #include "ggml-backend.h"
 #include "llama.h"
@@ -63,13 +64,18 @@ void clear_error(char * destination, size_t capacity) noexcept {
 
 namespace scamguard::detail {
 
-// Internal helper also linked by the model-backed vocabulary probe. Match the
-// HF path: text is already chat-rendered, so do not add BOS/EOS, and do recognize
-// its control tokens. Literal special tokens in message text follow that same
-// tokenizer behavior; this is tokenization parity, not an injection policy.
+// Internal helper also linked by the model-backed vocabulary probe. Follow the
+// published tokenizer's NFC normalization. Text is already chat-rendered, so do
+// not add BOS/EOS, and do recognize its control tokens. Literal special tokens
+// follow that same tokenizer behavior; this is not an injection policy.
 std::vector<llama_token> tokenize_rendered_chat(const llama_vocab * vocab, std::string_view text) {
     if (text.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
         throw std::runtime_error("input exceeds tokenizer length limit");
+    }
+    const std::string normalized = normalize_nfc(text);
+    text = normalized;
+    if (text.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+        throw std::runtime_error("normalized input exceeds tokenizer length limit");
     }
     const int32_t length = static_cast<int32_t>(text.size());
     const int32_t required = -llama_tokenize(vocab, text.data(), length, nullptr, 0, false, true);

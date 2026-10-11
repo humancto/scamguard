@@ -15,11 +15,12 @@ The closed Qwen line's uncertainty failure, all-alert versus binary precision, a
 macro-F1 ceiling are diagnosed in
 [reports/QWEN08_VERDICT_TRADEOFF.md](reports/QWEN08_VERDICT_TRADEOFF.md).
 
-**Runtime correction:** native protocol 4 fixes ChatML control-token parsing and rejects old
-protocol-3 calibration/packs. Real tokenizer checks still fail on Unicode because historical HF
-loader behavior and native normalization differ. Native timing/score entries below are historical
-controls, not evidence for a validated corrected deployment. See
-[reports/GGUF_PROTOCOL4_TOKENIZATION.md](reports/GGUF_PROTOCOL4_TOKENIZATION.md).
+**Runtime correction:** native protocol 5 adds NFC normalization to the ChatML fix. The expanded
+real-model probe now matches the pinned published tokenizer on **81/81 exact token sequences**;
+cached/uncached inference agrees on the top verdict and token count for all 20 synthetic messages.
+Historical HF training inputs remain different and unchanged. Old calibration/packs are rejected,
+and native timing/score entries below remain historical controls, not corrected deployment evidence.
+See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION.md).
 
 ## Current model ladder
 

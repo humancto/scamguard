@@ -4,11 +4,17 @@ ScamGuard's native scorer lives behind the versioned C ABI in
 `native/include/scamguard_gguf.h`. The desktop protocol runner, iOS wrapper, and Android JNI
 wrapper all call this same in-process implementation; they do not reimplement the scoring math.
 
-The current protocol is **4** (C ABI remains 1). Swift/Kotlin calibration constructors require an
+The current protocol is **5** (C ABI remains 1). Swift/Kotlin calibration constructors require an
 explicit `protocolVersion` taken from fresh calibration evidence, and runtime construction rejects
 old native libraries. Rebuild platform binaries together; do not relabel old calibration or smoke
-receipts. Current tokenizer parity still fails for Unicode; see
-[`reports/GGUF_PROTOCOL4_TOKENIZATION.md`](../reports/GGUF_PROTOCOL4_TOKENIZATION.md).
+receipts. The shared native path now applies NFC normalization and matches the published tokenizer
+on the 81-case desktop probe. This does not establish parity with historical training inputs or
+physical-device execution; see
+[`reports/GGUF_PROTOCOL5_TOKENIZATION.md`](../reports/GGUF_PROTOCOL5_TOKENIZATION.md).
+
+The pinned utf8proc dependency is statically linked. Desktop and mobile runtime packages must
+preserve `licenses/utf8proc/LICENSE.md`; builders record its hash and validators reject missing or
+changed license contents. The iOS combined archive includes its static library automatically.
 
 This source package is runtime plumbing, not mobile performance evidence. Release claims remain
 blocked until the frozen trained GGUF and calibration pass the physical-device protocol in

@@ -1,8 +1,10 @@
 # Qwen3.5-0.8B upstream Q4 runtime floor
 
-**Historical evidence notice:** protocol 4 corrected native ChatML token parsing after these runs.
+**Historical evidence notice:** protocols 4 and 5 corrected native ChatML parsing and NFC
+normalization after these runs. The published-tokenizer probe passes under protocol 5; see
+[GGUF_PROTOCOL5_TOKENIZATION.md](GGUF_PROTOCOL5_TOKENIZATION.md).
 The native measurements below do not establish corrected-runtime quality, parity, or latency.
-The new model-backed tokenizer audit still fails Unicode parity; see
+The historical training-loader mismatch remains; the earlier failure investigation is retained in
 [`GGUF_PROTOCOL4_TOKENIZATION.md`](GGUF_PROTOCOL4_TOKENIZATION.md). Original receipts are preserved.
 
 ## Decision

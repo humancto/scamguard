@@ -46,20 +46,28 @@ def test_native_score_cache_requires_exact_identity(tmp_path: Path) -> None:
     assert load_cache(tmp_path, "dev", identity() | {"model_sha256": "changed"}) is None
 
 
-def test_native_score_cache_rejects_protocol3_even_when_other_identity_matches(
-    tmp_path: Path,
+@pytest.mark.parametrize("protocol", [None, 3, 4])
+def test_native_score_cache_rejects_stale_protocol_even_when_other_identity_matches(
+    tmp_path: Path, protocol: int | None,
 ) -> None:
     current = identity()
-    stale = current | {"protocol_version": 3}
+    stale = current.copy()
+    if protocol is None:
+        del stale["protocol_version"]
+    else:
+        stale["protocol_version"] = protocol
     scores = np.asarray([[1.0, 2.0, 3.0], [3.0, 2.0, 1.0]])
     save_cache(tmp_path, "dev", stale, scores, [1.0, 2.0])
 
-    assert current["protocol_version"] == 4
+    assert current["protocol_version"] == 5
     assert load_cache(tmp_path, "dev", current) is None
     assert load_cache(tmp_path, "dev", stale) is None
 
 
-def test_native_calibration_is_bound_to_quantized_artifacts(tmp_path: Path) -> None:
+@pytest.mark.parametrize("stale_protocol", [None, 3, 4])
+def test_native_calibration_is_bound_to_quantized_artifacts(
+    tmp_path: Path, stale_protocol: int | None
+) -> None:
     path = tmp_path / "report.json"
     path.write_text(
         json.dumps(
@@ -68,7 +76,7 @@ def test_native_calibration_is_bound_to_quantized_artifacts(tmp_path: Path) -> N
                     "backend_type": "qwen_gguf_verdict_branch_token",
                     "model_sha256": "model",
                     "runner_sha256": "runner",
-                    "protocol_version": 4,
+                    "protocol_version": 5,
                     "scoring_mode": "branch_token",
                     "scoring_version": GGUF_SCORING_VERSION,
                     "dev_data_sha256": "dev",
@@ -94,7 +102,10 @@ def test_native_calibration_is_bound_to_quantized_artifacts(tmp_path: Path) -> N
 
     assert record["temperature"] == 1.0
     stale = json.loads(path.read_text(encoding="utf-8"))
-    stale["calibration"]["protocol_version"] = 3
+    if stale_protocol is None:
+        del stale["calibration"]["protocol_version"]
+    else:
+        stale["calibration"]["protocol_version"] = stale_protocol
     path.write_text(json.dumps(stale), encoding="utf-8")
     with pytest.raises(ValueError, match="differs"):
         calibration_from_report(
@@ -105,7 +116,7 @@ def test_native_calibration_is_bound_to_quantized_artifacts(tmp_path: Path) -> N
             max_fpr=0.02,
             min_recall=0.97,
         )
-    stale["calibration"]["protocol_version"] = 4
+    stale["calibration"]["protocol_version"] = 5
     path.write_text(json.dumps(stale), encoding="utf-8")
     with pytest.raises(ValueError, match="differs"):
         calibration_from_report(
@@ -169,7 +180,7 @@ def test_final_declaration_binds_every_sealed_input(tmp_path: Path) -> None:
         "product_contract_report_sha256": file_sha256(product_contract),
         "product_contract_gate_report": str(product_gates),
         "product_contract_gate_report_sha256": file_sha256(product_gates),
-        "protocol_version": 4,
+        "protocol_version": 5,
         "scoring_version": GGUF_SCORING_VERSION,
     }
     declaration.write_text(json.dumps(record), encoding="utf-8")

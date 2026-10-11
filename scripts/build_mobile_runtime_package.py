@@ -11,12 +11,19 @@ import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
 
-from scamguard.gguf_runtime import GGUF_PROTOCOL_VERSION
+from scamguard.gguf_runtime import (
+    GGUF_PROTOCOL_VERSION,
+    UTF8PROC_LICENSE_MEMBER,
+    UTF8PROC_LICENSE_SHA256,
+)
 from scamguard.metrics import file_sha256
 
 PACKAGE_SCHEMA_VERSION = 1
 ZIP_TIMESTAMP = (2020, 1, 1, 0, 0, 0)
 PINNED_LLAMA_CPP_REVISION = "521a64cd01979bb5b1a466152c576a9d809b068d"
+UTF8PROC_LICENSE_SOURCE = (
+    Path(__file__).resolve().parents[1] / "native/vendor/utf8proc/LICENSE.md"
+)
 
 
 def verify_mobile_package(
@@ -85,6 +92,13 @@ def verify_mobile_package(
             recorded_names.add(name)
         if set(members) != recorded_names | {manifest_name}:
             raise ValueError("mobile runtime package contains an unrecorded member")
+        if UTF8PROC_LICENSE_MEMBER not in recorded_names:
+            raise ValueError("mobile runtime package lacks the utf8proc license")
+        if (
+            hashlib.sha256(archive.read(UTF8PROC_LICENSE_MEMBER)).hexdigest()
+            != UTF8PROC_LICENSE_SHA256
+        ):
+            raise ValueError("mobile runtime package utf8proc license is incompatible")
         if platform == "android":
             required_names = {
                 "runtime/jni/arm64-v8a/libscamguard-jni.so",
@@ -184,11 +198,16 @@ def build_mobile_package(
         raise ValueError("mobile runtime differs from the pinned llama.cpp revision")
     if not license_path.is_file():
         raise FileNotFoundError(license_path)
+    if not UTF8PROC_LICENSE_SOURCE.is_file():
+        raise FileNotFoundError(UTF8PROC_LICENSE_SOURCE)
+    if file_sha256(UTF8PROC_LICENSE_SOURCE) != UTF8PROC_LICENSE_SHA256:
+        raise ValueError("vendored utf8proc license differs from the pinned license")
     if not all((scamguard_revision, toolchain_name, toolchain_version, minimum_os_version)):
         raise ValueError("runtime package provenance fields must be non-empty")
 
     inputs = _runtime_files(platform, runtime, wrapper)
     inputs.append((license_path, "LICENSE", 0o644))
+    inputs.append((UTF8PROC_LICENSE_SOURCE, UTF8PROC_LICENSE_MEMBER, 0o644))
     records = [
         {
             "path": archive_path,
