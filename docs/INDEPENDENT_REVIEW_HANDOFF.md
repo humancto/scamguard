@@ -6,9 +6,11 @@ schema-25 train/dev corpus. All 635 decisions are blank; no independent human re
 
 ## Owner action
 
-Choose one independent human reviewer, send only the ZIP below and the forwardable note, and
-agree a return date. Do not send the repository, this document's owner-only sections, model
-outputs, source metadata, or canonical label workbook.
+Choose an independent English-speaking primary reviewer/coordinator, arrange qualified human
+language help as described below, and send only the ZIP and forwardable note. Agree a return
+date after the language triage. Do not send the repository, this document's owner-only sections,
+model outputs, source metadata, or canonical label workbook. There is still only one frozen
+635-row packet and one final returned review CSV; do not ask anyone to review the old packet.
 
 - [Blind-review ZIP](../data/audit/ettin150m-v1/scamguard-ettin150m-v1-blind-audit.zip), 113,760 bytes.
 - Absolute path: `/Users/archithrapaka/Documents/Codex/2026-08-20/work/outputs/scamguard/data/audit/ettin150m-v1/scamguard-ettin150m-v1-blind-audit.zip`.
@@ -16,16 +18,45 @@ outputs, source metadata, or canonical label workbook.
 - Four files: `README.txt`, `review.py`, `scamguard_blind_audit.csv`,
   `scamguard_blind_audit.manifest.json`. No answer key is included.
 
-The reviewer must not have authored/corrected these project labels or seen their answer key or
-model predictions. Choose someone fluent in the displayed language and comfortable assessing
-ordinary financial/service messages and scam evidence. They must make their own decisions from
-the frozen rubric. AI-generated decisions do not count as independent human review.
+Every reviewer/helper must not have authored/corrected these project labels or seen their answer
+key or model predictions. Reviewers must understand the language of their assigned rows and be
+comfortable assessing ordinary financial/service messages and scam evidence. They must make
+their own decisions from the frozen rubric. AI-generated decisions do not count as independent
+human review; adding language help does not authorize AI-supplied labels or rationales.
 
-Plan **8–14 person-hours**, commonly over two days, plus any later adjudication. This is an
+### Language staffing — owner only
+
+An ID-exact join of the 635 selected rows to the pinned train/dev files finds **400 marked English,
+27 explicitly non-English, and 208 without language metadata**. The 27 rows span 19 languages:
+
+- Portuguese: 4; Spanish: 3; Italian: 3; Indonesian: 2.
+- One each: French, Dutch, Czech, German, Romanian, Bulgarian, Estonian, Hindi, Russian, Swedish,
+  Albanian, Japanese, Arabic, Danish and Greek.
+
+These are source metadata, not a certified language audit. Missing metadata does **not** establish
+that the other 208 rows are English; mixed-language or incorrectly tagged rows may need additional
+help. Six rows visibly contain non-Latin scripts, corroborating that an English-only reviewer
+cannot safely treat the entire packet as English.
+
+The coordinator should triage the text, review rows they can understand, and arrange proficient
+independent human reviewers or human translation assistance for the others. Keep the source text
+and IDs unchanged. Record the actual final decision-maker, language and any helper/translation
+assistance for each row outside the review CSV. If the language cannot be understood confidently,
+leave the decision unresolved until qualified help is available: **do not guess UNCERTAIN merely
+because the reviewer cannot read it**. UNCERTAIN concerns insufficient scam evidence, not the
+reviewer's language proficiency. Do not claim the review is complete while rows remain unresolved.
+
+Plan **8–14 person-hours for the base reading/decision work**, plus language coordination,
+human translation assistance where needed and any later adjudication. This is an
 estimate, not a deadline guarantee: the sample contains about 58,000 words (median 65 per row;
 51 rows exceed 250 words). Reading at 200 words/minute alone takes 4.8 hours; decisions, difficult
-dialogues, setup and breaks add time. Refine the estimate after the first 25 rows. The existing
-importer accepts one complete review; use another independent person for disputed cases as needed.
+dialogues, setup and breaks add time. Refine the estimate after the first 25 rows; do not promise a
+two-day calendar turnaround without confirmed language coverage. The importer accepts one complete
+CSV, not competing partial returns; the coordinator consolidates qualified decisions and preserves
+their attribution. Use another independent person for disputed cases as needed.
+
+Minimal owner checklist: appoint the coordinator and language helpers; send this ZIP plus the note;
+collect the completed CSV, truthful reviewer declarations and row-assignment record below.
 
 ## Forward this note with the ZIP
 
@@ -44,6 +75,11 @@ importer accepts one complete review; use another independent person for dispute
 > insufficient fraud evidence belongs in UNCERTAIN. Do not consult project labels, source
 > metadata or model predictions, and do not use an AI assistant to supply review decisions.
 >
+> The packet includes multiple languages. Only decide rows you can understand confidently. If
+> you cannot read a row, leave it unresolved and ask the coordinator for qualified independent
+> human language help; do not guess UNCERTAIN. Human translation assistance must be disclosed,
+> and the final decision must be made by the attributed human reviewer using the frozen rubric.
+>
 > Preserve IDs, text, columns, row count and the manifest. Only `auditor_label`,
 > `contains_sensitive_data` and `notes` are review fields; the UI preserves their format.
 >
@@ -51,11 +87,18 @@ importer accepts one complete review; use another independent person for dispute
 > `valid: true`, `rows: 635`, `complete_rows: 635`, `remaining_rows: 0`. A valid file can still
 > be incomplete.
 >
-> Return the completed `scamguard_blind_audit.csv`. In a separate plain-text note, provide:
-> reviewer name or agreed identifier; review dates; languages assessed; any assistance used;
-> and a truthful confirmation that you made these decisions personally, did not create/correct
-> the original project labels and did not consult the answer key or model predictions.
-> Mention any exception to that confirmation. Do not add this declaration as CSV columns.
+> Return one completed `scamguard_blind_audit.csv`. Separately return `reviewer-attestation.txt`
+> with each reviewer's/helper's name or agreed identifier, role, review dates, languages assessed,
+> assistance used and truthful independence declaration. Each final reviewer confirms they
+> personally made the decisions attributed to them, did not create/correct the original labels
+> and did not consult the answer key or model predictions; disclose any exception. Helpers
+> identify the assistance they actually provided rather than claiming decisions they did not make.
+>
+> Also return `reviewer-assignments.tsv`: one row per opaque message ID, with columns `id`,
+> `final_reviewer_id`, `language_assessed`, `helper_ids`, `assistance_used`. Use tabs between
+> columns; leave `helper_ids` empty and write `none` for assistance when none was used. This is
+> a separate attribution record, not new columns in the review CSV. The coordinator should
+> consolidate decisions without replacing someone's judgment to improve agreement.
 >
 > Please report your actual judgments, including disagreements and sensitive-data findings.
 > Agreement with an unseen project answer is not your objective.
@@ -69,10 +112,18 @@ id,text,auditor_label,contains_sensitive_data,notes
 ```
 
 Each row requires `SAFE`, `UNCERTAIN` or `SCAM`, and a sensitivity decision of `yes` or `no`.
-Notes are optional, maximum 2,000 characters. Preserve the separate identity/independence note
-unchanged as `data/audit/ettin150m-v1/returned/reviewer-attestation.txt`; do not fill it for the
-reviewer. The importer does not identify people or verify independence, so successful import
-alone is insufficient to assert an independent human review.
+Notes are optional, maximum 2,000 characters. Preserve the original returned files together:
+
+- `data/audit/ettin150m-v1/returned/scamguard_blind_audit.csv`
+- `data/audit/ettin150m-v1/returned/reviewer-attestation.txt`
+- `data/audit/ettin150m-v1/returned/reviewer-assignments.tsv`
+
+Do not invent the declarations or attribution for the reviewers. The TSV maps every opaque ID to
+the actual final reviewer and assessed language, including English rows; helper identities refer
+to the separate declarations. Check that each of the 635 IDs occurs exactly once and that named
+people supplied their own truthful declarations. The importer does not identify people, validate
+this TSV or verify language proficiency/independence. These are owner checks, so successful CSV
+import alone is insufficient to assert an independent human review.
 
 Save the original returned CSV unchanged at
 `data/audit/ettin150m-v1/returned/scamguard_blind_audit.csv`. From the repository root, run these

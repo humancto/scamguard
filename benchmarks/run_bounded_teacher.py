@@ -296,6 +296,13 @@ def classify(client: LocalServer, text: str) -> tuple[str, dict]:
             "response_format",
         )
     }
+    # The pinned server's parser requires the OAI envelope, unlike the sibling
+    # `schema` example in its README. Preserve the frozen semantic schema while
+    # adapting only its wire location; an empty schema would weaken the grammar.
+    payload["response_format"] = {
+        "type": "json_schema",
+        "json_schema": {"schema": PROTOCOL["response_format"]["schema"]},
+    }
     payload.update({"messages": messages(text), "stream": False})
     rendered = client.request("/apply-template", payload).get("prompt")
     if not isinstance(rendered, str) or not rendered:
@@ -356,6 +363,15 @@ def run(manifest_path: Path, output: Path, server_url: str, started_at: float) -
         "completed_examples": 0,
         "eligibility_authorization": False,
         "diagnostic_only": True,
+        "api_envelope_adaptation": {
+            "wire_schema_location": "response_format.json_schema.schema",
+            "frozen_schema_location": "protocol.response_format.schema",
+            "semantic_schema_unchanged": True,
+            "reason": (
+                "Pinned llama.cpp server-common.cpp parses the nested OAI envelope; "
+                "the frozen semantic schema is transmitted unchanged at that location."
+            ),
+        },
     }
     write_new(output, result)
     records = []

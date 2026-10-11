@@ -200,8 +200,29 @@ def test_completed_run_has_all_rows_bound_and_frozen_generation(
         payload["max_tokens"] == 24 and payload["temperature"] == 0 for payload in generations
     )
     assert all(payload["reasoning_effort"] == "none" for payload in generations)
+    assert result["api_envelope_adaptation"]["semantic_schema_unchanged"] is True
     with pytest.raises(FileExistsError):
         teacher.run(frozen[0], output, "http://127.0.0.1:8097", time.time())
+
+
+def test_exact_server_wire_schema_preserves_frozen_semantic_protocol(frozen) -> None:
+    protocol_before = teacher.digest(teacher.PROTOCOL)
+    mock = MockServer(frozen[1])
+    teacher.classify(mock, "Synthetic public fixture")
+    wire_calls = [
+        payload
+        for endpoint, payload in mock.requests
+        if endpoint in {"/apply-template", "/v1/chat/completions"}
+    ]
+    assert len(wire_calls) == 2
+    for payload in wire_calls:
+        assert payload["response_format"] == {
+            "type": "json_schema",
+            "json_schema": {"schema": teacher.SCHEMA},
+        }
+        assert "schema" not in payload["response_format"]
+    assert teacher.digest(teacher.PROTOCOL) == protocol_before
+    assert frozen[1]["protocol_sha256"] == protocol_before
 
 
 def test_partial_failure_is_terminal_not_resampled(frozen, tmp_path, monkeypatch) -> None:
