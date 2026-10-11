@@ -1,0 +1,24 @@
+{
+  "status": "complete",
+  "manifest_sha256": "6f35983ddaa6c26821769fc94d757905038fc42d91699de7eac8061ae1ad82fc",
+  "manifest_file_sha256": "9f1a3b4e21d7eb5a8b03ef9bdb9f2fda25a5e34b3d36fdab4836602f15f170e6",
+  "started_at_unix": 1791690461.2966452,
+  "complete": true,
+  "expected_examples": 300,
+  "completed_examples": 300,
+  "eligibility_authorization": false,
+  "diagnostic_only": true,
+  "api_envelope_adaptation": {
+    "wire_schema_location": "response_format.json_schema.schema",
+    "frozen_schema_location": "protocol.response_format.schema",
+    "semantic_schema_unchanged": true,
+    "reason": "Pinned llama.cpp server-common.cpp parses the nested OAI envelope; the frozen semantic schema is transmitted unchanged at that location."
+  },
+  "elapsed_seconds": 550.1779358386993,
+  "prediction_ledger": {
+    "path": "/Users/archithrapaka/Documents/Codex/2026-08-20/work/outputs/scamguard/reports/runs/qwen38-27b-open300-20261010.teacher.predictions.jsonl",
+    "sha256": "72ec8cd46e0b0059678da6e778a32c509e8c77ed28c4ebec6bfe0cd15d1b70df",
+    "examples": 300,
+    "contains_message_text": false
+  }
+}

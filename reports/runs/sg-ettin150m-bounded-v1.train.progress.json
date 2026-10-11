@@ -1,0 +1,9 @@
+{
+  "phase": "completed",
+  "global_step": 3056,
+  "effective_max_steps": 3056,
+  "max_wall_seconds": 3600,
+  "wall_seconds": 1291.2703064579982,
+  "stop_reason": "step_bound_reached",
+  "release_authorized": false
+}

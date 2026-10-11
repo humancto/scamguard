@@ -8,6 +8,15 @@ textual evidence it actually found, and recommends a reversible next action.
 The experiment is quality-first. Model size is minimized only after candidates clear the same
 contamination-controlled benchmark.
 
+**Latest bounded experiment (2026-10-10):** a fresh Ettin-150M fit completed once, followed by all
+21 declared open benchmark slices. Full-scanner desktop p95 is **13.72 ms**, but only **14/18**
+promotion checks pass: development recall and dialogue false-positive rates fail. No further fit,
+export, sealed test or HF upload is authorized for this candidate. See the
+[complete experiment record](reports/ETTIN150M_BOUNDED_V1.md) and the
+[current independent-review handoff](docs/INDEPENDENT_REVIEW_HANDOFF.md).
+On the preselected 300-row open comparison, Ettin's macro F1 was 0.837 versus 0.652 for the fixed
+zero-shot Qwen3.8-27B Q4 baseline; this limited result does not establish SOTA or override rejection.
+
 The requirement-by-requirement status, including the still-unproven SOTA, physical-mobile,
 independent-audit, and Hugging Face gates, is tracked in
 [docs/PRD_TRACEABILITY.md](docs/PRD_TRACEABILITY.md).
@@ -26,6 +35,7 @@ See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION
 
 | Track | Role | Approximate mobile package | Decision |
 |---|---|---:|---|
+| Ettin encoder, 150M (fresh schema v25 fit) | rejected single bounded experiment | 602.0 MB complete FP32 checkpoint; not a mobile package | 13.72 ms full-SDK desktop p95; 99.83% open regression recall / 0.34% FPR, but 93.19% dev recall and 39.22% scam-dialogue FPR; 14/18 promotion checks |
 | TF-IDF logistic regression | cheap reproducible floor | 2.7 MB measured | 1.16 ms p95; 58.1% test recall, gate failed |
 | ModernBERT-base, 149M (schema v6) | historical calibrated classifier | 574 MiB FP32 artifact | 92.67% test recall / 5.10% FPR; 19.06 ms MPS-forward p95 |
 | ModernBERT-base, 149M (schema v9) | fast-router candidate | 574 MiB FP32 artifact | 99.83% regression recall / 6.30% FPR; 16.67 ms MPS-forward p95; sole-detector gates failed |
@@ -58,10 +68,10 @@ See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION
 | Qwen3.5-4B, Q4/Q5/Q6 GGUF | deployable escalation candidates | 2.71/3.07/3.46 GB measured | Q4 and Q5 rejected after regression loss; Q6 is frozen on dev only |
 | Qwen3.5-9B, 4-bit | desktop teacher/upper bound | roughly 6 GB; measure after export | distillation source if needed |
 
-The final release can be a hybrid: the encoder supplies calibrated risk and the Qwen specialist is
-invoked only for uncertain cases. A smaller artifact wins only if it meets the exact same gates.
-The 4B candidate is mandatory when 2B fails a gate; the 9B model is a desktop teacher, not the
-default product payload.
+Earlier research considered a hybrid in which an encoder supplies calibrated risk and a Qwen
+specialist handles uncertain cases. Those historical routes did not establish a release winner.
+The old 2B/4B/9B ladder is not authorization for automatic new training runs. The latest single-fit
+Ettin experiment also stops at its frozen rejection decision.
 
 The 0.8B train/merge/quantize path and fail-closed Hugging Face publication contract are in
 [docs/HUGGING_FACE_RELEASE.md](docs/HUGGING_FACE_RELEASE.md). Training uses the official

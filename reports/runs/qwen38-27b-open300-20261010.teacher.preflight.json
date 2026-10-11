@@ -1,0 +1,19 @@
+{
+  "manifest_sha256": "6f35983ddaa6c26821769fc94d757905038fc42d91699de7eac8061ae1ad82fc",
+  "smoke": [
+    {
+      "prompt_tokens": 121,
+      "rendered_prompt_sha256": "14b684975261dd738cc5d05bb895bb3d9c17bd0287f807e96d33accc5f7afb00"
+    },
+    {
+      "prompt_tokens": 123,
+      "rendered_prompt_sha256": "314d92d35ec7cdd04bda503c77a7ba0755d87f9ff2772338521b7a3c49c90877"
+    },
+    {
+      "prompt_tokens": 130,
+      "rendered_prompt_sha256": "93e284237b1e8c245a7a7baba202b394129dc5214866ff47fde097e4011f1e9b"
+    }
+  ],
+  "server_build_info": "b10542-521a64cd0",
+  "definition": "format/context smoke only; no accuracy or HF-tokenizer parity claim"
+}
