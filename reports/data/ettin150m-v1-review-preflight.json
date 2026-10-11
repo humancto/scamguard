@@ -1,0 +1,31 @@
+{
+  "artifact_schema_version": 1,
+  "bindings": {
+    "audit_protocol_sha256": "d9dcc931447ce5229ca5e07398b20944759dfe0f0224369c14c2729be10cbb59",
+    "blind_inputs_sha256": "d5b1dde528f149e448643abce5d0f95ea81a1ec652ec6a8789cb4a4d5430a8db",
+    "bundle_bytes": 113760,
+    "bundle_path": "data/audit/ettin150m-v1/scamguard-ettin150m-v1-blind-audit.zip",
+    "bundle_sha256": "4f11ee5e63536785ee6a6f56c1bc7345e3de7d26315380853b11ce2334356ea5",
+    "canonical_audit_manifest_sha256": "db6aad6806107e306ce5709be59c32fa6380644bbba98cfd18e395e28b98aca7",
+    "review_app_sha256": "e99a6603be4c576783a3500e894e961d3f1a6198c15949ba5c3d18ebc7495276",
+    "review_csv_template_sha256": "5ce72f5d53f8814c4bc804c45894a6b0a435c2c00a1875ffe1ced59cf9e6ef7b",
+    "verifier_sha256": "a2c90f16f47ff0ccb1adbc577a57be35cbc1f2db473d6e354dc68b54fd8bdd19"
+  },
+  "contains_answer_key": false,
+  "contains_message_text": false,
+  "initial_complete_rows": 0,
+  "initial_remaining_rows": 635,
+  "isolated_python_check_passed": true,
+  "measurement_kind": "blind_audit_production_handoff_preflight",
+  "passed": true,
+  "rows": 635,
+  "save_resume_smoke_passed": true,
+  "server": {
+    "disposable_save_passed": true,
+    "ephemeral_port": true,
+    "loopback_host": "127.0.0.1",
+    "state_schema_passed": true,
+    "write_token_required": true
+  },
+  "source_bundle_untouched": true
+}

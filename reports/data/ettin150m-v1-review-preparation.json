@@ -1,0 +1,523 @@
+{
+  "artifact_type": "prospective_independent_review_preparation",
+  "artifact_schema_version": 1,
+  "experiment_id": "sg-ettin150m-bounded-v1",
+  "sampling_frame": "schema25 train+dev only; no evaluation labels or predictions",
+  "seed": "sg-ettin150m-bounded-v1-review-v1",
+  "label_targets": {
+    "SAFE": 212,
+    "SCAM": 212,
+    "UNCERTAIN": 211
+  },
+  "minimum_per_source_domain_label_split": 6,
+  "minimum_per_phone_label": 24,
+  "selection_method": "SHA256(seed:id) rank; stratum anchors; phone anchors; label round-robin",
+  "interpretation": "enriched supervision audit; not population-weighted accuracy evidence",
+  "frame_rows": 27070,
+  "frame_sources": 14,
+  "selected_sources": 14,
+  "selected_labels": {
+    "SAFE": 212,
+    "SCAM": 212,
+    "UNCERTAIN": 211
+  },
+  "selected_splits": {
+    "dev": 77,
+    "train": 558
+  },
+  "strata": [
+    {
+      "source": "imc25_public_forum_smishing",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 148,
+      "selected": 7
+    },
+    {
+      "source": "imc25_public_forum_smishing",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 1000,
+      "selected": 13
+    },
+    {
+      "source": "imc25_public_forum_smishing",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 100,
+      "selected": 16
+    },
+    {
+      "source": "mendeley_sms_phishing",
+      "domain": "",
+      "label": "SAFE",
+      "split": "dev",
+      "available": 484,
+      "selected": 7
+    },
+    {
+      "source": "mendeley_sms_phishing",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 3857,
+      "selected": 7
+    },
+    {
+      "source": "mendeley_sms_phishing",
+      "domain": "",
+      "label": "SCAM",
+      "split": "dev",
+      "available": 10,
+      "selected": 10
+    },
+    {
+      "source": "mendeley_sms_phishing",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 147,
+      "selected": 13
+    },
+    {
+      "source": "mendeley_sms_phishing",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "dev",
+      "available": 37,
+      "selected": 16
+    },
+    {
+      "source": "mendeley_sms_phishing",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 387,
+      "selected": 16
+    },
+    {
+      "source": "multidogo_human_service_dialogues",
+      "domain": "airline",
+      "label": "SAFE",
+      "split": "train",
+      "available": 129,
+      "selected": 7
+    },
+    {
+      "source": "multidogo_human_service_dialogues",
+      "domain": "fastfood",
+      "label": "SAFE",
+      "split": "train",
+      "available": 128,
+      "selected": 7
+    },
+    {
+      "source": "multidogo_human_service_dialogues",
+      "domain": "finance",
+      "label": "SAFE",
+      "split": "train",
+      "available": 129,
+      "selected": 7
+    },
+    {
+      "source": "multidogo_human_service_dialogues",
+      "domain": "insurance",
+      "label": "SAFE",
+      "split": "train",
+      "available": 150,
+      "selected": 7
+    },
+    {
+      "source": "multidogo_human_service_dialogues",
+      "domain": "media",
+      "label": "SAFE",
+      "split": "train",
+      "available": 127,
+      "selected": 7
+    },
+    {
+      "source": "multidogo_human_service_dialogues",
+      "domain": "software",
+      "label": "SAFE",
+      "split": "train",
+      "available": 149,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_ftc_pattern_action_states_v1",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 178,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_ftc_pattern_action_states_v1",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 89,
+      "selected": 13
+    },
+    {
+      "source": "scamguard_ftc_pattern_action_states_v1",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 89,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "airline",
+      "label": "SAFE",
+      "split": "train",
+      "available": 108,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "airline",
+      "label": "SCAM",
+      "split": "train",
+      "available": 54,
+      "selected": 13
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "airline",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 54,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "fastfood",
+      "label": "SAFE",
+      "split": "train",
+      "available": 104,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "fastfood",
+      "label": "SCAM",
+      "split": "train",
+      "available": 52,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "fastfood",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 52,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "finance",
+      "label": "SAFE",
+      "split": "train",
+      "available": 102,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "finance",
+      "label": "SCAM",
+      "split": "train",
+      "available": 51,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "finance",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 51,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "media",
+      "label": "SAFE",
+      "split": "train",
+      "available": 108,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "media",
+      "label": "SCAM",
+      "split": "train",
+      "available": 54,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_multidogo_grounded_evidence_states_v1",
+      "domain": "media",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 54,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_synthetic_counterfactual_v1",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 64,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_synthetic_counterfactual_v1",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 64,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_synthetic_dialogue_v2",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 732,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_synthetic_dialogue_v2",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 763,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_synthetic_long_call_action_states_v1",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 3072,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_synthetic_long_call_action_states_v1",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 1536,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_synthetic_long_call_action_states_v1",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 1536,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_synthetic_v5",
+      "domain": "",
+      "label": "SAFE",
+      "split": "dev",
+      "available": 1512,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_synthetic_v5",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 2484,
+      "selected": 7
+    },
+    {
+      "source": "scamguard_synthetic_v5",
+      "domain": "",
+      "label": "SCAM",
+      "split": "dev",
+      "available": 504,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_synthetic_v5",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 1584,
+      "selected": 12
+    },
+    {
+      "source": "scamguard_synthetic_v5",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "dev",
+      "available": 72,
+      "selected": 16
+    },
+    {
+      "source": "scamguard_synthetic_v5",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 72,
+      "selected": 16
+    },
+    {
+      "source": "shakeleoatmeal_phone_scam_synthetic",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 588,
+      "selected": 25
+    },
+    {
+      "source": "shakeleoatmeal_phone_scam_synthetic",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 602,
+      "selected": 30
+    },
+    {
+      "source": "taskmaster1_woz_dialogues",
+      "domain": "auto-repair",
+      "label": "SAFE",
+      "split": "train",
+      "available": 199,
+      "selected": 7
+    },
+    {
+      "source": "taskmaster1_woz_dialogues",
+      "domain": "coffee-ordering",
+      "label": "SAFE",
+      "split": "train",
+      "available": 199,
+      "selected": 7
+    },
+    {
+      "source": "taskmaster1_woz_dialogues",
+      "domain": "movie-tickets",
+      "label": "SAFE",
+      "split": "train",
+      "available": 198,
+      "selected": 7
+    },
+    {
+      "source": "taskmaster1_woz_dialogues",
+      "domain": "pizza-ordering",
+      "label": "SAFE",
+      "split": "train",
+      "available": 200,
+      "selected": 7
+    },
+    {
+      "source": "taskmaster1_woz_dialogues",
+      "domain": "restaurant-table",
+      "label": "SAFE",
+      "split": "train",
+      "available": 198,
+      "selected": 7
+    },
+    {
+      "source": "taskmaster1_woz_dialogues",
+      "domain": "uber-lyft",
+      "label": "SAFE",
+      "split": "train",
+      "available": 199,
+      "selected": 7
+    },
+    {
+      "source": "uci_sms_spam",
+      "domain": "",
+      "label": "SAFE",
+      "split": "dev",
+      "available": 12,
+      "selected": 6
+    },
+    {
+      "source": "uci_sms_spam",
+      "domain": "",
+      "label": "SAFE",
+      "split": "train",
+      "available": 120,
+      "selected": 6
+    },
+    {
+      "source": "uci_sms_spam",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "dev",
+      "available": 3,
+      "selected": 3
+    },
+    {
+      "source": "uci_sms_spam",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 27,
+      "selected": 16
+    },
+    {
+      "source": "wspr_sms_phishing",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 1644,
+      "selected": 12
+    },
+    {
+      "source": "wspr_sms_phishing",
+      "domain": "",
+      "label": "UNCERTAIN",
+      "split": "train",
+      "available": 269,
+      "selected": 16
+    },
+    {
+      "source": "youtube_scam_calls_cc0",
+      "domain": "",
+      "label": "SCAM",
+      "split": "train",
+      "available": 435,
+      "selected": 12
+    }
+  ],
+  "source_files": {
+    "train.jsonl": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/train.jsonl",
+      "sha256": "d4e3e100e97a937a789aa984d4ce75b545592886099a0027dbd758bbf0b2e614",
+      "rows": 24436
+    },
+    "dev.jsonl": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/dev.jsonl",
+      "sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "rows": 2634
+    }
+  },
+  "data_manifest_sha256": "6c1096f1017edb10b690fde8968d9de892d2bff8ae49b9183c5da15e0380ad57",
+  "canonical_audit": "data/audit/ettin150m-v1/label-audit.csv",
+  "canonical_audit_sha256": "51c8b448826a6bada655763cf746e9537936e9ae53961ada20bd4c81f5930d93",
+  "canonical_manifest": "data/audit/ettin150m-v1/label-audit.manifest.json",
+  "selected_inputs_sha256": "173ba2ce2cd0ed110e2536356f5781f1f0fb85cc3d390eb9fc6e2da1499e9fc6",
+  "selected_ids_sha256": "cdf04399b6040525cd16f7d39edf9a7854b58e4268165973ac7ef80ecb4dbb72",
+  "bundle": {
+    "bundle": "data/audit/ettin150m-v1/scamguard-ettin150m-v1-blind-audit.zip",
+    "bundle_sha256": "4f11ee5e63536785ee6a6f56c1bc7345e3de7d26315380853b11ce2334356ea5",
+    "rows": 635,
+    "blind_inputs_sha256": "d5b1dde528f149e448643abce5d0f95ea81a1ec652ec6a8789cb4a4d5430a8db",
+    "canonical_audit_manifest_sha256": "db6aad6806107e306ce5709be59c32fa6380644bbba98cfd18e395e28b98aca7",
+    "contains_answer_key": false
+  },
+  "independent_human_complete_rows": 0,
+  "release_gate_passed": false,
+  "reviewer_identity_attestation": "required separately; not verified by CSV importer"
+}
