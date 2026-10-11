@@ -1,0 +1,79 @@
+{
+  "config_sha256": "5c6a241a6994d0a64ea7d92c8052b9b4d1a76e917b553683ba1207babd7986b5",
+  "source_sha256": {
+    "training/run_bounded_encoder.py": "c9e5a1a112f61da3138fd79ed560774f4e8732e84f53dd0b9d24db2c40ca5e8a",
+    "training/train_encoder.py": "f6404f7b1e95a33633a3a29d1c3844e0839972b612385036857f9b2f534a9fd9",
+    "src/scamguard/metrics.py": "33609e010470b7b53dafe2b884a6901657b395ee702deecdf952f8e9cbb1a08b",
+    "src/scamguard/decision.py": "55b335c52e95f1ac9c2a12cb7031006d4091d6abf9e1c2f3d72d7eac1e316638",
+    "src/scamguard/preprocessing.py": "97b7d7c324b80ed0a1c449baf2f31e2e1d2ca45282d1761464aff67dabdb6822",
+    "training/run_ettin_recovery.py": "02317f067aabe875d3f005dd24b39d18f2a6ab41ae08ff98cc99918d11971691",
+    "training/ettin_calibration.py": "f09fbda62e28d7d37bdcf0ef572619ac4e8ad874da52054b26bbc7ad3d8c9037"
+  },
+  "train_sha256": "d4e3e100e97a937a789aa984d4ce75b545592886099a0027dbd758bbf0b2e614",
+  "parent": {
+    "checkpoint": "artifacts/checkpoints/sg-ettin150m-bounded-v1",
+    "parent_report": "reports/runs/sg-ettin150m-bounded-v1.train.json",
+    "parent_report_sha256": "10e531ca586e28cefc2d7359c946e95c3572ab3a59e691f7f24afce0037017f0",
+    "files_sha256": {
+      "config.json": "8ea25957e427f454a76413b0506a3b73e0caa6f9fec1f24522f4d4e0dbf8e260",
+      "model.safetensors": "d7ee45bb5d2cc12e0b0f26171cca45234cb9a0a7c517237971e31c2766f06803",
+      "scamguard_calibration.json": "aab4b00c8652a5aab8e77ad3f629344a4c4b3a7c739377cd3587d57ce0163f5b",
+      "tokenizer.json": "e0a696f1fbf0f2c7d212e8b9e133250d19bd1c7e5bc34fc91c59d008894dc7b1",
+      "tokenizer_config.json": "239885aa9c2ae7d31caf67e9a284f8741cb87846847a4ef74627efa3b6f33eb3",
+      "training_args.bin": "06f4d9dce9ad2767c3037800a0c52d291c20f8e9ddea11bdcae22c496bedb394"
+    },
+    "optimizer_state_reused": false
+  },
+  "replay": {
+    "protocol": "ettin-targeted-full-replay-v1",
+    "seed": 20261011,
+    "replacement_sampling": false,
+    "every_training_row_included": true,
+    "extra_target_repeats": 2,
+    "unique_training_rows": 24436,
+    "presentations": 29648,
+    "index_order_sha256": "e8bc2dfd223a35a519443c250cfc92096b6956daa8ee811f5cd9f464d40b97b2",
+    "row_id_order_sha256": "43edda0760a73395b8642ee2bb772223eb4756e7fec04289963d9164933914f4",
+    "groups": {
+      "identity_scam": {
+        "unique_rows": 1206,
+        "presentations": 3618,
+        "selected_ids_sha256": "7f497e30b8f188159b7913de4349813140d74db1a8c2d7f70c3d5408c396b9e3"
+      },
+      "service_safe": {
+        "unique_rows": 1400,
+        "presentations": 4200,
+        "selected_ids_sha256": "4f522b62c3297ea44d547a2d93b8fd5f6b78a7cb7fe64309d47b620986c5e6f7"
+      },
+      "ordinary": {
+        "unique_rows": 21830,
+        "presentations": 21830,
+        "selected_ids_sha256": "826d3cfca5a8e18bb581996cc502db9c96ae456d5617690c0d16a330a7a5ccb4"
+      }
+    },
+    "presentation_labels": {
+      "SAFE": 16470,
+      "SCAM": 10487,
+      "UNCERTAIN": 2691
+    },
+    "presentation_sources": {
+      "scamguard_synthetic_long_call_action_states_v1": 6528,
+      "mendeley_sms_phishing": 4391,
+      "shakeleoatmeal_phone_scam_synthetic": 2366,
+      "wspr_sms_phishing": 1913,
+      "taskmaster1_woz_dialogues": 1193,
+      "scamguard_synthetic_v5": 5148,
+      "imc25_public_forum_smishing": 1678,
+      "multidogo_human_service_dialogues": 2436,
+      "scamguard_ftc_pattern_action_states_v1": 402,
+      "scamguard_synthetic_dialogue_v2": 2007,
+      "uci_sms_spam": 147,
+      "scamguard_multidogo_grounded_evidence_states_v1": 844,
+      "scamguard_synthetic_counterfactual_v1": 160,
+      "youtube_scam_calls_cc0": 435
+    },
+    "source_texts_or_labels_modified": false
+  },
+  "steps": 1853,
+  "torch_version": "2.13.0"
+}

@@ -1,0 +1,121 @@
+{
+  "status": "passed",
+  "mode": "CPU_metadata_and_replay_only",
+  "config_sha256": "5c6a241a6994d0a64ea7d92c8052b9b4d1a76e917b553683ba1207babd7986b5",
+  "parent": {
+    "checkpoint": "artifacts/checkpoints/sg-ettin150m-bounded-v1",
+    "parent_report": "reports/runs/sg-ettin150m-bounded-v1.train.json",
+    "parent_report_sha256": "10e531ca586e28cefc2d7359c946e95c3572ab3a59e691f7f24afce0037017f0",
+    "files_sha256": {
+      "config.json": "8ea25957e427f454a76413b0506a3b73e0caa6f9fec1f24522f4d4e0dbf8e260",
+      "model.safetensors": "d7ee45bb5d2cc12e0b0f26171cca45234cb9a0a7c517237971e31c2766f06803",
+      "scamguard_calibration.json": "aab4b00c8652a5aab8e77ad3f629344a4c4b3a7c739377cd3587d57ce0163f5b",
+      "tokenizer.json": "e0a696f1fbf0f2c7d212e8b9e133250d19bd1c7e5bc34fc91c59d008894dc7b1",
+      "tokenizer_config.json": "239885aa9c2ae7d31caf67e9a284f8741cb87846847a4ef74627efa3b6f33eb3",
+      "training_args.bin": "06f4d9dce9ad2767c3037800a0c52d291c20f8e9ddea11bdcae22c496bedb394"
+    },
+    "optimizer_state_reused": false
+  },
+  "data": {
+    "train": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/train.jsonl",
+      "sha256": "d4e3e100e97a937a789aa984d4ce75b545592886099a0027dbd758bbf0b2e614",
+      "rows": 24436,
+      "labels": {
+        "SAFE": 13670,
+        "SCAM": 8075,
+        "UNCERTAIN": 2691
+      },
+      "sources": {
+        "mendeley_sms_phishing": 4391,
+        "uci_sms_spam": 147,
+        "scamguard_synthetic_v5": 4140,
+        "scamguard_synthetic_counterfactual_v1": 128,
+        "scamguard_synthetic_dialogue_v2": 1495,
+        "wspr_sms_phishing": 1913,
+        "imc25_public_forum_smishing": 1248,
+        "taskmaster1_woz_dialogues": 1193,
+        "youtube_scam_calls_cc0": 435,
+        "scamguard_synthetic_long_call_action_states_v1": 6144,
+        "scamguard_ftc_pattern_action_states_v1": 356,
+        "scamguard_multidogo_grounded_evidence_states_v1": 844,
+        "multidogo_human_service_dialogues": 812,
+        "shakeleoatmeal_phone_scam_synthetic": 1190
+      },
+      "families": 12582,
+      "auxiliary_rows_projected": 7344
+    },
+    "dev": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/dev.jsonl",
+      "sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "rows": 2634,
+      "labels": {
+        "SAFE": 2008,
+        "UNCERTAIN": 112,
+        "SCAM": 514
+      },
+      "sources": {
+        "mendeley_sms_phishing": 531,
+        "uci_sms_spam": 15,
+        "scamguard_synthetic_v5": 2088
+      },
+      "families": 575,
+      "auxiliary_rows_projected": 0
+    }
+  },
+  "replay": {
+    "protocol": "ettin-targeted-full-replay-v1",
+    "seed": 20261011,
+    "replacement_sampling": false,
+    "every_training_row_included": true,
+    "extra_target_repeats": 2,
+    "unique_training_rows": 24436,
+    "presentations": 29648,
+    "index_order_sha256": "e8bc2dfd223a35a519443c250cfc92096b6956daa8ee811f5cd9f464d40b97b2",
+    "row_id_order_sha256": "43edda0760a73395b8642ee2bb772223eb4756e7fec04289963d9164933914f4",
+    "groups": {
+      "identity_scam": {
+        "unique_rows": 1206,
+        "presentations": 3618,
+        "selected_ids_sha256": "7f497e30b8f188159b7913de4349813140d74db1a8c2d7f70c3d5408c396b9e3"
+      },
+      "service_safe": {
+        "unique_rows": 1400,
+        "presentations": 4200,
+        "selected_ids_sha256": "4f522b62c3297ea44d547a2d93b8fd5f6b78a7cb7fe64309d47b620986c5e6f7"
+      },
+      "ordinary": {
+        "unique_rows": 21830,
+        "presentations": 21830,
+        "selected_ids_sha256": "826d3cfca5a8e18bb581996cc502db9c96ae456d5617690c0d16a330a7a5ccb4"
+      }
+    },
+    "presentation_labels": {
+      "SAFE": 16470,
+      "SCAM": 10487,
+      "UNCERTAIN": 2691
+    },
+    "presentation_sources": {
+      "scamguard_synthetic_long_call_action_states_v1": 6528,
+      "mendeley_sms_phishing": 4391,
+      "shakeleoatmeal_phone_scam_synthetic": 2366,
+      "wspr_sms_phishing": 1913,
+      "taskmaster1_woz_dialogues": 1193,
+      "scamguard_synthetic_v5": 5148,
+      "imc25_public_forum_smishing": 1678,
+      "multidogo_human_service_dialogues": 2436,
+      "scamguard_ftc_pattern_action_states_v1": 402,
+      "scamguard_synthetic_dialogue_v2": 2007,
+      "uci_sms_spam": 147,
+      "scamguard_multidogo_grounded_evidence_states_v1": 844,
+      "scamguard_synthetic_counterfactual_v1": 160,
+      "youtube_scam_calls_cc0": 435
+    },
+    "source_texts_or_labels_modified": false
+  },
+  "effective_max_steps": 1853,
+  "replay_manifest_sha256": "612124d89541966bb5136a673c9cd623b451812b91e1a10fb300b5e886dec751",
+  "model_forward_performed": false,
+  "training_performed": false,
+  "release_authorized": false
+}
