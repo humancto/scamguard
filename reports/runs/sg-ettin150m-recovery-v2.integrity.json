@@ -1,0 +1,667 @@
+{
+  "artifact_schema_version": 1,
+  "experiment_id": "sg-ettin150m-recovery-v2",
+  "status": "verified",
+  "audit_method": "Independent CPU-only SHA-256, source-row joins, pure-Python confusion/count/three-class F1/gate and linear-percentile recalculation; no model inference, threshold fitting, data edits, or sealed inputs. Replay order was separately recomputed with CPU torch from the unchanged training rows.",
+  "release_authorized": false,
+  "sota_established": false,
+  "independent_human_review": false,
+  "sealed_tests_opened": false,
+  "inputs_sha256": {
+    "config": "5c6a241a6994d0a64ea7d92c8052b9b4d1a76e917b553683ba1207babd7986b5",
+    "train_report": "50d9f7483ac3b96e1d8b1cbb8846287eaa0f2c58cbff6296685289b445d75f8d",
+    "replay_manifest": "612124d89541966bb5136a673c9cd623b451812b91e1a10fb300b5e886dec751",
+    "train_dev_ledger": "847b7544436c4d8120d6ac22d41c0a38625649632c5cae2a6130dd763960112e",
+    "open_report": "ac8a6d53939355a82d453103170bc6fb31ef7d07b92cdbaf56bbcd0f3f83e045",
+    "open_ledger": "83eadf7b1615d6c5628984918e0b90a4baf0b4424402cb3b606609a15356e4aa",
+    "v1_open_report": "d6c6f810ab67066d9381eb633c9bd18c9fa7bf14db849fc9fbb34bf4af603adc",
+    "v1_open_ledger": "7e75390cad6be49bbf7e2ebb6b3d4bd895748a70668621700faaf47e0bbf1eb6",
+    "checkpoint_model": "d03120a4982d1191eb6257c081aedf13e18301f5c291ebd93f7ab2e0a76419e9",
+    "calibration": "d31108b08ad213ebb0c0e3db1794393a119f34dda8a8aa3af6146d5fab2eb08d"
+  },
+  "hash_binding_checks_passed": true,
+  "training_receipt": {
+    "global_step": 1853,
+    "presentations": 29648,
+    "unique_rows": 24436,
+    "one_exposure_rows": 21830,
+    "three_exposure_rows": 2606,
+    "train_runtime_seconds": 1826.4928,
+    "fit_and_calibration_wall_seconds": 1871.4828402500134,
+    "replay_order_recomputed_and_matched": true
+  },
+  "ledger": {
+    "rows": 19823,
+    "unique_split_id_pairs": 19823,
+    "dev_rows": 2634,
+    "open_rows": 17189,
+    "populations": 22,
+    "all_ids_labels_source_metadata_and_raw_text_hashes_match": true,
+    "same_v1_populations": true,
+    "all_probabilities_finite_normalized_and_verdicts_match": true,
+    "all_reported_primary_and_nested_slice_metrics_match": true,
+    "metric_populations_including_nested": 213,
+    "all_wilson_intervals_and_confusion_label_orders_verified": true
+  },
+  "serving_dev_parity": {
+    "rows": 2634,
+    "verdict_mismatches": 0,
+    "argmax_mismatches": 0,
+    "threshold_mask_mismatches": 0,
+    "rows_with_any_probability_difference": 0,
+    "max_absolute_probability_difference": 0
+  },
+  "gates": {
+    "total": 18,
+    "passed": 16,
+    "failed": 2,
+    "failed_names": [
+      "scam_dialogue_validation safe_fpr",
+      "phone_scam_validation safe_fpr"
+    ],
+    "details": [
+      {
+        "name": "dev scam recall",
+        "actual": 0.9883268482490273,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "dev SAFE FPR",
+        "actual": 0.01743027888446215,
+        "operator": "<=",
+        "threshold": 0.02,
+        "passed": true
+      },
+      {
+        "name": "test scam recall",
+        "actual": 0.9982964224872232,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "test SAFE FPR",
+        "actual": 0.013172966781214204,
+        "operator": "<=",
+        "threshold": 0.02,
+        "passed": true
+      },
+      {
+        "name": "test category CREDENTIAL_THEFT recall",
+        "actual": 1,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "test category DELIVERY_TOLL recall",
+        "actual": 1,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "test category FINANCIAL recall",
+        "actual": 1,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "test category IDENTITY_IMPERSONATION recall",
+        "actual": 1,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "test category OPPORTUNITY recall",
+        "actual": 1,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "test category RELATIONSHIP recall",
+        "actual": 1,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "scam_dialogue_validation scam_recall",
+        "actual": 0.9929078014184397,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "scam_dialogue_validation safe_fpr",
+        "actual": 0.1830065359477124,
+        "operator": "<=",
+        "threshold": 0.02,
+        "passed": false
+      },
+      {
+        "name": "taskmaster_validation safe_fpr",
+        "actual": 0,
+        "operator": "<=",
+        "threshold": 0.02,
+        "passed": true
+      },
+      {
+        "name": "multidogo_call_validation safe_fpr",
+        "actual": 0.017857142857142856,
+        "operator": "<=",
+        "threshold": 0.02,
+        "passed": true
+      },
+      {
+        "name": "phone_scam_validation scam_recall",
+        "actual": 0.9827586206896551,
+        "operator": ">=",
+        "threshold": 0.97,
+        "passed": true
+      },
+      {
+        "name": "phone_scam_validation safe_fpr",
+        "actual": 0.08823529411764706,
+        "operator": "<=",
+        "threshold": 0.02,
+        "passed": false
+      },
+      {
+        "name": "desktop full SDK p95 ms",
+        "actual": 17.1167292,
+        "operator": "<=",
+        "threshold": 20,
+        "passed": true
+      },
+      {
+        "name": "invalid evidence spans",
+        "actual": 0,
+        "operator": "<=",
+        "threshold": 0,
+        "passed": true
+      }
+    ]
+  },
+  "core_category_supports": {
+    "CREDENTIAL_THEFT": {
+      "scam_examples": 144,
+      "true_positives": 144
+    },
+    "DELIVERY_TOLL": {
+      "scam_examples": 72,
+      "true_positives": 72
+    },
+    "FINANCIAL": {
+      "scam_examples": 72,
+      "true_positives": 72
+    },
+    "IDENTITY_IMPERSONATION": {
+      "scam_examples": 144,
+      "true_positives": 144
+    },
+    "OPPORTUNITY": {
+      "scam_examples": 72,
+      "true_positives": 72
+    },
+    "RELATIONSHIP": {
+      "scam_examples": 72,
+      "true_positives": 72
+    }
+  },
+  "four_targeted_gate_populations": {
+    "dev": {
+      "scam_examples": 514,
+      "safe_examples": 2008,
+      "v1_tp": 479,
+      "v2_tp": 508,
+      "v1_fp": 38,
+      "v2_fp": 35
+    },
+    "scam_dialogue_validation": {
+      "scam_examples": 141,
+      "safe_examples": 153,
+      "v1_tp": 141,
+      "v2_tp": 140,
+      "v1_fp": 60,
+      "v2_fp": 28
+    },
+    "multidogo_call_validation": {
+      "scam_examples": 0,
+      "safe_examples": 896,
+      "v1_tp": 0,
+      "v2_tp": 0,
+      "v1_fp": 32,
+      "v2_fp": 16
+    },
+    "phone_scam_validation": {
+      "scam_examples": 174,
+      "safe_examples": 170,
+      "v1_tp": 173,
+      "v2_tp": 171,
+      "v1_fp": 23,
+      "v2_fp": 15
+    }
+  },
+  "populations": [
+    {
+      "split": "dev",
+      "rows": 2634,
+      "safe": 2008,
+      "uncertain": 112,
+      "scam": 514,
+      "tp": 508,
+      "fp": 35,
+      "scam_recall": 0.9883268482490273,
+      "safe_fpr": 0.01743027888446215,
+      "macro_f1": 0.710668785783522,
+      "uncertain_correct": 31,
+      "uncertain_alerts": 81
+    },
+    {
+      "split": "test",
+      "rows": 2374,
+      "safe": 1746,
+      "uncertain": 41,
+      "scam": 587,
+      "tp": 586,
+      "fp": 23,
+      "scam_recall": 0.9982964224872232,
+      "safe_fpr": 0.013172966781214204,
+      "macro_f1": 0.7918789040446353,
+      "uncertain_correct": 24,
+      "uncertain_alerts": 15
+    },
+    {
+      "split": "forum_validation",
+      "rows": 1125,
+      "safe": 25,
+      "uncertain": 100,
+      "scam": 1000,
+      "tp": 981,
+      "fp": 2,
+      "scam_recall": 0.981,
+      "safe_fpr": 0.08,
+      "macro_f1": 0.737036092100687,
+      "uncertain_correct": 48,
+      "uncertain_alerts": 46
+    },
+    {
+      "split": "ood_financial",
+      "rows": 431,
+      "safe": 171,
+      "uncertain": 0,
+      "scam": 260,
+      "tp": 242,
+      "fp": 89,
+      "scam_recall": 0.9307692307692308,
+      "safe_fpr": 0.52046783625731,
+      "macro_f1": 0.46150823370595356,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "ood_wspr",
+      "rows": 488,
+      "safe": 0,
+      "uncertain": 79,
+      "scam": 409,
+      "tp": 407,
+      "fp": 0,
+      "scam_recall": 0.9951100244498777,
+      "safe_fpr": null,
+      "macro_f1": 0.6228105361679369,
+      "uncertain_correct": 64,
+      "uncertain_alerts": 15
+    },
+    {
+      "split": "ood_azsc",
+      "rows": 4327,
+      "safe": 2963,
+      "uncertain": 1160,
+      "scam": 204,
+      "tp": 199,
+      "fp": 719,
+      "scam_recall": 0.9754901960784313,
+      "safe_fpr": 0.24265946675666555,
+      "macro_f1": 0.2499453650193126,
+      "uncertain_correct": 386,
+      "uncertain_alerts": 752
+    },
+    {
+      "split": "call_state_validation",
+      "rows": 2048,
+      "safe": 1024,
+      "uncertain": 512,
+      "scam": 512,
+      "tp": 512,
+      "fp": 0,
+      "scam_recall": 1,
+      "safe_fpr": 0,
+      "macro_f1": 1,
+      "uncertain_correct": 512,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "call_window_validation",
+      "rows": 447,
+      "safe": 447,
+      "uncertain": 0,
+      "scam": 0,
+      "tp": 0,
+      "fp": 0,
+      "scam_recall": null,
+      "safe_fpr": 0,
+      "macro_f1": 0.3333333333333333,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "ftc_pattern_validation",
+      "rows": 84,
+      "safe": 42,
+      "uncertain": 21,
+      "scam": 21,
+      "tp": 21,
+      "fp": 0,
+      "scam_recall": 1,
+      "safe_fpr": 0,
+      "macro_f1": 1,
+      "uncertain_correct": 21,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "multidogo_call_validation",
+      "rows": 896,
+      "safe": 896,
+      "uncertain": 0,
+      "scam": 0,
+      "tp": 0,
+      "fp": 16,
+      "scam_recall": null,
+      "safe_fpr": 0.017857142857142856,
+      "macro_f1": 0.3295711060948081,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "multidogo_state_validation",
+      "rows": 592,
+      "safe": 296,
+      "uncertain": 148,
+      "scam": 148,
+      "tp": 148,
+      "fp": 0,
+      "scam_recall": 1,
+      "safe_fpr": 0,
+      "macro_f1": 1,
+      "uncertain_correct": 148,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "phone_scam_validation",
+      "rows": 344,
+      "safe": 170,
+      "uncertain": 0,
+      "scam": 174,
+      "tp": 171,
+      "fp": 15,
+      "scam_recall": 0.9827586206896551,
+      "safe_fpr": 0.08823529411764706,
+      "macro_f1": 0.6317073170731707,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "scam_dialogue_validation",
+      "rows": 294,
+      "safe": 153,
+      "uncertain": 0,
+      "scam": 141,
+      "tp": 140,
+      "fp": 28,
+      "scam_recall": 0.9929078014184397,
+      "safe_fpr": 0.1830065359477124,
+      "macro_f1": 0.5953829557713053,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "taskmaster_validation",
+      "rows": 450,
+      "safe": 450,
+      "uncertain": 0,
+      "scam": 0,
+      "tp": 0,
+      "fp": 0,
+      "scam_recall": null,
+      "safe_fpr": 0,
+      "macro_f1": 0.3333333333333333,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "apptek_call_selection",
+      "rows": 348,
+      "safe": 348,
+      "uncertain": 0,
+      "scam": 0,
+      "tp": 0,
+      "fp": 1,
+      "scam_recall": null,
+      "safe_fpr": 0.0028735632183908046,
+      "macro_f1": 0.3323727185398655,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "ppone_validation",
+      "rows": 33,
+      "safe": 0,
+      "uncertain": 21,
+      "scam": 12,
+      "tp": 11,
+      "fp": 0,
+      "scam_recall": 0.9166666666666666,
+      "safe_fpr": null,
+      "macro_f1": 0.29964912280701755,
+      "uncertain_correct": 4,
+      "uncertain_alerts": 15
+    },
+    {
+      "split": "banking77_validation",
+      "rows": 770,
+      "safe": 770,
+      "uncertain": 0,
+      "scam": 0,
+      "tp": 0,
+      "fp": 76,
+      "scam_recall": null,
+      "safe_fpr": 0.0987012987012987,
+      "macro_f1": 0.30643274853801167,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "vystadial_safe_diagnostic",
+      "rows": 1024,
+      "safe": 1024,
+      "uncertain": 0,
+      "scam": 0,
+      "tp": 0,
+      "fp": 28,
+      "scam_recall": null,
+      "safe_fpr": 0.02734375,
+      "macro_f1": 0.3135023279875841,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "international_robocalls_diagnostic",
+      "rows": 47,
+      "safe": 0,
+      "uncertain": 28,
+      "scam": 19,
+      "tp": 18,
+      "fp": 0,
+      "scam_recall": 0.9473684210526315,
+      "safe_fpr": null,
+      "macro_f1": 0.24116575591985426,
+      "uncertain_correct": 2,
+      "uncertain_alerts": 24
+    },
+    {
+      "split": "adversarial",
+      "rows": 320,
+      "safe": 160,
+      "uncertain": 0,
+      "scam": 160,
+      "tp": 155,
+      "fp": 25,
+      "scam_recall": 0.96875,
+      "safe_fpr": 0.15625,
+      "macro_f1": 0.5788607413768427,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "youtube_scam_validation",
+      "rows": 70,
+      "safe": 0,
+      "uncertain": 0,
+      "scam": 70,
+      "tp": 70,
+      "fp": 0,
+      "scam_recall": 1,
+      "safe_fpr": null,
+      "macro_f1": 0.3333333333333333,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    },
+    {
+      "split": "ood_chichewa",
+      "rows": 677,
+      "safe": 362,
+      "uncertain": 0,
+      "scam": 315,
+      "tp": 222,
+      "fp": 73,
+      "scam_recall": 0.7047619047619048,
+      "safe_fpr": 0.20165745856353592,
+      "macro_f1": 0.4663910667617011,
+      "uncertain_correct": 0,
+      "uncertain_alerts": 0
+    }
+  ],
+  "regressions_vs_v1": [
+    {
+      "split": "test",
+      "safe_fpr": {
+        "v1": 0.003436426116838488,
+        "v2": 0.013172966781214204
+      },
+      "macro_f1": {
+        "v1": 0.8141182189259709,
+        "v2": 0.7918789040446353
+      }
+    },
+    {
+      "split": "forum_validation",
+      "scam_recall": {
+        "v1": 0.992,
+        "v2": 0.981
+      },
+      "macro_f1": {
+        "v1": 0.7859685998627316,
+        "v2": 0.737036092100687
+      }
+    },
+    {
+      "split": "ood_financial",
+      "scam_recall": {
+        "v1": 0.9730769230769231,
+        "v2": 0.9307692307692308
+      }
+    },
+    {
+      "split": "ood_azsc",
+      "safe_fpr": {
+        "v1": 0.2342220722240972,
+        "v2": 0.24265946675666555
+      }
+    },
+    {
+      "split": "phone_scam_validation",
+      "scam_recall": {
+        "v1": 0.9942528735632183,
+        "v2": 0.9827586206896551
+      }
+    },
+    {
+      "split": "scam_dialogue_validation",
+      "scam_recall": {
+        "v1": 1,
+        "v2": 0.9929078014184397
+      }
+    },
+    {
+      "split": "international_robocalls_diagnostic",
+      "macro_f1": {
+        "v1": 0.2612374405076679,
+        "v2": 0.24116575591985426
+      },
+      "uncertain_recall": {
+        "v1": 0.10714285714285714,
+        "v2": 0.07142857142857142
+      }
+    },
+    {
+      "split": "adversarial",
+      "scam_recall": {
+        "v1": 1,
+        "v2": 0.96875
+      }
+    }
+  ],
+  "latency": {
+    "observations": 300,
+    "selected_unique_ids": 100,
+    "rounds": 3,
+    "trace_order_matches_frozen_selection": true,
+    "p50_ms": 13.0568545,
+    "p95_ms": 17.1167292,
+    "p99_ms": 18.331058749999997,
+    "maximum_ms": 20.526917,
+    "observations_over_20ms": 2,
+    "scope": "warm batch-one complete Scanner.scan, including preprocessing, tokenizer, model, calibration, evidence/action extraction and synchronization; excludes load and external IPC",
+    "physical_mobile": false
+  },
+  "resources": {
+    "checkpoint_artifact_bytes": 602036052,
+    "reported_peak_process_rss_bytes": 1252589568,
+    "rss_is_not_total_metal_memory": true
+  },
+  "limitations": [
+    "Open datasets and development calibration only; no independent held-out release validation or SOTA conclusion.",
+    "Recovery was selected after v1 open results; source populations are unchanged but are not fresh validation.",
+    "Reference UNCERTAIN labels are not relabeled and uncertainty weaknesses are reported separately.",
+    "Evidence-span validity is checked against the recorded per-row invalid-span counters; the text-free ledger does not retain spans for a separate replay.",
+    "Peak RSS is copied from the evaluation receipt, not independently remeasured, and excludes a total device-memory claim.",
+    "No independent human label review, mobile-device latency measurement, new training, new inference, or eligibility/release authorization was performed by this audit."
+  ],
+  "metric_definition": {
+    "labels": [
+      "SAFE",
+      "UNCERTAIN",
+      "SCAM"
+    ],
+    "macro_f1": "Unweighted mean of three fixed-label F1 values; zero for absent undefined classes; single-class and binary-only subsets therefore cannot reach macro F1 1.0.",
+    "binary_safe_fpr": "Reference SAFE predicted SCAM / all reference SAFE.",
+    "scam_recall": "Reference SCAM predicted SCAM / all reference SCAM."
+  }
+}

@@ -8,14 +8,20 @@ textual evidence it actually found, and recommends a reversible next action.
 The experiment is quality-first. Model size is minimized only after candidates clear the same
 contamination-controlled benchmark.
 
-**Latest bounded experiment (2026-10-10):** a fresh Ettin-150M fit completed once, followed by all
-21 declared open benchmark slices. Full-scanner desktop p95 is **13.72 ms**, but only **14/18**
-promotion checks pass: development recall and dialogue false-positive rates fail. No further fit,
-export, sealed test or HF upload is authorized for this candidate. See the
-[complete experiment record](reports/ETTIN150M_BOUNDED_V1.md) and the
-[current independent-review handoff](docs/INDEPENDENT_REVIEW_HANDOFF.md).
-On the preselected 300-row open comparison, Ettin's macro F1 was 0.837 versus 0.652 for the fixed
-zero-shot Qwen3.8-27B Q4 baseline; this limited result does not establish SOTA or override rejection.
+**Latest bounded experiment (2026-10-11):** the separately authorized Ettin-150M v2 recovery
+completed one 1,853-step replay pass and all 21 declared open benchmark slices. Full-scanner
+desktop p95 is **17.12 ms**, and **16/18** promotion checks pass. Development recall (98.83%) and
+MultiDoGO SAFE false-positive rate (1.79%) now pass, but phone-source SAFE FPR (15/170, **8.82%**)
+and BothBosu dialogue SAFE FPR (28/153, **18.30%**) still exceed 2%. The candidate is rejected;
+no further fit, export, sealed test or HF upload is authorized. See the
+[complete recovery record](reports/ETTIN150M_RECOVERY_V2.md); the
+[v1 result](reports/ETTIN150M_BOUNDED_V1.md) remains historical evidence.
+The same 635-row [independent-review packet](docs/INDEPENDENT_REVIEW_HANDOFF.md) still has no completed decisions;
+[v2 reuses that unchanged-corpus packet](docs/ETTIN_V2_AUDIT_REUSE.md), not a second review.
+
+On the preselected 300-row open comparison, v2's macro F1 was 0.835 versus 0.652 for the fixed
+zero-shot Qwen3.8-27B Q4 baseline, with 76/76 versus 65/76 scams detected but 2/210 versus 0/210
+SAFE false positives. This limited result does not establish SOTA or override rejection.
 
 The requirement-by-requirement status, including the still-unproven SOTA, physical-mobile,
 independent-audit, and Hugging Face gates, is tracked in
@@ -35,7 +41,8 @@ See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION
 
 | Track | Role | Approximate mobile package | Decision |
 |---|---|---:|---|
-| Ettin encoder, 150M (fresh schema v25 fit) | rejected single bounded experiment | 602.0 MB complete FP32 checkpoint; not a mobile package | 13.72 ms full-SDK desktop p95; 99.83% open regression recall / 0.34% FPR, but 93.19% dev recall and 39.22% scam-dialogue FPR; 14/18 promotion checks |
+| Ettin encoder, 150M (schema v25 recovery v2) | rejected one-pass recovery | 602.0 MB complete FP32 checkpoint; not a mobile package | 17.12 ms full-SDK desktop p95; 98.83% dev recall / 1.74% FPR; 1.79% MultiDoGO FPR, but phone FPR 8.82% and BothBosu FPR 18.30%; open regression macro F1 0.7919; 16/18 promotion checks |
+| Ettin encoder, 150M (fresh schema v25 fit, v1) | historical rejected bounded experiment | 602.0 MB complete FP32 checkpoint; not a mobile package | 13.72 ms full-SDK desktop p95; 99.83% open regression recall / 0.34% FPR, but 93.19% dev recall and 39.22% scam-dialogue FPR; 14/18 promotion checks |
 | TF-IDF logistic regression | cheap reproducible floor | 2.7 MB measured | 1.16 ms p95; 58.1% test recall, gate failed |
 | ModernBERT-base, 149M (schema v6) | historical calibrated classifier | 574 MiB FP32 artifact | 92.67% test recall / 5.10% FPR; 19.06 ms MPS-forward p95 |
 | ModernBERT-base, 149M (schema v9) | fast-router candidate | 574 MiB FP32 artifact | 99.83% regression recall / 6.30% FPR; 16.67 ms MPS-forward p95; sole-detector gates failed |
@@ -70,8 +77,8 @@ See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION
 
 Earlier research considered a hybrid in which an encoder supplies calibrated risk and a Qwen
 specialist handles uncertain cases. Those historical routes did not establish a release winner.
-The old 2B/4B/9B ladder is not authorization for automatic new training runs. The latest single-fit
-Ettin experiment also stops at its frozen rejection decision.
+The old 2B/4B/9B ladder is not authorization for automatic new training runs. The separately
+authorized, single-pass Ettin v2 recovery also stops at its frozen rejection decision.
 
 The 0.8B train/merge/quantize path and fail-closed Hugging Face publication contract are in
 [docs/HUGGING_FACE_RELEASE.md](docs/HUGGING_FACE_RELEASE.md). Training uses the official

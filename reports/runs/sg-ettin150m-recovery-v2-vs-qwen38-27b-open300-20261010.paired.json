@@ -1,0 +1,174 @@
+{
+  "diagnostic_only": true,
+  "eligibility_authorization": false,
+  "sealed_data_used": false,
+  "scope": "open regression diagnostic; stratified sample, not population or SOTA evidence",
+  "manifest_sha256": "6f35983ddaa6c26821769fc94d757905038fc42d91699de7eac8061ae1ad82fc",
+  "counts": {
+    "source": {
+      "SAFE": 1746,
+      "UNCERTAIN": 41,
+      "SCAM": 587
+    },
+    "selected": {
+      "SAFE": 210,
+      "UNCERTAIN": 14,
+      "SCAM": 76
+    },
+    "method": "minimum 10 per available label, then proportional remaining capacity; largest remainder"
+  },
+  "candidate": {
+    "examples": 300,
+    "confusion_order": [
+      "SAFE",
+      "UNCERTAIN",
+      "SCAM"
+    ],
+    "confusion": [
+      [
+        202,
+        6,
+        2
+      ],
+      [
+        1,
+        8,
+        5
+      ],
+      [
+        0,
+        0,
+        76
+      ]
+    ],
+    "macro_f1": 0.8352038822137958,
+    "accuracy": 0.9533333333333334,
+    "alert_composition": {
+      "definition": "Reference-label composition of all SCAM alerts; UNCERTAIN references are not relabeled SAFE or SCAM. Binary precision excludes them.",
+      "examples": 300,
+      "alerts": 83,
+      "alerts_by_reference_label": {
+        "SAFE": 2,
+        "UNCERTAIN": 5,
+        "SCAM": 76
+      },
+      "alert_fraction_by_reference_label": {
+        "SAFE": 0.024096385542168676,
+        "UNCERTAIN": 0.060240963855421686,
+        "SCAM": 0.9156626506024096
+      },
+      "binary_subset_precision": 0.9743589743589743,
+      "uncertain_to_scam_rate": 0.35714285714285715
+    },
+    "binary": {
+      "examples": 286,
+      "scam_examples": 76,
+      "safe_examples": 210,
+      "recall": 1.0,
+      "recall_ci95": [
+        0.9518864149348628,
+        1.0
+      ],
+      "false_positive_rate": 0.009523809523809525,
+      "false_positive_rate_ci95": [
+        0.002615669387409439,
+        0.03405382802407793
+      ]
+    }
+  },
+  "teacher": {
+    "examples": 300,
+    "confusion_order": [
+      "SAFE",
+      "UNCERTAIN",
+      "SCAM"
+    ],
+    "confusion": [
+      [
+        192,
+        18,
+        0
+      ],
+      [
+        4,
+        3,
+        7
+      ],
+      [
+        0,
+        11,
+        65
+      ]
+    ],
+    "macro_f1": 0.6515419896229492,
+    "accuracy": 0.8666666666666667,
+    "alert_composition": {
+      "definition": "Reference-label composition of all SCAM alerts; UNCERTAIN references are not relabeled SAFE or SCAM. Binary precision excludes them.",
+      "examples": 300,
+      "alerts": 72,
+      "alerts_by_reference_label": {
+        "SAFE": 0,
+        "UNCERTAIN": 7,
+        "SCAM": 65
+      },
+      "alert_fraction_by_reference_label": {
+        "SAFE": 0.0,
+        "UNCERTAIN": 0.09722222222222222,
+        "SCAM": 0.9027777777777778
+      },
+      "binary_subset_precision": 1.0,
+      "uncertain_to_scam_rate": 0.5
+    },
+    "binary": {
+      "examples": 286,
+      "scam_examples": 76,
+      "safe_examples": 210,
+      "recall": 0.8552631578947368,
+      "recall_ci95": [
+        0.7591255101452948,
+        0.9172148373084233
+      ],
+      "false_positive_rate": 0.0,
+      "false_positive_rate_ci95": [
+        0.0,
+        0.017964050759283236
+      ]
+    }
+  },
+  "candidate_minus_teacher": {
+    "recall": {
+      "difference": 0.14473684210526316,
+      "ci95_paired_bootstrap": [
+        0.06944444444444442,
+        0.22826863354037258
+      ]
+    },
+    "false_positive_rate": {
+      "difference": 0.009523809523809525,
+      "ci95_paired_bootstrap": [
+        0.0,
+        0.024271844660194174
+      ]
+    },
+    "binary_accuracy": {
+      "difference": 0.03146853146853146,
+      "ci95_paired_bootstrap": [
+        0.006993006993006978,
+        0.05594405594405594
+      ]
+    }
+  },
+  "mcnemar_exact_binary": {
+    "candidate_only_correct": 11,
+    "teacher_only_correct": 2,
+    "two_sided_p_value": 0.0224609375
+  },
+  "bootstrap_iterations": 5000,
+  "seed": 20261010,
+  "bindings": {
+    "candidate_report_sha256": "ac8a6d53939355a82d453103170bc6fb31ef7d07b92cdbaf56bbcd0f3f83e045",
+    "candidate_ledger_sha256": "83eadf7b1615d6c5628984918e0b90a4baf0b4424402cb3b606609a15356e4aa",
+    "teacher_report_sha256": "73f4c20e4e862f7517be7014fd0322cd170577e247b470b652c3fa09c71775b0",
+    "teacher_ledger_sha256": "72ec8cd46e0b0059678da6e778a32c509e8c77ed28c4ebec6bfe0cd15d1b70df"
+  }
+}
