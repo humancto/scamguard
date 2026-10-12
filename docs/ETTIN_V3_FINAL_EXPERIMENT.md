@@ -1,5 +1,9 @@
 # Final bounded Ettin experiment
 
+**Outcome:** completed and rejected, 12/18 gates. See the
+[final measured result](../reports/ETTIN150M_SOURCE_FILTERED_V3.md).
+The prospective recipe and limits below remain unchanged; no retry is queued.
+
 Authorized by the owner: “Decide the goal and pursue it.” Frozen before any v3 fit.
 The goal is a defensible desktop-first release candidate, with one final attempt and a
 clear decision—not an indefinite model search. Open screening is not final release evidence.

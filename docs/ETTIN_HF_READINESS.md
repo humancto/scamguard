@@ -1,5 +1,16 @@
 # Ettin HF readiness: hardened staging, not a production release
 
+**Current status, 2026-10-12 UTC:** the separately authorized fresh-base, source-filtered
+v3 experiment is complete and rejected: 12/18 gates, 85.80% development recall,
+27.01% phone recall and 5.67% BothBosu recall. Speed passes at 11.02 ms desktop p95;
+exact SDK parity passes. No upload, sealed evaluation or export occurred, and no further
+fit is queued. See the [final decision](../reports/ETTIN150M_SOURCE_FILTERED_V3.md).
+Do not commission release certification for this rejected candidate. The historical
+635-row packet below is not automatically a corpus-bound review of the source-filtered v3 data.
+
+The rest of this page preserves the **historical v2 preparation pass**, not a current
+claim that v3 has never been trained or that its only blockers are two v2 false-alarm gates.
+
 2026-10-11. **The model still fails two quality gates. No HF upload, new fit,
 new model inference, calibration change, or sealed evaluation was performed in this pass.**
 The latest request authorized repair and release preparation; the old experiment's

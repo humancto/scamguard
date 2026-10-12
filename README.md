@@ -8,14 +8,24 @@ textual evidence it actually found, and recommends a reversible next action.
 The experiment is quality-first. Model size is minimized only after candidates clear the same
 contamination-controlled benchmark.
 
-**Latest release-preparation pass (2026-10-11):** opt-in V3 preprocessing fixes two observed
+**Final bounded attempt completed and rejected (2026-10-12 UTC):** fresh-base Ettin-150M v3
+completed one 2,852-step fit on 22,811 source-filtered rows and all 21 open benchmarks.
+It passes **12/18 gates**, with **11.02 ms** full-SDK desktop p95, but development recall
+is **85.80%**, phone recall **27.01%**, and BothBosu recall **5.67%**. All 72 development
+identity scams are incorrectly SAFE. Exact SDK/calibration parity passes on 2,634 rows;
+864 code tests pass. The failure is model quality, not a serving mismatch.
+**No further fit is queued; no sealed test, mobile export or HF upload occurred.**
+The production goal remains unmet. See the [final decision and all results](reports/ETTIN150M_SOURCE_FILTERED_V3.md)
+and [prospective one-attempt contract](docs/ETTIN_V3_FINAL_EXPERIMENT.md).
+
+**Historical release-preparation pass (2026-10-11):** opt-in V3 preprocessing fixes two observed
 action-retention defects; existing V2 inputs remain identical on 44,259 frozen rows. All 745
 tests pass. An encoder-specific, blocked local HF package and a 96-row blind benchmark-label
 adjudication packet are prepared. This is not a trained V3 model or a passed quality gate.
 Human review and two source-rights questions remain unresolved. See the
 [HF readiness and exact handoff](docs/ETTIN_HF_READINESS.md).
 
-**Latest bounded experiment (2026-10-11):** the separately authorized Ettin-150M v2 recovery
+**Previous bounded experiment (2026-10-11):** the separately authorized Ettin-150M v2 recovery
 completed one 1,853-step replay pass and all 21 declared open benchmark slices. Full-scanner
 desktop p95 is **17.12 ms**, and **16/18** promotion checks pass. Development recall (98.83%) and
 MultiDoGO SAFE false-positive rate (1.79%) now pass, but phone-source SAFE FPR (15/170, **8.82%**)
@@ -49,6 +59,7 @@ See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION
 
 | Track | Role | Approximate mobile package | Decision |
 |---|---|---:|---|
+| Ettin encoder, 150M (fresh schema v26 source-filtered v3) | terminal rejected research attempt | 602.03 MB five-file FP32 runtime; not a mobile package | 11.02 ms desktop p95, but 85.80% dev recall, 2.98% regression FPR, phone 27.01% recall / 17.06% FPR, BothBosu 5.67% recall / 0% FPR; 12/18 gates |
 | Ettin encoder, 150M (schema v25 recovery v2) | rejected one-pass recovery | 602.0 MB complete FP32 checkpoint; not a mobile package | 17.12 ms full-SDK desktop p95; 98.83% dev recall / 1.74% FPR; 1.79% MultiDoGO FPR, but phone FPR 8.82% and BothBosu FPR 18.30%; open regression macro F1 0.7919; 16/18 promotion checks |
 | Ettin encoder, 150M (fresh schema v25 fit, v1) | historical rejected bounded experiment | 602.0 MB complete FP32 checkpoint; not a mobile package | 13.72 ms full-SDK desktop p95; 99.83% open regression recall / 0.34% FPR, but 93.19% dev recall and 39.22% scam-dialogue FPR; 14/18 promotion checks |
 | TF-IDF logistic regression | cheap reproducible floor | 2.7 MB measured | 1.16 ms p95; 58.1% test recall, gate failed |
@@ -87,6 +98,8 @@ Earlier research considered a hybrid in which an encoder supplies calibrated ris
 specialist handles uncertain cases. Those historical routes did not establish a release winner.
 The old 2B/4B/9B ladder is not authorization for automatic new training runs. The separately
 authorized, single-pass Ettin v2 recovery also stops at its frozen rejection decision.
+The subsequently authorized v3 attempt started from the original base, not the v2 checkpoint,
+and is now terminally rejected too. No automatic next-model experiment is authorized.
 
 The 0.8B train/merge/quantize path and fail-closed Hugging Face publication contract are in
 [docs/HUGGING_FACE_RELEASE.md](docs/HUGGING_FACE_RELEASE.md). Training uses the official

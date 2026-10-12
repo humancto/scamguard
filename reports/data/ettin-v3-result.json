@@ -1,0 +1,1745 @@
+{
+  "schema_version": 1,
+  "experiment_id": "sg-ettin150m-source-filtered-v3",
+  "decision": "rejected_quality_terminal_no_automatic_retry",
+  "freeze_commit": "ccecf2a",
+  "release_authorized": false,
+  "production_ready": false,
+  "sota_established": false,
+  "sealed_tests_opened": false,
+  "physical_mobile_verified": false,
+  "hugging_face_uploaded": false,
+  "independent_human_review_completed": false,
+  "code_tests_passed": 864,
+  "fit": {
+    "status": "completed",
+    "global_step": 2852,
+    "training_completed": true,
+    "train": {
+      "train_runtime": 1176.3455,
+      "train_samples_per_second": 38.791,
+      "train_steps_per_second": 2.424,
+      "train_loss": 0.15692766379085313,
+      "epoch": 2
+    },
+    "wall_seconds": 1216.5357305419166,
+    "environment": {
+      "python": "3.11.15",
+      "architecture": "arm64",
+      "platform": "macOS-26.3-arm64-i386-64bit",
+      "device": "mps",
+      "packages": {
+        "torch": "2.13.0",
+        "transformers": "5.16.0.dev0",
+        "tokenizers": "0.23.1",
+        "accelerate": "1.14.0",
+        "numpy": "2.4.6"
+      },
+      "mps_available": true
+    },
+    "model_parameters": 149607171,
+    "calibration": {
+      "temperature": 2.945853146223402,
+      "scam_threshold": 0.20228464901447296,
+      "safe_threshold": 0.2,
+      "safe_threshold_semantics": "maximum_safe_risk",
+      "labels": [
+        "SAFE",
+        "UNCERTAIN",
+        "SCAM"
+      ],
+      "threshold_source": "dev SAFE/SCAM only",
+      "safe_threshold_source": "fixed existing encoder policy; not fitted",
+      "calibration_version": "ettin-serving-batch1-torch-fp32-v1",
+      "serving_contract": {
+        "device": "mps:0",
+        "message_batch_size": 1,
+        "logits_dtype": "float32",
+        "softmax": "torch.softmax((logits[0, :3] / temperature), dim=-1)",
+        "softmax_vector_shape": [
+          3
+        ],
+        "padding": false,
+        "text_preprocessing": "strip then prepare_model_text",
+        "dialogue_policy": "speaker-neutral-action-preserving-v3",
+        "max_length": 256,
+        "truncation_side": "right"
+      },
+      "threshold_selection": {
+        "objective": "max recall under SAFE FPR cap, then precision, then highest observed threshold",
+        "selection_kind": "optimal_observed_score",
+        "observed_threshold": 0.2026323825120926,
+        "threshold": 0.20228464901447296,
+        "threshold_location": "stable_interval_midpoint",
+        "largest_excluded_score": 0.20193691551685333,
+        "smallest_included_score": 0.2026323825120926,
+        "minimum_score_margin": 0.0003477334976196289,
+        "minimum_interior_margin_ulps": 1,
+        "interval_float32_ulp": 1.4901161193847656e-8,
+        "mask_unchanged": true,
+        "comparison": "Python float >= Python float; no float32 threshold cast",
+        "max_safe_fpr": 0.02,
+        "safe_examples": 2008,
+        "scam_examples": 514,
+        "tp": 441,
+        "fp": 23,
+        "scam_recall": 0.857976653696498,
+        "safe_fpr": 0.011454183266932271
+      },
+      "model_id": "sg-ettin150m-source-filtered-v3",
+      "input_transform": {
+        "dialogue_policy": "speaker-neutral-action-preserving-v3",
+        "truncation_side": "right",
+        "max_length": 256
+      },
+      "checkpoint_model_sha256": "853f56c940a0e06c66f90096230952db15da6d8893c0228168097754cd966871",
+      "dev_data_sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07"
+    },
+    "checkpoint_model_sha256": "853f56c940a0e06c66f90096230952db15da6d8893c0228168097754cd966871",
+    "calibration_sha256": "307eda637a3e22d7ac7d39445e3e2af233784cb9dfe95c0de1159ef5d656302e",
+    "predictions": {
+      "path": "reports/runs/sg-ettin150m-source-filtered-v3.train.dev.predictions.jsonl",
+      "sha256": "56dbd663c6103512b186436b8bbef380d372fad47d285770596411f2904acf0e",
+      "rows": 2634,
+      "contains_text": false
+    }
+  },
+  "evaluation": {
+    "experiment_id": "sg-ettin150m-source-filtered-v3",
+    "config_sha256": "af97b5e2de2f9450bf88d3deacfa7559c7854b8a15cdc1be605021884f80c086",
+    "training_report_sha256": "1d3e9c6a97ccf4f9d2966af8f7277829f0f88d5ebf1548e2beca6c2d78ccb555",
+    "checkpoint_model_sha256": "853f56c940a0e06c66f90096230952db15da6d8893c0228168097754cd966871",
+    "calibration_sha256": "307eda637a3e22d7ac7d39445e3e2af233784cb9dfe95c0de1159ef5d656302e",
+    "data_sha256": {
+      "dev": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "test": "1208a54751b798f8a6bbe9101259c3fa141ad314606cb60b8d421dbf87f59475",
+      "forum_validation": "3fdbb438f1fa4d08328ff2c3cf35907d1080841749b418ac9241983a97bc567f",
+      "ood_financial": "686a0ded4b83c243778ab43ab546f3baa44181ec743d9428f7ec419c2eac3c33",
+      "ood_wspr": "dac5a52a60bb47087e9a687b2fbcc72de1f509b0eaede16ad7e0e7420db10144",
+      "ood_azsc": "358cd43ce205d580709ce5c68d8582eaab9dd0846d23445de1266fca49e589fd",
+      "call_state_validation": "fc48f925bafcd732a9191bcbdfb3a35f8646517146a8124efe66bcb57543e60e",
+      "call_window_validation": "1053f4be9270b819d5f2272e50645e9ea251d5a875d8a40ff170f71e7c01302d",
+      "ftc_pattern_validation": "d492c236175d56469d663feb159bea16d38214b196731c09bd139e4129de9d9b",
+      "multidogo_call_validation": "55f06cf914cc92f741e5234e49092ecacad5fdbbf5235905e847b747c6d6bf7b",
+      "multidogo_state_validation": "6bf7310ab0910cbf00c6c6dbcca356a205d61cdcf093931d0768ce6728f0fcf5",
+      "phone_scam_validation": "96d06085c4b5423a33235e417e1abcfa428ef0dd5a1f4551ded6305ead79f9ec",
+      "scam_dialogue_validation": "c473c94a6d3cc7b6c114c5e6b29f86a31e454310558f5282d9c1133bb51741a0",
+      "taskmaster_validation": "539b81a06328b2914407565c1bb7fac54a486333cea45a0853b4e2160df79760",
+      "apptek_call_selection": "e0e7ad4de8d378061159df18a8fa6c39fedd69d0cdd0dffe3f72579158290b62",
+      "ppone_validation": "3bb8ac2673199a23f19b6f53931ff9a58fffb6505428bfd916a71c3eaa95a6f9",
+      "banking77_validation": "efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7",
+      "vystadial_safe_diagnostic": "0a2c9a8e1e100fddd338d22acf2dc4ee85401ac40710199196e7171d1b463042",
+      "international_robocalls_diagnostic": "4604d1566dc09a616bf57318359ac2946036606d5ed03acb874b83ff9e5967af",
+      "adversarial": "eb0e137318b39b210af3015fa1409737696482c96495d01ae70e51c49eef0547",
+      "youtube_scam_validation": "108daf448b01e64f1f6f58228b295119b536c44cede1e6b512abc1eaf9262b1e",
+      "ood_chichewa": "b429621d3508b9cb3f1a7c7f079603f10966cdcec81b339d5d176aa8c77b0b38"
+    },
+    "evaluation_code_sha256": "70299698ec910deaeb01882bf0249dd5358331fc62c29202eee7460c05208a39",
+    "source_code_sha256": {
+      "src/scamguard/model.py": "3cd51a3cced27c75433a962718aeab22f9ced287c95a7f83885a5908f0dee322",
+      "src/scamguard/scanner.py": "93102bfcfe7f5fe896ddc0c7b219dd39e644238dfceeecd47ed35fd237f25076",
+      "src/scamguard/signals.py": "3e78659a166f9cf435f46e112fcbcc108390aa6dc104153300a4a5ca59b64a5b",
+      "src/scamguard/preprocessing.py": "32d5f2381e03504f3c603728e901d25a4ade7f54c1638ca22118096a068e4ddb"
+    },
+    "environment": {
+      "python": "3.11.15",
+      "arch": "arm64",
+      "torch": "2.13.0",
+      "device": "mps"
+    },
+    "release_authorized": false,
+    "sota_established": false,
+    "sealed_tests_opened": false,
+    "status": "completed",
+    "input_transform": "speaker-neutral-action-preserving-v3",
+    "metrics": {
+      "dev": {
+        "examples": 2634,
+        "truth_counts": {
+          "SAFE": 2008,
+          "UNCERTAIN": 112,
+          "SCAM": 514
+        },
+        "verdict_counts": {
+          "SAFE": 1892,
+          "UNCERTAIN": 197,
+          "SCAM": 545
+        },
+        "macro_f1": 0.6556139241086573,
+        "macro_f1_argmax": 0.7682063250324768,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            1820,
+            165,
+            23
+          ],
+          [
+            0,
+            31,
+            81
+          ],
+          [
+            72,
+            1,
+            441
+          ]
+        ],
+        "scam_recall": 0.857976653696498,
+        "scam_recall_ci95": [
+          0.8251386367138716,
+          0.885503575746414
+        ],
+        "safe_fpr": 0.011454183266932271,
+        "safe_fpr_ci95": [
+          0.007644601631723736,
+          0.017129447338273287
+        ],
+        "binary_precision": 0.9504310344827587,
+        "known_scam_fraction_of_alerts": 0.8091743119266055,
+        "scams_marked_safe": 72,
+        "scams_deferred": 1,
+        "safe_deferred": 165,
+        "uncertain_recall": 0.2767857142857143,
+        "uncertain_marked_scam": 81,
+        "invalid_evidence_spans": 0
+      },
+      "test": {
+        "examples": 2374,
+        "truth_counts": {
+          "SAFE": 1746,
+          "UNCERTAIN": 41,
+          "SCAM": 587
+        },
+        "verdict_counts": {
+          "SAFE": 1565,
+          "UNCERTAIN": 158,
+          "SCAM": 651
+        },
+        "macro_f1": 0.7244763259974758,
+        "macro_f1_argmax": 0.9127943092124453,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            1565,
+            129,
+            52
+          ],
+          [
+            0,
+            28,
+            13
+          ],
+          [
+            0,
+            1,
+            586
+          ]
+        ],
+        "scam_recall": 0.9982964224872232,
+        "scam_recall_ci95": [
+          0.9904141093170945,
+          0.9996992134135864
+        ],
+        "safe_fpr": 0.029782359679266894,
+        "safe_fpr_ci95": [
+          0.022783439726290607,
+          0.03884583432998527
+        ],
+        "binary_precision": 0.9184952978056427,
+        "known_scam_fraction_of_alerts": 0.9001536098310292,
+        "scams_marked_safe": 0,
+        "scams_deferred": 1,
+        "safe_deferred": 129,
+        "uncertain_recall": 0.6829268292682927,
+        "uncertain_marked_scam": 13,
+        "invalid_evidence_spans": 0
+      },
+      "forum_validation": {
+        "examples": 1125,
+        "truth_counts": {
+          "SCAM": 1000,
+          "UNCERTAIN": 100,
+          "SAFE": 25
+        },
+        "verdict_counts": {
+          "SCAM": 1020,
+          "UNCERTAIN": 88,
+          "SAFE": 17
+        },
+        "macro_f1": 0.7736334727697693,
+        "macro_f1_argmax": 0.7552274423492721,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            15,
+            6,
+            4
+          ],
+          [
+            2,
+            60,
+            38
+          ],
+          [
+            0,
+            22,
+            978
+          ]
+        ],
+        "scam_recall": 0.978,
+        "scam_recall_ci95": [
+          0.9669143266526004,
+          0.985427292235209
+        ],
+        "safe_fpr": 0.16,
+        "safe_fpr_ci95": [
+          0.0640345145667644,
+          0.3465362160717886
+        ],
+        "binary_precision": 0.9959266802443992,
+        "known_scam_fraction_of_alerts": 0.9588235294117647,
+        "scams_marked_safe": 0,
+        "scams_deferred": 22,
+        "safe_deferred": 6,
+        "uncertain_recall": 0.6,
+        "uncertain_marked_scam": 38,
+        "invalid_evidence_spans": 0
+      },
+      "ood_financial": {
+        "examples": 431,
+        "truth_counts": {
+          "SCAM": 260,
+          "SAFE": 171
+        },
+        "verdict_counts": {
+          "SCAM": 324,
+          "SAFE": 43,
+          "UNCERTAIN": 64
+        },
+        "macro_f1": 0.3797955874194512,
+        "macro_f1_argmax": 0.45579702681360934,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            38,
+            38,
+            95
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            5,
+            26,
+            229
+          ]
+        ],
+        "scam_recall": 0.8807692307692307,
+        "scam_recall_ci95": [
+          0.8357320304598881,
+          0.9147186412617241
+        ],
+        "safe_fpr": 0.5555555555555556,
+        "safe_fpr_ci95": [
+          0.4806704810446478,
+          0.6279993969588591
+        ],
+        "binary_precision": 0.7067901234567902,
+        "known_scam_fraction_of_alerts": 0.7067901234567902,
+        "scams_marked_safe": 5,
+        "scams_deferred": 26,
+        "safe_deferred": 38,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "ood_wspr": {
+        "examples": 488,
+        "truth_counts": {
+          "SCAM": 409,
+          "UNCERTAIN": 79
+        },
+        "verdict_counts": {
+          "SCAM": 426,
+          "UNCERTAIN": 61,
+          "SAFE": 1
+        },
+        "macro_f1": 0.6106643855146849,
+        "macro_f1_argmax": 0.6343998169874833,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            60,
+            19
+          ],
+          [
+            1,
+            1,
+            407
+          ]
+        ],
+        "scam_recall": 0.9951100244498777,
+        "scam_recall_ci95": [
+          0.9823481591478824,
+          0.9986579664406334
+        ],
+        "safe_fpr": null,
+        "safe_fpr_ci95": null,
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 0.9553990610328639,
+        "scams_marked_safe": 1,
+        "scams_deferred": 1,
+        "safe_deferred": 0,
+        "uncertain_recall": 0.759493670886076,
+        "uncertain_marked_scam": 19,
+        "invalid_evidence_spans": 0
+      },
+      "ood_azsc": {
+        "examples": 4327,
+        "truth_counts": {
+          "SAFE": 2963,
+          "UNCERTAIN": 1160,
+          "SCAM": 204
+        },
+        "verdict_counts": {
+          "SCAM": 730,
+          "UNCERTAIN": 3372,
+          "SAFE": 225
+        },
+        "macro_f1": 0.28888829033486224,
+        "macro_f1_argmax": 0.3998938419699922,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            215,
+            2610,
+            138
+          ],
+          [
+            10,
+            746,
+            404
+          ],
+          [
+            0,
+            16,
+            188
+          ]
+        ],
+        "scam_recall": 0.9215686274509803,
+        "scam_recall_ci95": [
+          0.8764053620091886,
+          0.9511484907011373
+        ],
+        "safe_fpr": 0.04657441781977725,
+        "safe_fpr_ci95": [
+          0.03955621961446238,
+          0.05476680462018272
+        ],
+        "binary_precision": 0.5766871165644172,
+        "known_scam_fraction_of_alerts": 0.25753424657534246,
+        "scams_marked_safe": 0,
+        "scams_deferred": 16,
+        "safe_deferred": 2610,
+        "uncertain_recall": 0.6431034482758621,
+        "uncertain_marked_scam": 404,
+        "invalid_evidence_spans": 0
+      },
+      "call_state_validation": {
+        "examples": 2048,
+        "truth_counts": {
+          "SCAM": 512,
+          "SAFE": 1024,
+          "UNCERTAIN": 512
+        },
+        "verdict_counts": {
+          "SCAM": 512,
+          "SAFE": 1024,
+          "UNCERTAIN": 512
+        },
+        "macro_f1": 1,
+        "macro_f1_argmax": 1,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            1024,
+            0,
+            0
+          ],
+          [
+            0,
+            512,
+            0
+          ],
+          [
+            0,
+            0,
+            512
+          ]
+        ],
+        "scam_recall": 1,
+        "scam_recall_ci95": [
+          0.9925530242771171,
+          1
+        ],
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.0037374040400176777
+        ],
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 1,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": 1,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "call_window_validation": {
+        "examples": 447,
+        "truth_counts": {
+          "SAFE": 447
+        },
+        "verdict_counts": {
+          "SAFE": 447
+        },
+        "macro_f1": 0.3333333333333333,
+        "macro_f1_argmax": 0.3333333333333333,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            447,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "scam_recall": null,
+        "scam_recall_ci95": null,
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.008520642335650695
+        ],
+        "binary_precision": null,
+        "known_scam_fraction_of_alerts": null,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "ftc_pattern_validation": {
+        "examples": 84,
+        "truth_counts": {
+          "SCAM": 21,
+          "SAFE": 42,
+          "UNCERTAIN": 21
+        },
+        "verdict_counts": {
+          "SCAM": 21,
+          "SAFE": 42,
+          "UNCERTAIN": 21
+        },
+        "macro_f1": 1,
+        "macro_f1_argmax": 1,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            42,
+            0,
+            0
+          ],
+          [
+            0,
+            21,
+            0
+          ],
+          [
+            0,
+            0,
+            21
+          ]
+        ],
+        "scam_recall": 1,
+        "scam_recall_ci95": [
+          0.8453609810751531,
+          1
+        ],
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.08379879086570391
+        ],
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 1,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": 1,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "multidogo_call_validation": {
+        "examples": 896,
+        "truth_counts": {
+          "SAFE": 896
+        },
+        "verdict_counts": {
+          "SAFE": 847,
+          "UNCERTAIN": 29,
+          "SCAM": 20
+        },
+        "macro_f1": 0.32396251673360105,
+        "macro_f1_argmax": 0.33240067151650815,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            847,
+            29,
+            20
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "scam_recall": null,
+        "scam_recall_ci95": null,
+        "safe_fpr": 0.022321428571428572,
+        "safe_fpr_ci95": [
+          0.014495441462984452,
+          0.034225873154094276
+        ],
+        "binary_precision": 0,
+        "known_scam_fraction_of_alerts": 0,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 29,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "multidogo_state_validation": {
+        "examples": 592,
+        "truth_counts": {
+          "SCAM": 148,
+          "SAFE": 296,
+          "UNCERTAIN": 148
+        },
+        "verdict_counts": {
+          "SCAM": 148,
+          "SAFE": 296,
+          "UNCERTAIN": 148
+        },
+        "macro_f1": 1,
+        "macro_f1_argmax": 1,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            296,
+            0,
+            0
+          ],
+          [
+            0,
+            148,
+            0
+          ],
+          [
+            0,
+            0,
+            148
+          ]
+        ],
+        "scam_recall": 1,
+        "scam_recall_ci95": [
+          0.9747008567322154,
+          1
+        ],
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.012811633307158257
+        ],
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 1,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": 1,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "phone_scam_validation": {
+        "examples": 344,
+        "truth_counts": {
+          "SCAM": 174,
+          "SAFE": 170
+        },
+        "verdict_counts": {
+          "SAFE": 244,
+          "UNCERTAIN": 24,
+          "SCAM": 76
+        },
+        "macro_f1": 0.3314524959742351,
+        "macro_f1_argmax": 0.2728763505992324,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            128,
+            13,
+            29
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            116,
+            11,
+            47
+          ]
+        ],
+        "scam_recall": 0.27011494252873564,
+        "scam_recall_ci95": [
+          0.20963401238523766,
+          0.34052712253517065
+        ],
+        "safe_fpr": 0.17058823529411765,
+        "safe_fpr_ci95": [
+          0.1214802387930996,
+          0.23425457406577926
+        ],
+        "binary_precision": 0.618421052631579,
+        "known_scam_fraction_of_alerts": 0.618421052631579,
+        "scams_marked_safe": 116,
+        "scams_deferred": 11,
+        "safe_deferred": 13,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "scam_dialogue_validation": {
+        "examples": 294,
+        "truth_counts": {
+          "SCAM": 141,
+          "SAFE": 153
+        },
+        "verdict_counts": {
+          "SAFE": 279,
+          "SCAM": 8,
+          "UNCERTAIN": 7
+        },
+        "macro_f1": 0.27190529455630125,
+        "macro_f1_argmax": 0.23339438725025788,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            153,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            126,
+            7,
+            8
+          ]
+        ],
+        "scam_recall": 0.05673758865248227,
+        "scam_recall_ci95": [
+          0.02902711180217068,
+          0.10796031557010383
+        ],
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.024492623631394532
+        ],
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 1,
+        "scams_marked_safe": 126,
+        "scams_deferred": 7,
+        "safe_deferred": 0,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "taskmaster_validation": {
+        "examples": 450,
+        "truth_counts": {
+          "SAFE": 450
+        },
+        "verdict_counts": {
+          "SAFE": 450
+        },
+        "macro_f1": 0.3333333333333333,
+        "macro_f1_argmax": 0.3333333333333333,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            450,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "scam_recall": null,
+        "scam_recall_ci95": null,
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.008464318862970662
+        ],
+        "binary_precision": null,
+        "known_scam_fraction_of_alerts": null,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "apptek_call_selection": {
+        "examples": 348,
+        "truth_counts": {
+          "SAFE": 348
+        },
+        "verdict_counts": {
+          "SAFE": 348
+        },
+        "macro_f1": 0.3333333333333333,
+        "macro_f1_argmax": 0.3333333333333333,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            348,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "scam_recall": null,
+        "scam_recall_ci95": null,
+        "safe_fpr": 0,
+        "safe_fpr_ci95": [
+          0,
+          0.010918152833864339
+        ],
+        "binary_precision": null,
+        "known_scam_fraction_of_alerts": null,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "ppone_validation": {
+        "examples": 33,
+        "truth_counts": {
+          "SCAM": 12,
+          "UNCERTAIN": 21
+        },
+        "verdict_counts": {
+          "SCAM": 30,
+          "SAFE": 3
+        },
+        "macro_f1": 0.19047619047619047,
+        "macro_f1_argmax": 0.19565217391304346,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            18
+          ],
+          [
+            0,
+            0,
+            12
+          ]
+        ],
+        "scam_recall": 1,
+        "scam_recall_ci95": [
+          0.7575059933447592,
+          1
+        ],
+        "safe_fpr": null,
+        "safe_fpr_ci95": null,
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 0.4,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 0,
+        "uncertain_recall": 0,
+        "uncertain_marked_scam": 18,
+        "invalid_evidence_spans": 0
+      },
+      "banking77_validation": {
+        "examples": 770,
+        "truth_counts": {
+          "SAFE": 770
+        },
+        "verdict_counts": {
+          "SAFE": 676,
+          "SCAM": 47,
+          "UNCERTAIN": 47
+        },
+        "macro_f1": 0.3116643614568926,
+        "macro_f1_argmax": 0.3307155322862129,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            676,
+            47,
+            47
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "scam_recall": null,
+        "scam_recall_ci95": null,
+        "safe_fpr": 0.06103896103896104,
+        "safe_fpr_ci95": [
+          0.046210403719096044,
+          0.08022564814325947
+        ],
+        "binary_precision": 0,
+        "known_scam_fraction_of_alerts": 0,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 47,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "vystadial_safe_diagnostic": {
+        "examples": 1024,
+        "truth_counts": {
+          "SAFE": 1024
+        },
+        "verdict_counts": {
+          "SAFE": 825,
+          "UNCERTAIN": 181,
+          "SCAM": 18
+        },
+        "macro_f1": 0.29745808545159547,
+        "macro_f1_argmax": 0.32954732510288065,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            825,
+            181,
+            18
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "scam_recall": null,
+        "scam_recall_ci95": null,
+        "safe_fpr": 0.017578125,
+        "safe_fpr_ci95": [
+          0.011147506606701729,
+          0.027614754322534085
+        ],
+        "binary_precision": 0,
+        "known_scam_fraction_of_alerts": 0,
+        "scams_marked_safe": 0,
+        "scams_deferred": 0,
+        "safe_deferred": 181,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "international_robocalls_diagnostic": {
+        "examples": 47,
+        "truth_counts": {
+          "UNCERTAIN": 28,
+          "SCAM": 19
+        },
+        "verdict_counts": {
+          "SCAM": 46,
+          "UNCERTAIN": 1
+        },
+        "macro_f1": 0.18461538461538463,
+        "macro_f1_argmax": 0.21507890122735243,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            28
+          ],
+          [
+            0,
+            1,
+            18
+          ]
+        ],
+        "scam_recall": 0.9473684210526315,
+        "scam_recall_ci95": [
+          0.753612688331012,
+          0.9906480059376995
+        ],
+        "safe_fpr": null,
+        "safe_fpr_ci95": null,
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 0.391304347826087,
+        "scams_marked_safe": 0,
+        "scams_deferred": 1,
+        "safe_deferred": 0,
+        "uncertain_recall": 0,
+        "uncertain_marked_scam": 28,
+        "invalid_evidence_spans": 0
+      },
+      "adversarial": {
+        "examples": 320,
+        "truth_counts": {
+          "SAFE": 160,
+          "SCAM": 160
+        },
+        "verdict_counts": {
+          "SAFE": 129,
+          "UNCERTAIN": 32,
+          "SCAM": 159
+        },
+        "macro_f1": 0.6171101300560792,
+        "macro_f1_argmax": 0.623795476892822,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            128,
+            27,
+            5
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            5,
+            154
+          ]
+        ],
+        "scam_recall": 0.9625,
+        "scam_recall_ci95": [
+          0.9206101926328578,
+          0.9827020768335
+        ],
+        "safe_fpr": 0.03125,
+        "safe_fpr_ci95": [
+          0.013420516687644407,
+          0.07106029128564172
+        ],
+        "binary_precision": 0.9685534591194969,
+        "known_scam_fraction_of_alerts": 0.9685534591194969,
+        "scams_marked_safe": 1,
+        "scams_deferred": 5,
+        "safe_deferred": 27,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "youtube_scam_validation": {
+        "examples": 70,
+        "truth_counts": {
+          "SCAM": 70
+        },
+        "verdict_counts": {
+          "SCAM": 8,
+          "SAFE": 54,
+          "UNCERTAIN": 8
+        },
+        "macro_f1": 0.06837606837606837,
+        "macro_f1_argmax": 0.018518518518518517,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            54,
+            8,
+            8
+          ]
+        ],
+        "scam_recall": 0.11428571428571428,
+        "scam_recall_ci95": [
+          0.059061289466376454,
+          0.20964221582154374
+        ],
+        "safe_fpr": null,
+        "safe_fpr_ci95": null,
+        "binary_precision": 1,
+        "known_scam_fraction_of_alerts": 1,
+        "scams_marked_safe": 54,
+        "scams_deferred": 8,
+        "safe_deferred": 0,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      },
+      "ood_chichewa": {
+        "examples": 677,
+        "truth_counts": {
+          "SAFE": 362,
+          "SCAM": 315
+        },
+        "verdict_counts": {
+          "UNCERTAIN": 252,
+          "SCAM": 203,
+          "SAFE": 222
+        },
+        "macro_f1": 0.45083831385201245,
+        "macro_f1_argmax": 0.49945004894440065,
+        "confusion_labels": [
+          "SAFE",
+          "UNCERTAIN",
+          "SCAM"
+        ],
+        "confusion": [
+          [
+            192,
+            147,
+            23
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            30,
+            105,
+            180
+          ]
+        ],
+        "scam_recall": 0.5714285714285714,
+        "scam_recall_ci95": [
+          0.5162419811307103,
+          0.6248939933640824
+        ],
+        "safe_fpr": 0.06353591160220995,
+        "safe_fpr_ci95": [
+          0.042707031000081955,
+          0.09353083274931438
+        ],
+        "binary_precision": 0.8866995073891626,
+        "known_scam_fraction_of_alerts": 0.8866995073891626,
+        "scams_marked_safe": 30,
+        "scams_deferred": 105,
+        "safe_deferred": 147,
+        "uncertain_recall": null,
+        "uncertain_marked_scam": 0,
+        "invalid_evidence_spans": 0
+      }
+    },
+    "latency": {
+      "p50_ms": 9.358938,
+      "p95_ms": 11.01664375,
+      "p99_ms": 11.523704589999998,
+      "limit_ms": 20,
+      "scope": "warm batch-one complete Scanner.scan, including preprocessing, tokenizer, model, calibration, evidence/action extraction and synchronization; excludes load and external IPC",
+      "physical_mobile": false
+    },
+    "promotion": {
+      "passed": false,
+      "gates": [
+        {
+          "name": "dev scam recall",
+          "actual": 0.857976653696498,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": false
+        },
+        {
+          "name": "dev SAFE FPR",
+          "actual": 0.011454183266932271,
+          "operator": "<=",
+          "threshold": 0.02,
+          "passed": true
+        },
+        {
+          "name": "test scam recall",
+          "actual": 0.9982964224872232,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "test SAFE FPR",
+          "actual": 0.029782359679266894,
+          "operator": "<=",
+          "threshold": 0.02,
+          "passed": false
+        },
+        {
+          "name": "test category CREDENTIAL_THEFT recall",
+          "actual": 1,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "test category DELIVERY_TOLL recall",
+          "actual": 1,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "test category FINANCIAL recall",
+          "actual": 1,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "test category IDENTITY_IMPERSONATION recall",
+          "actual": 1,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "test category OPPORTUNITY recall",
+          "actual": 1,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "test category RELATIONSHIP recall",
+          "actual": 1,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": true
+        },
+        {
+          "name": "scam_dialogue_validation scam_recall",
+          "actual": 0.05673758865248227,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": false
+        },
+        {
+          "name": "scam_dialogue_validation safe_fpr",
+          "actual": 0,
+          "operator": "<=",
+          "threshold": 0.02,
+          "passed": true
+        },
+        {
+          "name": "taskmaster_validation safe_fpr",
+          "actual": 0,
+          "operator": "<=",
+          "threshold": 0.02,
+          "passed": true
+        },
+        {
+          "name": "multidogo_call_validation safe_fpr",
+          "actual": 0.022321428571428572,
+          "operator": "<=",
+          "threshold": 0.02,
+          "passed": false
+        },
+        {
+          "name": "phone_scam_validation scam_recall",
+          "actual": 0.27011494252873564,
+          "operator": ">=",
+          "threshold": 0.97,
+          "passed": false
+        },
+        {
+          "name": "phone_scam_validation safe_fpr",
+          "actual": 0.17058823529411765,
+          "operator": "<=",
+          "threshold": 0.02,
+          "passed": false
+        },
+        {
+          "name": "desktop full SDK p95 ms",
+          "actual": 11.01664375,
+          "operator": "<=",
+          "threshold": 20,
+          "passed": true
+        },
+        {
+          "name": "invalid evidence spans",
+          "actual": 0,
+          "operator": "<=",
+          "threshold": 0,
+          "passed": true
+        }
+      ],
+      "failed_gates": [
+        "dev scam recall",
+        "test SAFE FPR",
+        "scam_dialogue_validation scam_recall",
+        "multidogo_call_validation safe_fpr",
+        "phone_scam_validation scam_recall",
+        "phone_scam_validation safe_fpr"
+      ],
+      "macro_f1_stretch": {
+        "required": false,
+        "target": 0.94,
+        "actual": 0.7244763259974758
+      },
+      "meaning": "open-screen eligibility only; not final quality or release authorization"
+    },
+    "elapsed_seconds": 224.81707533309236,
+    "prediction_ledger": {
+      "path": "reports/runs/sg-ettin150m-source-filtered-v3.open.predictions.jsonl",
+      "rows": 19823,
+      "examples": 19823,
+      "sha256": "d101380f0b8c84fac10e24f429272c0666740f158eba2650f39f881dd7a5c7e8"
+    },
+    "peak_process_rss_bytes": 1248493568,
+    "artifact_bytes": 602036017
+  },
+  "integrity": {
+    "schema_version": 1,
+    "status": "verified",
+    "experiment_id": "sg-ettin150m-source-filtered-v3",
+    "scope": "receipt integrity and exact development serving parity only; not accuracy or rights review",
+    "config_sha256": "af97b5e2de2f9450bf88d3deacfa7559c7854b8a15cdc1be605021884f80c086",
+    "training_report_sha256": "1d3e9c6a97ccf4f9d2966af8f7277829f0f88d5ebf1548e2beca6c2d78ccb555",
+    "open_report_sha256": "c4d850f0c18d2ae3795ad87e9c68519a8a91f2142363b2dcd391258aaa69a0b4",
+    "checkpoint_files_sha256": {
+      "config.json": "8ea25957e427f454a76413b0506a3b73e0caa6f9fec1f24522f4d4e0dbf8e260",
+      "model.safetensors": "853f56c940a0e06c66f90096230952db15da6d8893c0228168097754cd966871",
+      "tokenizer.json": "e0a696f1fbf0f2c7d212e8b9e133250d19bd1c7e5bc34fc91c59d008894dc7b1",
+      "tokenizer_config.json": "239885aa9c2ae7d31caf67e9a284f8741cb87846847a4ef74627efa3b6f33eb3",
+      "training_args.bin": "f15d527baf82825a152fe215d85ac94db3241caf60f7981b82ea08027014f098",
+      "scamguard_calibration.json": "307eda637a3e22d7ac7d39445e3e2af233784cb9dfe95c0de1159ef5d656302e"
+    },
+    "training_ledger_sha256": "56dbd663c6103512b186436b8bbef380d372fad47d285770596411f2904acf0e",
+    "open_ledger_sha256": "d101380f0b8c84fac10e24f429272c0666740f158eba2650f39f881dd7a5c7e8",
+    "corpus_sha256": {
+      "train": "8d2d33e271ce8499c4f0b65dfc1a589bd64adecf760f01bc905416ffc8db148a",
+      "dev": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "test": "1208a54751b798f8a6bbe9101259c3fa141ad314606cb60b8d421dbf87f59475",
+      "forum_validation": "3fdbb438f1fa4d08328ff2c3cf35907d1080841749b418ac9241983a97bc567f",
+      "ood_financial": "686a0ded4b83c243778ab43ab546f3baa44181ec743d9428f7ec419c2eac3c33",
+      "ood_wspr": "dac5a52a60bb47087e9a687b2fbcc72de1f509b0eaede16ad7e0e7420db10144",
+      "ood_azsc": "358cd43ce205d580709ce5c68d8582eaab9dd0846d23445de1266fca49e589fd",
+      "call_state_validation": "fc48f925bafcd732a9191bcbdfb3a35f8646517146a8124efe66bcb57543e60e",
+      "call_window_validation": "1053f4be9270b819d5f2272e50645e9ea251d5a875d8a40ff170f71e7c01302d",
+      "ftc_pattern_validation": "d492c236175d56469d663feb159bea16d38214b196731c09bd139e4129de9d9b",
+      "multidogo_call_validation": "55f06cf914cc92f741e5234e49092ecacad5fdbbf5235905e847b747c6d6bf7b",
+      "multidogo_state_validation": "6bf7310ab0910cbf00c6c6dbcca356a205d61cdcf093931d0768ce6728f0fcf5",
+      "phone_scam_validation": "96d06085c4b5423a33235e417e1abcfa428ef0dd5a1f4551ded6305ead79f9ec",
+      "scam_dialogue_validation": "c473c94a6d3cc7b6c114c5e6b29f86a31e454310558f5282d9c1133bb51741a0",
+      "taskmaster_validation": "539b81a06328b2914407565c1bb7fac54a486333cea45a0853b4e2160df79760",
+      "apptek_call_selection": "e0e7ad4de8d378061159df18a8fa6c39fedd69d0cdd0dffe3f72579158290b62",
+      "ppone_validation": "3bb8ac2673199a23f19b6f53931ff9a58fffb6505428bfd916a71c3eaa95a6f9",
+      "banking77_validation": "efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7",
+      "vystadial_safe_diagnostic": "0a2c9a8e1e100fddd338d22acf2dc4ee85401ac40710199196e7171d1b463042",
+      "international_robocalls_diagnostic": "4604d1566dc09a616bf57318359ac2946036606d5ed03acb874b83ff9e5967af",
+      "adversarial": "eb0e137318b39b210af3015fa1409737696482c96495d01ae70e51c49eef0547",
+      "youtube_scam_validation": "108daf448b01e64f1f6f58228b295119b536c44cede1e6b512abc1eaf9262b1e",
+      "ood_chichewa": "b429621d3508b9cb3f1a7c7f079603f10966cdcec81b339d5d176aa8c77b0b38"
+    },
+    "source_sha256": {
+      "training/run_bounded_encoder.py": "48b3529a2f12cc369f0082832e852872c8345a78777ff1164d4a79752ca9144b",
+      "training/train_encoder.py": "f6404f7b1e95a33633a3a29d1c3844e0839972b612385036857f9b2f534a9fd9",
+      "training/ettin_calibration.py": "f09fbda62e28d7d37bdcf0ef572619ac4e8ad874da52054b26bbc7ad3d8c9037",
+      "benchmarks/eval_bounded_encoder.py": "70299698ec910deaeb01882bf0249dd5358331fc62c29202eee7460c05208a39",
+      "src/scamguard/metrics.py": "33609e010470b7b53dafe2b884a6901657b395ee702deecdf952f8e9cbb1a08b",
+      "src/scamguard/decision.py": "55b335c52e95f1ac9c2a12cb7031006d4091d6abf9e1c2f3d72d7eac1e316638",
+      "src/scamguard/model.py": "3cd51a3cced27c75433a962718aeab22f9ced287c95a7f83885a5908f0dee322",
+      "src/scamguard/scanner.py": "93102bfcfe7f5fe896ddc0c7b219dd39e644238dfceeecd47ed35fd237f25076",
+      "src/scamguard/signals.py": "3e78659a166f9cf435f46e112fcbcc108390aa6dc104153300a4a5ca59b64a5b",
+      "src/scamguard/preprocessing.py": "32d5f2381e03504f3c603728e901d25a4ade7f54c1638ca22118096a068e4ddb"
+    },
+    "development_exact_parity_rows": 2634,
+    "population_rows": {
+      "dev": 2634,
+      "test": 2374,
+      "forum_validation": 1125,
+      "ood_financial": 431,
+      "ood_wspr": 488,
+      "ood_azsc": 4327,
+      "call_state_validation": 2048,
+      "call_window_validation": 447,
+      "ftc_pattern_validation": 84,
+      "multidogo_call_validation": 896,
+      "multidogo_state_validation": 592,
+      "phone_scam_validation": 344,
+      "scam_dialogue_validation": 294,
+      "taskmaster_validation": 450,
+      "apptek_call_selection": 348,
+      "ppone_validation": 33,
+      "banking77_validation": 770,
+      "vystadial_safe_diagnostic": 1024,
+      "international_robocalls_diagnostic": 47,
+      "adversarial": 320,
+      "youtube_scam_validation": 70,
+      "ood_chichewa": 677
+    },
+    "release_authorized": false,
+    "production_ready": false,
+    "model_inference_performed": false,
+    "sealed_tests_opened": false,
+    "verifier_sha256": "385a79ad89eeac4d93e9f373965e6aa10576380016c30ad48e45861ffbc5ae6e"
+  },
+  "paired_open_comparison": {
+    "diagnostic_only": true,
+    "eligibility_authorization": false,
+    "sealed_data_used": false,
+    "scope": "open regression diagnostic; stratified sample, not population or SOTA evidence",
+    "manifest_sha256": "6f35983ddaa6c26821769fc94d757905038fc42d91699de7eac8061ae1ad82fc",
+    "counts": {
+      "source": {
+        "SAFE": 1746,
+        "UNCERTAIN": 41,
+        "SCAM": 587
+      },
+      "selected": {
+        "SAFE": 210,
+        "UNCERTAIN": 14,
+        "SCAM": 76
+      },
+      "method": "minimum 10 per available label, then proportional remaining capacity; largest remainder"
+    },
+    "candidate": {
+      "examples": 300,
+      "confusion_order": [
+        "SAFE",
+        "UNCERTAIN",
+        "SCAM"
+      ],
+      "confusion": [
+        [
+          190,
+          13,
+          7
+        ],
+        [
+          0,
+          10,
+          4
+        ],
+        [
+          0,
+          0,
+          76
+        ]
+      ],
+      "macro_f1": 0.8076852926546177,
+      "accuracy": 0.92,
+      "alert_composition": {
+        "definition": "Reference-label composition of all SCAM alerts; UNCERTAIN references are not relabeled SAFE or SCAM. Binary precision excludes them.",
+        "examples": 300,
+        "alerts": 87,
+        "alerts_by_reference_label": {
+          "SAFE": 7,
+          "UNCERTAIN": 4,
+          "SCAM": 76
+        },
+        "alert_fraction_by_reference_label": {
+          "SAFE": 0.08045977011494253,
+          "UNCERTAIN": 0.04597701149425287,
+          "SCAM": 0.8735632183908046
+        },
+        "binary_subset_precision": 0.9156626506024096,
+        "uncertain_to_scam_rate": 0.2857142857142857
+      },
+      "binary": {
+        "examples": 286,
+        "scam_examples": 76,
+        "safe_examples": 210,
+        "recall": 1,
+        "recall_ci95": [
+          0.9518864149348628,
+          1
+        ],
+        "false_positive_rate": 0.03333333333333333,
+        "false_positive_rate_ci95": [
+          0.016238722046764076,
+          0.06719439199523361
+        ]
+      }
+    },
+    "teacher": {
+      "examples": 300,
+      "confusion_order": [
+        "SAFE",
+        "UNCERTAIN",
+        "SCAM"
+      ],
+      "confusion": [
+        [
+          192,
+          18,
+          0
+        ],
+        [
+          4,
+          3,
+          7
+        ],
+        [
+          0,
+          11,
+          65
+        ]
+      ],
+      "macro_f1": 0.6515419896229492,
+      "accuracy": 0.8666666666666667,
+      "alert_composition": {
+        "definition": "Reference-label composition of all SCAM alerts; UNCERTAIN references are not relabeled SAFE or SCAM. Binary precision excludes them.",
+        "examples": 300,
+        "alerts": 72,
+        "alerts_by_reference_label": {
+          "SAFE": 0,
+          "UNCERTAIN": 7,
+          "SCAM": 65
+        },
+        "alert_fraction_by_reference_label": {
+          "SAFE": 0,
+          "UNCERTAIN": 0.09722222222222222,
+          "SCAM": 0.9027777777777778
+        },
+        "binary_subset_precision": 1,
+        "uncertain_to_scam_rate": 0.5
+      },
+      "binary": {
+        "examples": 286,
+        "scam_examples": 76,
+        "safe_examples": 210,
+        "recall": 0.8552631578947368,
+        "recall_ci95": [
+          0.7591255101452948,
+          0.9172148373084233
+        ],
+        "false_positive_rate": 0,
+        "false_positive_rate_ci95": [
+          0,
+          0.017964050759283236
+        ]
+      }
+    },
+    "candidate_minus_teacher": {
+      "recall": {
+        "difference": 0.14473684210526316,
+        "ci95_paired_bootstrap": [
+          0.06944444444444442,
+          0.22826863354037258
+        ]
+      },
+      "false_positive_rate": {
+        "difference": 0.03333333333333333,
+        "ci95_paired_bootstrap": [
+          0.009950248756218905,
+          0.06046511627906977
+        ]
+      },
+      "binary_accuracy": {
+        "difference": 0.013986013986013957,
+        "ci95_paired_bootstrap": [
+          -0.013986013986013957,
+          0.04195804195804198
+        ]
+      }
+    },
+    "mcnemar_exact_binary": {
+      "candidate_only_correct": 11,
+      "teacher_only_correct": 7,
+      "two_sided_p_value": 0.480682373046875
+    },
+    "bootstrap_iterations": 5000,
+    "seed": 20261010,
+    "bindings": {
+      "candidate_report_sha256": "c4d850f0c18d2ae3795ad87e9c68519a8a91f2142363b2dcd391258aaa69a0b4",
+      "candidate_ledger_sha256": "d101380f0b8c84fac10e24f429272c0666740f158eba2650f39f881dd7a5c7e8",
+      "teacher_report_sha256": "73f4c20e4e862f7517be7014fd0322cd170577e247b470b652c3fa09c71775b0",
+      "teacher_ledger_sha256": "72ec8cd46e0b0059678da6e778a32c509e8c77ed28c4ebec6bfe0cd15d1b70df"
+    }
+  },
+  "additional_evidence_sha256": {
+    "reports/runs/sg-ettin150m-source-filtered-v3.freeze.json": "9ca8b127d493f606d4a4ef8374a0ac70238375b3a2a9c131e1ad1ea32e49b879",
+    "reports/runs/sg-ettin150m-source-filtered-v3.integrity.json": "c878b71711a93f10d0edb4a151fe0e2c7db1bf827ab80f6f4585d2d1b056d0d1",
+    "reports/runs/sg-ettin150m-source-filtered-v3-vs-qwen38-27b-open300-20261010.paired.json": "b0c7e5ebb497764411a798ac01737b771ec8db98fba2456994ad1548a9635110"
+  },
+  "runtime_file_bytes": 602030752,
+  "limitations": [
+    "Open populations informed model selection; no sealed or SOTA claim.",
+    "BothBosu/phone reference labels remain unchanged despite known adjudication questions.",
+    "Source filtering, preprocessing and initialization/seed are bundled; no causal ablation.",
+    "Aggregate summaries omit per-row prediction IDs/text and timing trace; original hash-bound local receipts retain these.",
+    "Wilson row intervals do not account for family clustering or prior-open selection.",
+    "Peak process RSS excludes an audited complete Metal allocation peak.",
+    "Source declarations and automated privacy checks are not final rights/privacy clearance."
+  ]
+}
