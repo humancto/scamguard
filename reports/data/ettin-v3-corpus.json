@@ -1,0 +1,582 @@
+{
+  "artifact_schema_version": 1,
+  "builder": {
+    "path": "scripts/build_ettin_v3_corpus.py",
+    "sha256": "d556bbb77e670063f2a32c1de136dc66ff16169cc3ac748440864f89b30e7ae8"
+  },
+  "data_integrity_preflight": "passed",
+  "dataset_schema_version": 26,
+  "excluded": {
+    "dev": {
+      "families": 0,
+      "labels": {
+        "SAFE": 0,
+        "SCAM": 0,
+        "UNCERTAIN": 0
+      },
+      "rows": 0,
+      "source_table": {},
+      "sources": {}
+    },
+    "train": {
+      "families": 1335,
+      "labels": {
+        "SAFE": 588,
+        "SCAM": 1037,
+        "UNCERTAIN": 0
+      },
+      "rows": 1625,
+      "source_table": {
+        "shakeleoatmeal_phone_scam_synthetic": {
+          "families": 1190,
+          "labels": {
+            "SAFE": 588,
+            "SCAM": 602
+          },
+          "rows": 1190
+        },
+        "youtube_scam_calls_cc0": {
+          "families": 145,
+          "labels": {
+            "SCAM": 435
+          },
+          "rows": 435
+        }
+      },
+      "sources": {
+        "shakeleoatmeal_phone_scam_synthetic": 1190,
+        "youtube_scam_calls_cc0": 435
+      }
+    }
+  },
+  "filter": {
+    "allowlist": {
+      "imc25_public_forum_smishing": "CC-BY-4.0",
+      "mendeley_sms_phishing": "CC-BY-4.0",
+      "multidogo_human_service_dialogues": "CDLA-Permissive-1.0",
+      "scamguard_ftc_pattern_action_states_v1": "Apache-2.0",
+      "scamguard_multidogo_grounded_evidence_states_v1": "CDLA-Permissive-1.0",
+      "scamguard_synthetic_counterfactual_v1": "Apache-2.0",
+      "scamguard_synthetic_dialogue_v2": "Apache-2.0",
+      "scamguard_synthetic_long_call_action_states_v1": "Apache-2.0",
+      "scamguard_synthetic_v5": "Apache-2.0",
+      "taskmaster1_woz_dialogues": "CC-BY-4.0",
+      "uci_sms_spam": "CC-BY-4.0",
+      "wspr_sms_phishing": "MIT"
+    },
+    "benchmark_or_review_rows_added": 0,
+    "duplicate_ids_or_normalized_text": 0,
+    "excluded_sources": {
+      "shakeleoatmeal_phone_scam_synthetic": "MIT",
+      "youtube_scam_calls_cc0": "CC0-1.0"
+    },
+    "family_repetition_within_split": "preserved; counterfactual siblings are intentional",
+    "held_out_corpora_opened": false,
+    "labels_or_text_modified": false,
+    "new_rows_added": 0,
+    "retained_excluded_ancestry_matches": 0,
+    "retained_row_bytes_preserved": true,
+    "row_order_preserved": true,
+    "semantic_or_pretraining_overlap_proven_absent": false,
+    "train_dev_id_text_family_overlap": 0,
+    "training_or_model_inference_performed": false,
+    "unexpected_derivative_policy": "reject; explicit ancestry review required"
+  },
+  "human_review_status": "pending_new_corpus_bound_audit",
+  "input_refs": {
+    "dev": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/dev.jsonl",
+      "sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07"
+    },
+    "parent_manifest": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/manifest.json",
+      "sha256": "6c1096f1017edb10b690fde8968d9de892d2bff8ae49b9183c5da15e0380ad57"
+    },
+    "source_inventory": {
+      "path": "configs/ettin150m-release-provenance.json",
+      "sha256": "791fb85a06a8594983104219c51ffb531989e038fb02f849451d10cbc56368c0"
+    },
+    "source_registry": {
+      "path": "data/raw/sources.json",
+      "sha256": "bb27a2d89e98a7e53f009ca556d35cb4a62fcd79dd5827ffafec3f609ae99cea"
+    },
+    "train": {
+      "path": "data/experiments/schema25-full-call-curriculum/processed/train.jsonl",
+      "sha256": "d4e3e100e97a937a789aa984d4ce75b545592886099a0027dbd758bbf0b2e614"
+    }
+  },
+  "limitations": [
+    "Publisher license records are not independent upstream-rights or privacy clearance.",
+    "Existing labels are preserved, not human-verified or corrected by the AI review.",
+    "The old 635-row audit is not a completed or sufficient audit of this new corpus.",
+    "No existing holdout or benchmark was filtered, relabeled, or replaced.",
+    "Training inputs are restricted to the pinned parent corpus, never the 96-case audit.",
+    "Source subtraction does not erase influence from prior fitted model weights.",
+    "Passing data integrity is not a quality, production, mobile, or publication gate."
+  ],
+  "manifest": {
+    "path": "data/experiments/schema26-ettin-source-filtered/processed/manifest.json",
+    "sha256": "dd37e9c07f7e8d4fb0b47b319fddbd812049169dbf6259660e8665820de2f7e4"
+  },
+  "original": {
+    "dev": {
+      "families": 575,
+      "labels": {
+        "SAFE": 2008,
+        "SCAM": 514,
+        "UNCERTAIN": 112
+      },
+      "rows": 2634,
+      "source_table": {
+        "mendeley_sms_phishing": {
+          "families": 523,
+          "labels": {
+            "SAFE": 484,
+            "SCAM": 10,
+            "UNCERTAIN": 37
+          },
+          "rows": 531
+        },
+        "scamguard_synthetic_v5": {
+          "families": 43,
+          "labels": {
+            "SAFE": 1512,
+            "SCAM": 504,
+            "UNCERTAIN": 72
+          },
+          "rows": 2088
+        },
+        "uci_sms_spam": {
+          "families": 14,
+          "labels": {
+            "SAFE": 12,
+            "UNCERTAIN": 3
+          },
+          "rows": 15
+        }
+      },
+      "sources": {
+        "mendeley_sms_phishing": 531,
+        "scamguard_synthetic_v5": 2088,
+        "uci_sms_spam": 15
+      }
+    },
+    "train": {
+      "families": 12582,
+      "labels": {
+        "SAFE": 13670,
+        "SCAM": 8075,
+        "UNCERTAIN": 2691
+      },
+      "rows": 24436,
+      "source_table": {
+        "imc25_public_forum_smishing": {
+          "families": 1248,
+          "labels": {
+            "SAFE": 148,
+            "SCAM": 1000,
+            "UNCERTAIN": 100
+          },
+          "rows": 1248
+        },
+        "mendeley_sms_phishing": {
+          "families": 4277,
+          "labels": {
+            "SAFE": 3857,
+            "SCAM": 147,
+            "UNCERTAIN": 387
+          },
+          "rows": 4391
+        },
+        "multidogo_human_service_dialogues": {
+          "families": 812,
+          "labels": {
+            "SAFE": 812
+          },
+          "rows": 812
+        },
+        "scamguard_ftc_pattern_action_states_v1": {
+          "families": 89,
+          "labels": {
+            "SAFE": 178,
+            "SCAM": 89,
+            "UNCERTAIN": 89
+          },
+          "rows": 356
+        },
+        "scamguard_multidogo_grounded_evidence_states_v1": {
+          "families": 211,
+          "labels": {
+            "SAFE": 422,
+            "SCAM": 211,
+            "UNCERTAIN": 211
+          },
+          "rows": 844
+        },
+        "scamguard_synthetic_counterfactual_v1": {
+          "families": 8,
+          "labels": {
+            "SAFE": 64,
+            "SCAM": 64
+          },
+          "rows": 128
+        },
+        "scamguard_synthetic_dialogue_v2": {
+          "families": 24,
+          "labels": {
+            "SAFE": 732,
+            "SCAM": 763
+          },
+          "rows": 1495
+        },
+        "scamguard_synthetic_long_call_action_states_v1": {
+          "families": 1536,
+          "labels": {
+            "SAFE": 3072,
+            "SCAM": 1536,
+            "UNCERTAIN": 1536
+          },
+          "rows": 6144
+        },
+        "scamguard_synthetic_v5": {
+          "families": 75,
+          "labels": {
+            "SAFE": 2484,
+            "SCAM": 1584,
+            "UNCERTAIN": 72
+          },
+          "rows": 4140
+        },
+        "shakeleoatmeal_phone_scam_synthetic": {
+          "families": 1190,
+          "labels": {
+            "SAFE": 588,
+            "SCAM": 602
+          },
+          "rows": 1190
+        },
+        "taskmaster1_woz_dialogues": {
+          "families": 1167,
+          "labels": {
+            "SAFE": 1193
+          },
+          "rows": 1193
+        },
+        "uci_sms_spam": {
+          "families": 146,
+          "labels": {
+            "SAFE": 120,
+            "UNCERTAIN": 27
+          },
+          "rows": 147
+        },
+        "wspr_sms_phishing": {
+          "families": 1913,
+          "labels": {
+            "SCAM": 1644,
+            "UNCERTAIN": 269
+          },
+          "rows": 1913
+        },
+        "youtube_scam_calls_cc0": {
+          "families": 145,
+          "labels": {
+            "SCAM": 435
+          },
+          "rows": 435
+        }
+      },
+      "sources": {
+        "imc25_public_forum_smishing": 1248,
+        "mendeley_sms_phishing": 4391,
+        "multidogo_human_service_dialogues": 812,
+        "scamguard_ftc_pattern_action_states_v1": 356,
+        "scamguard_multidogo_grounded_evidence_states_v1": 844,
+        "scamguard_synthetic_counterfactual_v1": 128,
+        "scamguard_synthetic_dialogue_v2": 1495,
+        "scamguard_synthetic_long_call_action_states_v1": 6144,
+        "scamguard_synthetic_v5": 4140,
+        "shakeleoatmeal_phone_scam_synthetic": 1190,
+        "taskmaster1_woz_dialogues": 1193,
+        "uci_sms_spam": 147,
+        "wspr_sms_phishing": 1913,
+        "youtube_scam_calls_cc0": 435
+      }
+    }
+  },
+  "privacy_audit": {
+    "code_sha256": {
+      "scripts/build_dataset.py": "1c6b8b1e86e640eced80b1fa10cb3957e6d1f44b27e6f7a72cca12fd27fe78fb",
+      "src/scamguard/privacy.py": "089f118c174cc1249589d3250992a3574b4b3c0c3bb5dcd24547e40c00aef0fa"
+    },
+    "limitation": "Conservative regex/masking checks are not a privacy certificate; names, addresses, context and missed patterns require human review.",
+    "policy": "contextual_sensitive_values_v1",
+    "splits": {
+      "dev": {
+        "findings": {
+          "contextual_value": 0,
+          "email": 0,
+          "long_digits": 0,
+          "phone_like": 0
+        },
+        "independent_privacy_review_completed": false,
+        "rows": 2634,
+        "status": "passed_heuristic_preflight",
+        "text_modified": false
+      },
+      "train": {
+        "findings": {
+          "contextual_value": 0,
+          "email": 0,
+          "long_digits": 0,
+          "phone_like": 0
+        },
+        "independent_privacy_review_completed": false,
+        "rows": 22811,
+        "status": "passed_heuristic_preflight",
+        "text_modified": false
+      }
+    }
+  },
+  "production_ready": false,
+  "purpose": "source-filtered fresh-base Ettin research experiment",
+  "release_authorized": false,
+  "remaining_source_reviews": {
+    "imc25_public_forum_smishing": {
+      "human_review_status": "pending",
+      "license_declared": "CC-BY-4.0",
+      "rights_review_status": "review_required"
+    },
+    "mendeley_sms_phishing": {
+      "human_review_status": "pending",
+      "license_declared": "CC-BY-4.0",
+      "rights_review_status": "review_required"
+    },
+    "multidogo_human_service_dialogues": {
+      "human_review_status": "pending",
+      "license_declared": "CDLA-Permissive-1.0",
+      "rights_review_status": "review_required"
+    },
+    "scamguard_ftc_pattern_action_states_v1": {
+      "human_review_status": "pending",
+      "license_declared": "Apache-2.0",
+      "rights_review_status": "review_required"
+    },
+    "scamguard_multidogo_grounded_evidence_states_v1": {
+      "human_review_status": "pending",
+      "license_declared": "CDLA-Permissive-1.0",
+      "rights_review_status": "review_required"
+    },
+    "scamguard_synthetic_counterfactual_v1": {
+      "human_review_status": "pending",
+      "license_declared": "Apache-2.0",
+      "rights_review_status": "review_required"
+    },
+    "scamguard_synthetic_dialogue_v2": {
+      "human_review_status": "pending",
+      "license_declared": "Apache-2.0",
+      "rights_review_status": "review_required"
+    },
+    "scamguard_synthetic_long_call_action_states_v1": {
+      "human_review_status": "pending",
+      "license_declared": "Apache-2.0",
+      "rights_review_status": "review_required"
+    },
+    "scamguard_synthetic_v5": {
+      "human_review_status": "pending",
+      "license_declared": "Apache-2.0",
+      "rights_review_status": "review_required"
+    },
+    "taskmaster1_woz_dialogues": {
+      "human_review_status": "pending",
+      "license_declared": "CC-BY-4.0",
+      "rights_review_status": "review_required"
+    },
+    "uci_sms_spam": {
+      "human_review_status": "pending",
+      "license_declared": "CC-BY-4.0",
+      "rights_review_status": "review_required"
+    },
+    "wspr_sms_phishing": {
+      "human_review_status": "pending",
+      "license_declared": "MIT",
+      "rights_review_status": "review_required"
+    }
+  },
+  "requires_fresh_base_weights": true,
+  "research_eligible": true,
+  "rights_review_status": "review_required",
+  "splits": {
+    "dev": {
+      "families": 575,
+      "labels": {
+        "SAFE": 2008,
+        "SCAM": 514,
+        "UNCERTAIN": 112
+      },
+      "path": "data/experiments/schema26-ettin-source-filtered/processed/dev.jsonl",
+      "rows": 2634,
+      "sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "source_table": {
+        "mendeley_sms_phishing": {
+          "families": 523,
+          "labels": {
+            "SAFE": 484,
+            "SCAM": 10,
+            "UNCERTAIN": 37
+          },
+          "rows": 531
+        },
+        "scamguard_synthetic_v5": {
+          "families": 43,
+          "labels": {
+            "SAFE": 1512,
+            "SCAM": 504,
+            "UNCERTAIN": 72
+          },
+          "rows": 2088
+        },
+        "uci_sms_spam": {
+          "families": 14,
+          "labels": {
+            "SAFE": 12,
+            "UNCERTAIN": 3
+          },
+          "rows": 15
+        }
+      },
+      "sources": {
+        "mendeley_sms_phishing": 531,
+        "scamguard_synthetic_v5": 2088,
+        "uci_sms_spam": 15
+      }
+    },
+    "train": {
+      "families": 11247,
+      "labels": {
+        "SAFE": 13082,
+        "SCAM": 7038,
+        "UNCERTAIN": 2691
+      },
+      "path": "data/experiments/schema26-ettin-source-filtered/processed/train.jsonl",
+      "rows": 22811,
+      "sha256": "8d2d33e271ce8499c4f0b65dfc1a589bd64adecf760f01bc905416ffc8db148a",
+      "source_table": {
+        "imc25_public_forum_smishing": {
+          "families": 1248,
+          "labels": {
+            "SAFE": 148,
+            "SCAM": 1000,
+            "UNCERTAIN": 100
+          },
+          "rows": 1248
+        },
+        "mendeley_sms_phishing": {
+          "families": 4277,
+          "labels": {
+            "SAFE": 3857,
+            "SCAM": 147,
+            "UNCERTAIN": 387
+          },
+          "rows": 4391
+        },
+        "multidogo_human_service_dialogues": {
+          "families": 812,
+          "labels": {
+            "SAFE": 812
+          },
+          "rows": 812
+        },
+        "scamguard_ftc_pattern_action_states_v1": {
+          "families": 89,
+          "labels": {
+            "SAFE": 178,
+            "SCAM": 89,
+            "UNCERTAIN": 89
+          },
+          "rows": 356
+        },
+        "scamguard_multidogo_grounded_evidence_states_v1": {
+          "families": 211,
+          "labels": {
+            "SAFE": 422,
+            "SCAM": 211,
+            "UNCERTAIN": 211
+          },
+          "rows": 844
+        },
+        "scamguard_synthetic_counterfactual_v1": {
+          "families": 8,
+          "labels": {
+            "SAFE": 64,
+            "SCAM": 64
+          },
+          "rows": 128
+        },
+        "scamguard_synthetic_dialogue_v2": {
+          "families": 24,
+          "labels": {
+            "SAFE": 732,
+            "SCAM": 763
+          },
+          "rows": 1495
+        },
+        "scamguard_synthetic_long_call_action_states_v1": {
+          "families": 1536,
+          "labels": {
+            "SAFE": 3072,
+            "SCAM": 1536,
+            "UNCERTAIN": 1536
+          },
+          "rows": 6144
+        },
+        "scamguard_synthetic_v5": {
+          "families": 75,
+          "labels": {
+            "SAFE": 2484,
+            "SCAM": 1584,
+            "UNCERTAIN": 72
+          },
+          "rows": 4140
+        },
+        "taskmaster1_woz_dialogues": {
+          "families": 1167,
+          "labels": {
+            "SAFE": 1193
+          },
+          "rows": 1193
+        },
+        "uci_sms_spam": {
+          "families": 146,
+          "labels": {
+            "SAFE": 120,
+            "UNCERTAIN": 27
+          },
+          "rows": 147
+        },
+        "wspr_sms_phishing": {
+          "families": 1913,
+          "labels": {
+            "SCAM": 1644,
+            "UNCERTAIN": 269
+          },
+          "rows": 1913
+        }
+      },
+      "sources": {
+        "imc25_public_forum_smishing": 1248,
+        "mendeley_sms_phishing": 4391,
+        "multidogo_human_service_dialogues": 812,
+        "scamguard_ftc_pattern_action_states_v1": 356,
+        "scamguard_multidogo_grounded_evidence_states_v1": 844,
+        "scamguard_synthetic_counterfactual_v1": 128,
+        "scamguard_synthetic_dialogue_v2": 1495,
+        "scamguard_synthetic_long_call_action_states_v1": 6144,
+        "scamguard_synthetic_v5": 4140,
+        "taskmaster1_woz_dialogues": 1193,
+        "uci_sms_spam": 147,
+        "wspr_sms_phishing": 1913
+      }
+    }
+  }
+}

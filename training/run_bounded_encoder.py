@@ -33,6 +33,7 @@ if __package__ in {None, ""}:
 
 from scamguard.metrics import choose_threshold, file_sha256, verdict_alert_metrics
 from scamguard.preprocessing import DIALOGUE_POLICIES, prepare_model_text
+from training.ettin_calibration import SERVING_CALIBRATION_VERSION, calibrate_serving_dev
 from training.train_encoder import (
     LABEL_TO_ID,
     LABELS,
@@ -157,6 +158,11 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ValueError("invalid truncation side")
     if settings["dialogue_policy"] not in DIALOGUE_POLICIES:
         raise ValueError("unknown dialogue policy")
+    calibration = config.get("calibration", {})
+    if not isinstance(calibration, dict) or (
+        "method" in calibration and calibration["method"] != SERVING_CALIBRATION_VERSION
+    ):
+        raise ValueError("unknown calibration method; omit method for legacy calibration")
     outputs = config.get("outputs", {})
     if not {"checkpoint", "report"} <= set(outputs) or set(outputs) - {
         "checkpoint",
@@ -287,8 +293,13 @@ def source_identity() -> dict[str, str]:
     names = (
         "training/run_bounded_encoder.py",
         "training/train_encoder.py",
+        "training/ettin_calibration.py",
+        "benchmarks/eval_bounded_encoder.py",
         "src/scamguard/metrics.py",
         "src/scamguard/decision.py",
+        "src/scamguard/model.py",
+        "src/scamguard/scanner.py",
+        "src/scamguard/signals.py",
         "src/scamguard/preprocessing.py",
     )
     return {name: file_sha256(root / name) for name in names}
@@ -364,23 +375,75 @@ def calibrate_dev(rows: list[dict], logits: np.ndarray) -> tuple[dict, dict, lis
     return calibration, metrics, records
 
 
-def run(config_path: Path, *, preflight: bool = False) -> int:
+def calibrate_checkpoint_dev(
+    config: dict[str, Any], model: Any, tokenizer: Any, rows: list[dict],
+    trainer: Any, dataset: Any,
+) -> tuple[dict, dict, list[dict]]:
+    """Explicit serving calibration opt-in; old configs retain their original path."""
+    settings = config["training"]
+    if config.get("calibration", {}).get("method") == SERVING_CALIBRATION_VERSION:
+        return calibrate_serving_dev(
+            model, tokenizer, rows, settings["max_length"], settings["dialogue_policy"]
+        )
+    trainer.args.train_sampling_strategy = "random"
+    logits = predict_in_dataset_order(trainer, dataset, rows)
+    return calibrate_dev(rows, logits)
+
+
+def run(
+    config_path: Path, *, preflight: bool = False, metadata_preflight: bool = False,
+) -> int:
     config_bytes = config_path.read_bytes()
     config = json.loads(config_bytes)
     validate_config(config)
+    serving_calibration = (
+        config.get("calibration", {}).get("method") == SERVING_CALIBRATION_VERSION
+    )
+    if preflight and metadata_preflight:
+        raise ValueError("choose only one preflight mode")
+    if preflight and serving_calibration:
+        raise ValueError("serving-calibrated fits require --metadata-preflight, not --preflight")
     paths = artifact_paths(config)
-    ensure_fresh_outputs(paths, preflight=preflight)
+    ensure_fresh_outputs(paths, preflight=preflight or metadata_preflight)
     rows, data_identity = load_rows(config)
     settings = config["training"]
     steps = step_bound(len(rows["train"]), settings)
+    config_sha256 = hashlib.sha256(config_bytes).hexdigest()
+    sources = source_identity()
+    base_files = None
+    if metadata_preflight or serving_calibration:
+        # Offline file verification only: no MPS probing, model load, or forward pass.
+        base_files = local_model_files(config)
+        expected_preflight = {
+            "status": "passed",
+            "mode": "CPU_metadata_only",
+            "config_sha256": config_sha256,
+            "source_sha256": sources,
+            "data": data_identity,
+            "base_model_files_sha256": base_files,
+            "effective_max_steps": steps,
+            "model_forward_performed": False,
+            "training_performed": False,
+            "release_authorized": False,
+        }
+        if metadata_preflight:
+            write_json(paths["preflight"], expected_preflight, exclusive=True)
+            return 0
+        # The same preflight path is exclusive for preparation, but its unchanged
+        # receipt must already exist when the one serving-calibrated fit begins.
+        if (
+            not paths["preflight"].is_file()
+            or json.loads(paths["preflight"].read_text()) != expected_preflight
+        ):
+            raise ValueError("serving fit requires its unchanged metadata preflight receipt")
     started = time.monotonic()
     result: dict[str, Any] = {
         "artifact_schema_version": 1,
         "experiment_id": config["experiment_id"],
         "mode": "preflight" if preflight else "fresh_fixed_terminal_fit",
         "config": config,
-        "config_sha256": hashlib.sha256(config_bytes).hexdigest(),
-        "source_sha256": source_identity(),
+        "config_sha256": config_sha256,
+        "source_sha256": sources,
         "data": data_identity,
         "environment": environment(),
         "effective_max_steps": steps,
@@ -392,6 +455,11 @@ def run(config_path: Path, *, preflight: bool = False) -> int:
         "stop_reason": None,
         "checkpoint": str(paths["checkpoint"]),
     }
+    if serving_calibration:
+        result["metadata_preflight"] = {
+            "path": str(paths["preflight"]),
+            "sha256": file_sha256(paths["preflight"]),
+        }
     result["environment_sha256"] = hashlib.sha256(
         json.dumps(result["environment"], sort_keys=True).encode()
     ).hexdigest()
@@ -402,7 +470,9 @@ def run(config_path: Path, *, preflight: bool = False) -> int:
         if not torch.backends.mps.is_available():
             raise RuntimeError("this local experiment requires MPS; CPU fallback is prohibited")
         set_seed(settings["seed"])
-        result["base_model_files_sha256"] = local_model_files(config)
+        result["base_model_files_sha256"] = (
+            base_files if base_files is not None else local_model_files(config)
+        )
         load_args = {
             "revision": config["model"]["revision"],
             "local_files_only": True,
@@ -491,8 +561,8 @@ def run(config_path: Path, *, preflight: bool = False) -> int:
             binary_positive_weight=1.0,
             callbacks=[progress],
         )
-        if trainer.model.device.type != "mps":
-            raise RuntimeError("Trainer did not retain the required MPS device")
+        if trainer.model.device.type != "mps" or args.world_size != 1:
+            raise RuntimeError("bounded fit requires one local MPS process")
         if time.monotonic() - started >= settings["max_wall_seconds"]:
             raise TimeoutError("wall limit reached before training")
         result["train"] = trainer.train().metrics
@@ -518,9 +588,9 @@ def run(config_path: Path, *, preflight: bool = False) -> int:
         result["checkpoint_model_sha256"] = result["checkpoint_files_sha256"]["model.safetensors"]
 
         progress.record(trainer.state, "development_calibration")
-        trainer.args.train_sampling_strategy = "random"
-        logits = predict_in_dataset_order(trainer, datasets["dev"], projected["dev"])
-        calibration, metrics, records = calibrate_dev(projected["dev"], logits)
+        calibration, metrics, records = calibrate_checkpoint_dev(
+            config, model, tokenizer, projected["dev"], trainer, datasets["dev"]
+        )
         calibration.update(
             model_id=config["experiment_id"],
             input_transform={
@@ -590,10 +660,17 @@ def run(config_path: Path, *, preflight: bool = False) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--preflight", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--preflight", action="store_true")
+    modes.add_argument(
+        "--metadata-preflight", action="store_true",
+        help="Verify immutable inputs offline without loading a model; exclusive receipt.",
+    )
     args = parser.parse_args()
     try:
-        raise SystemExit(run(args.config, preflight=args.preflight))
+        raise SystemExit(run(
+            args.config, preflight=args.preflight, metadata_preflight=args.metadata_preflight
+        ))
     except (ValueError, RuntimeError, OSError) as error:
         print(json.dumps({"status": "failed", "error": str(error)}), file=sys.stderr)
         raise SystemExit(1) from error

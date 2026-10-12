@@ -1,0 +1,264 @@
+{
+  "experiment_id": "sg-ettin150m-source-filtered-v3",
+  "predeclared_before_training": true,
+  "created_at": "2026-10-12",
+  "purpose": "One final user-authorized local research fit from the original Ettin base, excluding two unresolved training sources and using action-preserving v3 preprocessing. Open diagnoses informed this experiment: no independent final or SOTA claim.",
+  "model": {
+    "repository": "jhu-clsp/ettin-encoder-150m",
+    "revision": "45d08642849e5c5701b162671ac811b7654bfd9f",
+    "license": "MIT",
+    "files_sha256": {
+      "config.json": "21a0595c0284dd9920783ac526ea2985aa9d0fdb5b0c09848f9c1916cdd82787",
+      "pytorch_model.bin": "fd77a88ef9599bf8698811e3d6010fc1c4a48bf2149cd56d49b146469b394754",
+      "special_tokens_map.json": "ea97ecdbcc73713039d8d64dbb05e3689495c96657fbd9a18f5bed381be81049",
+      "tokenizer.json": "9fd55248d51d33976b324fc11592e28071da7d41e0e9401dfb7082e30574b7b1",
+      "tokenizer_config.json": "3cd2017ff46d0a527e5d39cae39272eccfa1f19bb9f89b05d166aab2e38354e2"
+    }
+  },
+  "data": {
+    "train": {
+      "path": "data/experiments/schema26-ettin-source-filtered/processed/train.jsonl",
+      "sha256": "8d2d33e271ce8499c4f0b65dfc1a589bd64adecf760f01bc905416ffc8db148a",
+      "rows": 22811
+    },
+    "dev": {
+      "path": "data/experiments/schema26-ettin-source-filtered/processed/dev.jsonl",
+      "sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "rows": 2634
+    }
+  },
+  "training": {
+    "epochs": 2,
+    "batch_size": 16,
+    "learning_rate": 0.00002,
+    "max_steps": 2852,
+    "max_wall_seconds": 3600,
+    "max_length": 256,
+    "truncation_side": "right",
+    "dialogue_policy": "speaker-neutral-action-preserving-v3",
+    "seed": 20261012,
+    "binary_loss_weight": 0,
+    "checkpoint_selection": "fixed terminal checkpoint at min(max_steps, epochs * ceil(train_rows / batch_size))",
+    "class_weights": "sqrt(total / (3 * label_count))",
+    "initialization": "fresh pretrained backbone plus seeded 3-way head",
+    "auxiliary_fields": "action_targets and action_verdict_weight removed from in-memory row copies only",
+    "hyperparameter_runs": 1,
+    "resume_or_continuation_allowed": false
+  },
+  "outputs": {
+    "checkpoint": "artifacts/checkpoints/sg-ettin150m-source-filtered-v3",
+    "report": "reports/runs/sg-ettin150m-source-filtered-v3.train.json",
+    "evaluation": "reports/runs/sg-ettin150m-source-filtered-v3.open.json",
+    "predictions": "reports/runs/sg-ettin150m-source-filtered-v3.open.predictions.jsonl"
+  },
+  "calibration": {
+    "method": "ettin-serving-batch1-torch-fp32-v1",
+    "source": "unchanged 2634-row development set only",
+    "temperature": "NLL fit on batch-one unpadded FP32 logits",
+    "probabilities": "float32 one-dimensional torch.softmax on MPS, exactly matching TransformersBackend",
+    "scam_threshold": "maximize SCAM recall under development SAFE FPR <= 0.02, then precision, then highest threshold; stable interval midpoint only without any changed three-label decision",
+    "safe_threshold": 0.2,
+    "safe_threshold_semantics": "maximum_safe_risk",
+    "refit_after_open_evaluation": false
+  },
+  "evaluation": {
+    "max_wall_seconds": 1800,
+    "batch_size": 1,
+    "all_declared_slices_reported_even_if_quality_fails": true,
+    "splits": {
+      "test": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/test.jsonl",
+        "sha256": "1208a54751b798f8a6bbe9101259c3fa141ad314606cb60b8d421dbf87f59475",
+        "rows": 2374,
+        "role": "regression"
+      },
+      "forum_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/forum_validation.jsonl",
+        "sha256": "3fdbb438f1fa4d08328ff2c3cf35907d1080841749b418ac9241983a97bc567f",
+        "rows": 1125,
+        "role": "open_diagnostic"
+      },
+      "ood_financial": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/ood_financial.jsonl",
+        "sha256": "686a0ded4b83c243778ab43ab546f3baa44181ec743d9428f7ec419c2eac3c33",
+        "rows": 431,
+        "role": "open_diagnostic"
+      },
+      "ood_wspr": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/ood_wspr.jsonl",
+        "sha256": "dac5a52a60bb47087e9a687b2fbcc72de1f509b0eaede16ad7e0e7420db10144",
+        "rows": 488,
+        "role": "open_diagnostic"
+      },
+      "ood_azsc": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/ood_azsc.jsonl",
+        "sha256": "358cd43ce205d580709ce5c68d8582eaab9dd0846d23445de1266fca49e589fd",
+        "rows": 4327,
+        "role": "open_diagnostic"
+      },
+      "call_state_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/call_state_validation.jsonl",
+        "sha256": "fc48f925bafcd732a9191bcbdfb3a35f8646517146a8124efe66bcb57543e60e",
+        "rows": 2048,
+        "role": "open_diagnostic"
+      },
+      "call_window_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/call_window_validation.jsonl",
+        "sha256": "1053f4be9270b819d5f2272e50645e9ea251d5a875d8a40ff170f71e7c01302d",
+        "rows": 447,
+        "role": "open_diagnostic"
+      },
+      "ftc_pattern_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/ftc_pattern_validation.jsonl",
+        "sha256": "d492c236175d56469d663feb159bea16d38214b196731c09bd139e4129de9d9b",
+        "rows": 84,
+        "role": "open_diagnostic"
+      },
+      "multidogo_call_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/multidogo_call_validation.jsonl",
+        "sha256": "55f06cf914cc92f741e5234e49092ecacad5fdbbf5235905e847b747c6d6bf7b",
+        "rows": 896,
+        "role": "open_diagnostic"
+      },
+      "multidogo_state_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/multidogo_state_validation.jsonl",
+        "sha256": "6bf7310ab0910cbf00c6c6dbcca356a205d61cdcf093931d0768ce6728f0fcf5",
+        "rows": 592,
+        "role": "open_diagnostic"
+      },
+      "phone_scam_validation": {
+        "path": "data/experiments/schema25-full-call-curriculum/processed/phone_scam_validation.jsonl",
+        "sha256": "96d06085c4b5423a33235e417e1abcfa428ef0dd5a1f4551ded6305ead79f9ec",
+        "rows": 344,
+        "role": "open_diagnostic"
+      },
+      "scam_dialogue_validation": {
+        "path": "data/external/scam_dialogue/scam_dialogue_validation.jsonl",
+        "sha256": "c473c94a6d3cc7b6c114c5e6b29f86a31e454310558f5282d9c1133bb51741a0",
+        "rows": 294,
+        "role": "open_diagnostic"
+      },
+      "taskmaster_validation": {
+        "path": "data/external/taskmaster/taskmaster_validation.jsonl",
+        "sha256": "539b81a06328b2914407565c1bb7fac54a486333cea45a0853b4e2160df79760",
+        "rows": 450,
+        "role": "open_diagnostic"
+      },
+      "apptek_call_selection": {
+        "path": "data/external/apptek_callcenter/apptek_call_selection.jsonl",
+        "sha256": "e0e7ad4de8d378061159df18a8fa6c39fedd69d0cdd0dffe3f72579158290b62",
+        "rows": 348,
+        "role": "open_diagnostic"
+      },
+      "ppone_validation": {
+        "path": "data/external/ppone_robocalls/ppone_validation.jsonl",
+        "sha256": "3bb8ac2673199a23f19b6f53931ff9a58fffb6505428bfd916a71c3eaa95a6f9",
+        "rows": 33,
+        "role": "open_diagnostic"
+      },
+      "banking77_validation": {
+        "path": "data/external/banking77/banking77_validation.jsonl",
+        "sha256": "efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7",
+        "rows": 770,
+        "role": "open_diagnostic"
+      },
+      "vystadial_safe_diagnostic": {
+        "path": "data/external/vystadial_safe/vystadial_safe_diagnostic.jsonl",
+        "sha256": "0a2c9a8e1e100fddd338d22acf2dc4ee85401ac40710199196e7171d1b463042",
+        "rows": 1024,
+        "role": "open_diagnostic"
+      },
+      "international_robocalls_diagnostic": {
+        "path": "data/external/international_robocalls/international_robocalls_diagnostic.jsonl",
+        "sha256": "4604d1566dc09a616bf57318359ac2946036606d5ed03acb874b83ff9e5967af",
+        "rows": 47,
+        "role": "open_diagnostic"
+      },
+      "adversarial": {
+        "path": "data/processed/adversarial.jsonl",
+        "sha256": "eb0e137318b39b210af3015fa1409737696482c96495d01ae70e51c49eef0547",
+        "rows": 320,
+        "role": "open_diagnostic"
+      },
+      "youtube_scam_validation": {
+        "path": "data/external/youtube_scam_calls/youtube_scam_validation.jsonl",
+        "sha256": "108daf448b01e64f1f6f58228b295119b536c44cede1e6b512abc1eaf9262b1e",
+        "rows": 70,
+        "role": "open_diagnostic"
+      },
+      "ood_chichewa": {
+        "path": "data/external/chichewa/ood_chichewa.jsonl",
+        "sha256": "b429621d3508b9cb3f1a7c7f079603f10966cdcec81b339d5d176aa8c77b0b38",
+        "rows": 677,
+        "role": "open_diagnostic"
+      }
+    },
+    "primary_and_other_sealed_tests_may_open": false,
+    "primary_reason": "Open screening first; no sealed evaluation or release claim in this bounded pilot.",
+    "latency": {
+      "scope": "warm batch-one complete Scanner.scan, including preprocessing, tokenizer, model, calibration, evidence/action extraction and synchronization; excludes load and external IPC",
+      "source_split": "test",
+      "rows": 100,
+      "rounds": 3,
+      "warmup": 10,
+      "seed": 20261010,
+      "p95_ms_max": 20
+    }
+  },
+  "quality_promotion": {
+    "dev_scam_recall_min": 0.97,
+    "dev_safe_fpr_max": 0.02,
+    "test_scam_recall_min": 0.97,
+    "test_safe_fpr_max": 0.02,
+    "test_core_category_recall_min": 0.97,
+    "test_category_min_examples": 20,
+    "required_dialogue_splits": [
+      "scam_dialogue_validation",
+      "taskmaster_validation",
+      "multidogo_call_validation",
+      "phone_scam_validation"
+    ],
+    "dialogue_scam_recall_min": 0.97,
+    "dialogue_safe_fpr_max": 0.02,
+    "macro_f1_stretch": 0.94,
+    "macro_f1_role": "PRD stretch; always report, never conflate binary and three-class quality",
+    "other_slices": "mandatory transparent diagnostics; source/language weaknesses are not masked by aggregates",
+    "promotion_meaning": "eligibility for a separately frozen export/final-validation experiment only, not release"
+  },
+  "teacher_comparison": {
+    "role": "optional descriptive continuity only, not a mandatory gate",
+    "new_teacher_inference": false,
+    "reuse_existing_completed_teacher": true,
+    "manifest": "reports/runs/qwen38-27b-open300-20261010.manifest.json",
+    "teacher_report": "reports/runs/qwen38-27b-open300-20261010.teacher.json",
+    "teacher_predictions": "reports/runs/qwen38-27b-open300-20261010.teacher.predictions.jsonl",
+    "claim_scope": "previously open and recipe-informed; never sealed evidence or SOTA proof"
+  },
+  "stop_policy": "One fit only, authorized after v2 rejection and independent AI diagnostic review. No resume, continuation, sweep, checkpoint selection, extra seed, post-open threshold refit or automatic repair fit. Numerical failure, timeout, invalid protocol or any mandatory quality gate failure terminates this attempt. CPU implementation fixes allowed only before freeze/fit. All 21 declared open slices reported even on quality failure; original labels and denominators preserved.",
+  "release_authorized": false,
+  "independent_human_review_required": true,
+  "physical_mobile_claim_authorized": false,
+  "execution": {
+    "effective_max_steps": 2852,
+    "train_process_before_terminal_step_seconds": 3600,
+    "post_fit_process_seconds": 900,
+    "train_process_total_seconds": 4500,
+    "evaluation_process_seconds": 1800
+  },
+  "corpus_receipt": {
+    "path": "reports/data/ettin-v3-corpus.json",
+    "sha256": "3b49a973a135e558ea05432e0921f7f751fceaf801b1da1731827cb25abed0b5"
+  },
+  "source_policy": {
+    "removed_training_sources": [
+      "shakeleoatmeal_phone_scam_synthetic",
+      "youtube_scam_calls_cc0"
+    ],
+    "new_training_rows": 0,
+    "training_row_texts_and_labels_changed": false,
+    "dev_byte_identical_to_v2": true,
+    "ai_review_is_training_or_ground_truth": false,
+    "raw_reddit_training": false,
+    "research_use_not_final_rights_clearance": true
+  }
+}
