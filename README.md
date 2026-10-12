@@ -8,12 +8,20 @@ textual evidence it actually found, and recommends a reversible next action.
 The experiment is quality-first. Model size is minimized only after candidates clear the same
 contamination-controlled benchmark.
 
+**Latest release-preparation pass (2026-10-11):** opt-in V3 preprocessing fixes two observed
+action-retention defects; existing V2 inputs remain identical on 44,259 frozen rows. All 745
+tests pass. An encoder-specific, blocked local HF package and a 96-row blind benchmark-label
+adjudication packet are prepared. This is not a trained V3 model or a passed quality gate.
+Human review and two source-rights questions remain unresolved. See the
+[HF readiness and exact handoff](docs/ETTIN_HF_READINESS.md).
+
 **Latest bounded experiment (2026-10-11):** the separately authorized Ettin-150M v2 recovery
 completed one 1,853-step replay pass and all 21 declared open benchmark slices. Full-scanner
 desktop p95 is **17.12 ms**, and **16/18** promotion checks pass. Development recall (98.83%) and
 MultiDoGO SAFE false-positive rate (1.79%) now pass, but phone-source SAFE FPR (15/170, **8.82%**)
 and BothBosu dialogue SAFE FPR (28/153, **18.30%**) still exceed 2%. The candidate is rejected;
-no further fit, export, sealed test or HF upload is authorized. See the
+this result does not justify export, sealed testing or HF upload. The subsequent hardening
+pass did not run another fit or model evaluation. See the
 [complete recovery record](reports/ETTIN150M_RECOVERY_V2.md); the
 [v1 result](reports/ETTIN150M_BOUNDED_V1.md) remains historical evidence.
 The same 635-row [independent-review packet](docs/INDEPENDENT_REVIEW_HANDOFF.md) still has no completed decisions;
@@ -60,7 +68,7 @@ See [reports/GGUF_PROTOCOL5_TOKENIZATION.md](reports/GGUF_PROTOCOL5_TOKENIZATION
 | ModernBERT-base, 149M (schema v21 human calls) | rejected full-dose call teacher | 602.0 MB training artifact | regression FPR 4.64%, Harper SAFE FPR 4.24%, BothBosu 90.07% recall / 39.22% FPR; rejected |
 | ModernBERT-base, 149M (schema v22 service evidence) | rejected conservative teacher | 602.1 MB training artifact | 20/29 gates passed; regression FPR 0.63% and BothBosu FPR 1.96%, but BothBosu recall collapsed to 41.13%; rejected |
 | ModernBERT-base, 149M (schema v23 evidence compaction) | rejected bounded-evidence teacher | 602.1 MB training artifact | 18/36 gates passed; 16.97 ms PyTorch/MPS p95, but MultiDoGO SAFE FPR 23.10% and BothBosu 77.30% recall / 13.73% FPR |
-| ModernBERT-base, 149M (schema v25 full calls + phone) | rejected rights-clear data expansion | 602.1 MB training artifact | 20/38 gates; 15.39 ms end-to-end MPS p95, but MultiDoGO SAFE FPR 16.96%, BothBosu 85.82% recall / 9.15% FPR, and phone-source SAFE FPR 77.65% |
+| ModernBERT-base, 149M (schema v25 full calls + phone) | rejected source-tagged data expansion; release rights unresolved | 602.1 MB training artifact | 20/38 gates; 15.39 ms end-to-end MPS p95, but MultiDoGO SAFE FPR 16.96%, BothBosu 85.82% recall / 9.15% FPR, and phone-source SAFE FPR 77.65% |
 | Qwen3.5-0.8B, BF16 base / Q4 control | untouched runtime and capacity control | 537 MiB verified Q4_0 plus 5.27 MB portable arm64 runner | product-shaped BF16 base is 30.32% recall / 2.52% FPR / 0.4295 macro F1; hash-verified public SDK path is 39.60 ms p95 with no Transformers runtime |
 | Qwen3.5-0.8B, schema-v24 AI-internal LoRA | trained specialist; rejected before quantization | 41.3 MB adapter plus BF16 base | primary regression is 99.66% recall / 0.115% FPR, but macro F1 is 0.7407, MultiDoGO complete-call FPR is 5.69%, and BothBosu is 65.96% recall / 3.27% FPR; 29/39 gates pass |
 | Qwen3.5-0.8B, stage-3 boundary recovery | strongest 0.8B adapter; rejected before quantization | 60.4 MB adapter plus BF16 base | 36/39 gates; 99.83% held recall / 4.07% FPR / 0.7370 macro F1, MultiDoGO call FPR 1.12%, BothBosu recall 58.16%; 93.54/99.11 ms BF16 median/p95 |

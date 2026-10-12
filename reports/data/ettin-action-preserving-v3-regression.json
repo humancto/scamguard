@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "purpose": "text_transform_regression_only",
+  "frozen_runtime_revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+  "frozen_source_sha256": "97b7d7c324b80ed0a1c449baf2f31e2e1d2ca45282d1761464aff67dabdb6822",
+  "current_source_sha256": "32d5f2381e03504f3c603728e901d25a4ade7f54c1638ca22118096a068e4ddb",
+  "script_sha256": "2d22eb529e13fe9e35cc8b0095cd03103b7883a71bdbeceee56193d98bd1145f",
+  "config_sha256": "5c6a241a6994d0a64ea7d92c8052b9b4d1a76e917b553683ba1207babd7986b5",
+  "candidate_policy": "speaker-neutral-action-preserving-v3",
+  "populations": {
+    "train": {
+      "rows": 24436,
+      "input_sha256": "d4e3e100e97a937a789aa984d4ce75b545592886099a0027dbd758bbf0b2e614",
+      "v2_identical": 24436,
+      "v2_changed": 0,
+      "v3_changed_inputs": 1365
+    },
+    "dev": {
+      "rows": 2634,
+      "input_sha256": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+      "v2_identical": 2634,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "test": {
+      "rows": 2374,
+      "input_sha256": "1208a54751b798f8a6bbe9101259c3fa141ad314606cb60b8d421dbf87f59475",
+      "v2_identical": 2374,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "forum_validation": {
+      "rows": 1125,
+      "input_sha256": "3fdbb438f1fa4d08328ff2c3cf35907d1080841749b418ac9241983a97bc567f",
+      "v2_identical": 1125,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "ood_financial": {
+      "rows": 431,
+      "input_sha256": "686a0ded4b83c243778ab43ab546f3baa44181ec743d9428f7ec419c2eac3c33",
+      "v2_identical": 431,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "ood_wspr": {
+      "rows": 488,
+      "input_sha256": "dac5a52a60bb47087e9a687b2fbcc72de1f509b0eaede16ad7e0e7420db10144",
+      "v2_identical": 488,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "ood_azsc": {
+      "rows": 4327,
+      "input_sha256": "358cd43ce205d580709ce5c68d8582eaab9dd0846d23445de1266fca49e589fd",
+      "v2_identical": 4327,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "call_state_validation": {
+      "rows": 2048,
+      "input_sha256": "fc48f925bafcd732a9191bcbdfb3a35f8646517146a8124efe66bcb57543e60e",
+      "v2_identical": 2048,
+      "v2_changed": 0,
+      "v3_changed_inputs": 55
+    },
+    "call_window_validation": {
+      "rows": 447,
+      "input_sha256": "1053f4be9270b819d5f2272e50645e9ea251d5a875d8a40ff170f71e7c01302d",
+      "v2_identical": 447,
+      "v2_changed": 0,
+      "v3_changed_inputs": 14
+    },
+    "ftc_pattern_validation": {
+      "rows": 84,
+      "input_sha256": "d492c236175d56469d663feb159bea16d38214b196731c09bd139e4129de9d9b",
+      "v2_identical": 84,
+      "v2_changed": 0,
+      "v3_changed_inputs": 8
+    },
+    "multidogo_call_validation": {
+      "rows": 896,
+      "input_sha256": "55f06cf914cc92f741e5234e49092ecacad5fdbbf5235905e847b747c6d6bf7b",
+      "v2_identical": 896,
+      "v2_changed": 0,
+      "v3_changed_inputs": 76
+    },
+    "multidogo_state_validation": {
+      "rows": 592,
+      "input_sha256": "6bf7310ab0910cbf00c6c6dbcca356a205d61cdcf093931d0768ce6728f0fcf5",
+      "v2_identical": 592,
+      "v2_changed": 0,
+      "v3_changed_inputs": 218
+    },
+    "phone_scam_validation": {
+      "rows": 344,
+      "input_sha256": "96d06085c4b5423a33235e417e1abcfa428ef0dd5a1f4551ded6305ead79f9ec",
+      "v2_identical": 344,
+      "v2_changed": 0,
+      "v3_changed_inputs": 182
+    },
+    "scam_dialogue_validation": {
+      "rows": 294,
+      "input_sha256": "c473c94a6d3cc7b6c114c5e6b29f86a31e454310558f5282d9c1133bb51741a0",
+      "v2_identical": 294,
+      "v2_changed": 0,
+      "v3_changed_inputs": 124
+    },
+    "taskmaster_validation": {
+      "rows": 450,
+      "input_sha256": "539b81a06328b2914407565c1bb7fac54a486333cea45a0853b4e2160df79760",
+      "v2_identical": 450,
+      "v2_changed": 0,
+      "v3_changed_inputs": 4
+    },
+    "apptek_call_selection": {
+      "rows": 348,
+      "input_sha256": "e0e7ad4de8d378061159df18a8fa6c39fedd69d0cdd0dffe3f72579158290b62",
+      "v2_identical": 348,
+      "v2_changed": 0,
+      "v3_changed_inputs": 5
+    },
+    "ppone_validation": {
+      "rows": 33,
+      "input_sha256": "3bb8ac2673199a23f19b6f53931ff9a58fffb6505428bfd916a71c3eaa95a6f9",
+      "v2_identical": 33,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "banking77_validation": {
+      "rows": 770,
+      "input_sha256": "efab4f6e90c9c84b6a44cf9546ee3036bf03ec59b49922b2275c9957f5b8ccf7",
+      "v2_identical": 770,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "vystadial_safe_diagnostic": {
+      "rows": 1024,
+      "input_sha256": "0a2c9a8e1e100fddd338d22acf2dc4ee85401ac40710199196e7171d1b463042",
+      "v2_identical": 1024,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "international_robocalls_diagnostic": {
+      "rows": 47,
+      "input_sha256": "4604d1566dc09a616bf57318359ac2946036606d5ed03acb874b83ff9e5967af",
+      "v2_identical": 47,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "adversarial": {
+      "rows": 320,
+      "input_sha256": "eb0e137318b39b210af3015fa1409737696482c96495d01ae70e51c49eef0547",
+      "v2_identical": 320,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "youtube_scam_validation": {
+      "rows": 70,
+      "input_sha256": "108daf448b01e64f1f6f58228b295119b536c44cede1e6b512abc1eaf9262b1e",
+      "v2_identical": 70,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    },
+    "ood_chichewa": {
+      "rows": 677,
+      "input_sha256": "b429621d3508b9cb3f1a7c7f079603f10966cdcec81b339d5d176aa8c77b0b38",
+      "v2_identical": 677,
+      "v2_changed": 0,
+      "v3_changed_inputs": 0
+    }
+  },
+  "rows": 44259,
+  "v2_all_identical": true,
+  "request_retention_diagnostics": {
+    "role": "selected_open_error_diagnostics_not_accuracy",
+    "examples": {
+      "cloud_access_request": {
+        "speaker-neutral-evidence-recent-v2": {
+          "compacted_chars": 835,
+          "served_tokens": 201,
+          "request_in_compacted_text": false,
+          "request_in_served_text": false
+        },
+        "speaker-neutral-action-preserving-v3": {
+          "compacted_chars": 766,
+          "served_tokens": 181,
+          "request_in_compacted_text": true,
+          "request_in_served_text": true
+        }
+      },
+      "account_number_request": {
+        "speaker-neutral-evidence-recent-v2": {
+          "compacted_chars": 738,
+          "served_tokens": 184,
+          "request_in_compacted_text": false,
+          "request_in_served_text": false
+        },
+        "speaker-neutral-action-preserving-v3": {
+          "compacted_chars": 661,
+          "served_tokens": 170,
+          "request_in_compacted_text": true,
+          "request_in_served_text": true
+        }
+      }
+    },
+    "tokenizer_sha256": {
+      "tokenizer.json": "e0a696f1fbf0f2c7d212e8b9e133250d19bd1c7e5bc34fc91c59d008894dc7b1",
+      "tokenizer_config.json": "d1356b2fcea62ce13fa24529b5f99a9f95a62ef278d75ff0e9b0b2c32a325da4"
+    },
+    "max_length": 256,
+    "truncation_side": "right"
+  },
+  "model_inference_run": false,
+  "sealed_tests_opened": false,
+  "candidate_quality_validated": false,
+  "release_authorized": false,
+  "limitations": [
+    "V3 is opt-in; no existing calibration manifest changed.",
+    "Input retention is not evidence of improved classification or latency.",
+    "Open diagnostics informed V3 and cannot become independent final evidence."
+  ]
+}

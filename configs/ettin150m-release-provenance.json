@@ -1,0 +1,627 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-11",
+  "status": "blocked",
+  "release_authorized": false,
+  "rights_review_status": "review_required",
+  "scope": "Evidence inventory for schema-25 Ettin training ancestry and a local blocked staging pack; not legal advice, a rights guarantee, or release authorization.",
+  "candidate": {
+    "experiment_id": "sg-ettin150m-recovery-v2",
+    "checkpoint_model_sha256": "d03120a4982d1191eb6257c081aedf13e18301f5c291ebd93f7ab2e0a76419e9",
+    "training_report": {
+      "path": "reports/runs/sg-ettin150m-recovery-v2.train.json",
+      "sha256": "50d9f7483ac3b96e1d8b1cbb8846287eaa0f2c58cbff6296685289b445d75f8d"
+    }
+  },
+  "data_sha256": {
+    "train": "d4e3e100e97a937a789aa984d4ce75b545592886099a0027dbd758bbf0b2e614",
+    "dev": "04201ee86325306cf1751dbf848ddca360386de707069c0c4bba0c9c28a21c07",
+    "manifest": "6c1096f1017edb10b690fde8968d9de892d2bff8ae49b9183c5da15e0380ad57"
+  },
+  "data": {
+    "train": "data/experiments/schema25-full-call-curriculum/processed/train.jsonl",
+    "dev": "data/experiments/schema25-full-call-curriculum/processed/dev.jsonl",
+    "manifest": "data/experiments/schema25-full-call-curriculum/processed/manifest.json",
+    "train_rows": 24436,
+    "dev_rows": 2634,
+    "training_sources": 14,
+    "training_source_id_digest_method": "SHA-256 of UTF-8 sorted train IDs joined with newline plus one terminal newline",
+    "source_inventory_excludes_evaluation_only_sources": true,
+    "notice": "Corpus SHA-256 is authoritative. Current generator code/manifests document provenance; they do not recreate every historical generation execution."
+  },
+  "base_model": {
+    "repository": "jhu-clsp/ettin-encoder-150m",
+    "revision": "45d08642849e5c5701b162671ac811b7654bfd9f",
+    "license": "MIT",
+    "license_evidence_status": "verified_publisher_declaration",
+    "model_sha256": "fd77a88ef9599bf8698811e3d6010fc1c4a48bf2149cd56d49b146469b394754",
+    "model_card": {
+      "url": "https://huggingface.co/jhu-clsp/ettin-encoder-150m/raw/45d08642849e5c5701b162671ac811b7654bfd9f/README.md",
+      "sha256": "95b8dbb4c4ba78b2855bdfc6ebefe8eac4c39d63c20f92e2aced3f47cd7e1ff6",
+      "standalone_license_present_in_hf_revision": false
+    },
+    "upstream_license": {
+      "url": "https://raw.githubusercontent.com/JHU-CLSP/ettin-encoder-vs-decoder/6cbf954a2ecaa7c753be6468a1bccdef401d5f93/LICENSE",
+      "repository_revision": "6cbf954a2ecaa7c753be6468a1bccdef401d5f93",
+      "sha256": "7e096e455b9dac457008fa960d25e64066416f417a71c7ad61fbdd65158ba9b9",
+      "copyright_notice": "Copyright (c) 2025 Johns Hopkins University Center for Language and Speech Processing"
+    },
+    "packaged_license": {
+      "path": "LICENSES/Ettin-MIT.txt",
+      "sha256": "b866194b77a237d30106629df409eeafea233c019373e0b902332b4c3d517cd5",
+      "normalization": "upstream.rstrip() + '\\n'; only terminal whitespace changes, legal wording and copyright unchanged"
+    },
+    "conditions": "Preserve upstream copyright and MIT permission notice with covered copies/substantial portions. The base's MIT declaration does not clear fine-tuning sources or privacy rights."
+  },
+  "code_license": {
+    "spdx": "Apache-2.0",
+    "path": "LICENSE",
+    "sha256": "e2036f41ca93317d8f17b91fff722c3ddd96acc76b97c5c2023055c3e827be77",
+    "scope": "ScamGuard repository code; do not substitute this for base-model or dataset licenses."
+  },
+  "ancestry": {
+    "must_preserve_all_training_source_history": true,
+    "parents": [
+      {
+        "experiment_id": "sg-ettin150m-bounded-v1",
+        "checkpoint_model_sha256": "d7ee45bb5d2cc12e0b0f26171cca45234cb9a0a7c517237971e31c2766f06803",
+        "training_report": {
+          "path": "reports/runs/sg-ettin150m-bounded-v1.train.json",
+          "sha256": "10e531ca586e28cefc2d7359c946e95c3572ab3a59e691f7f24afce0037017f0"
+        },
+        "uses_same_train_sha256": true
+      }
+    ],
+    "replay_manifest": {
+      "path": "reports/runs/sg-ettin150m-recovery-v2.train.replay.json",
+      "sha256": "612124d89541966bb5136a673c9cd623b451812b91e1a10fb300b5e886dec751"
+    },
+    "v2_presentations": 29648,
+    "notice": "All 14 sources already influenced v1 and v2. Omitting a source from a later replay does not remove its ancestral training influence or clear its rights; a clean-data alternative requires an appropriately re-frozen fresh-base fit and review."
+  },
+  "critical_unresolved": [
+    {
+      "id": "phone_generator_terms",
+      "source": "shakeleoatmeal_phone_scam_synthetic",
+      "status": "review_required",
+      "resolution": "Authoritative exact generator/version and applicable terms review, or separately authorized fresh-base clean-data experiment."
+    },
+    {
+      "id": "youtube_underlying_rights_and_privacy",
+      "source": "youtube_scam_calls_cc0",
+      "status": "review_required",
+      "resolution": "Document underlying rights/permissions or qualified legal review of the intended use plus independent privacy review; otherwise exclude from a separately authorized fresh-base experiment."
+    }
+  ],
+  "audit": {
+    "status": "pending",
+    "rows": 635,
+    "completed_rows": 0,
+    "canonical_manifest": {
+      "path": "data/audit/ettin150m-v1/label-audit.manifest.json",
+      "sha256": "db6aad6806107e306ce5709be59c32fa6380644bbba98cfd18e395e28b98aca7"
+    },
+    "bundle": {
+      "path": "data/audit/ettin150m-v1/scamguard-ettin150m-v1-blind-audit.zip",
+      "sha256": "4f11ee5e63536785ee6a6f56c1bc7345e3de7d26315380853b11ce2334356ea5"
+    },
+    "returns": [
+      {
+        "path": "data/audit/ettin150m-v1/returned/scamguard_blind_audit.csv",
+        "present": false
+      },
+      {
+        "path": "data/audit/ettin150m-v1/returned/reviewer-attestation.txt",
+        "present": false
+      },
+      {
+        "path": "data/audit/ettin150m-v1/returned/reviewer-assignments.tsv",
+        "present": false
+      }
+    ],
+    "reuse_note": "docs/ETTIN_V2_AUDIT_REUSE.md",
+    "handoff": "docs/INDEPENDENT_REVIEW_HANDOFF.md",
+    "model_accuracy_or_copyright_clearance_proven": false
+  },
+  "authentication_snapshot": {
+    "command": ".venv/bin/hf auth whoami",
+    "checked_at": "2026-10-11",
+    "status": "not_logged_in",
+    "credentials_read_or_copied": false,
+    "notice": "Operational prerequisite only; signing in is not release approval."
+  },
+  "source_registry": {
+    "path": "data/raw/sources.json",
+    "sha256": "bb27a2d89e98a7e53f009ca556d35cb4a62fcd79dd5827ffafec3f609ae99cea"
+  },
+  "sources": [
+    {
+      "id": "imc25_public_forum_smishing",
+      "rows": 1248,
+      "dev_rows": 0,
+      "v2_presentations": 1678,
+      "selected_train_ids_sha256": "3eb17afc0de29df241e485038c2d4040fa9c3808037a3d836d469f5960975cbe",
+      "license_declared": "CC-BY-4.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "IMC25 public-forum smishing release",
+      "kind": "publisher_forum_derived",
+      "publisher": "reportsmishing / Smishing-Dataset-IMC25",
+      "url": "https://github.com/reportsmishing/Smishing-Dataset-IMC25/tree/a6175560b57387199871e51fbef6bc523d2516b4",
+      "revision": "a6175560b57387199871e51fbef6bc523d2516b4",
+      "artifact": {
+        "path": "data/raw/imc25_public_forum_smishing.csv",
+        "sha256": "1bbd1e9e82c3ea023112207b80da268a5c4a07d2353c2b0898360ab037fa9a64"
+      },
+      "citation": "https://doi.org/10.1145/3730567.3764431",
+      "remaining_reviews": [
+        "Review source release terms and upstream forum rights/privacy; no direct Reddit scrape was used.",
+        "Retain source/creator attribution, license link and modification notice for covered redistributed material.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "mendeley_sms_phishing",
+      "rows": 4391,
+      "dev_rows": 531,
+      "v2_presentations": 4391,
+      "selected_train_ids_sha256": "95c22bdba265a38a7349ee7892d6155f89982434b33ba58230188ff3e43ee52e",
+      "license_declared": "CC-BY-4.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "SMS Phishing Dataset for Machine Learning and Pattern Recognition",
+      "kind": "publisher_collected_messages",
+      "publisher": "Sandhya Mishra and Devpriya Soni",
+      "url": "https://data.mendeley.com/datasets/f45bkkt8pr/1",
+      "revision": "version 1",
+      "artifact": {
+        "path": "data/raw/sms_phishing_5971.zip",
+        "sha256": "9bbf3188fdad81495d8e82825648b9b63b53fc86841a3d26c02629990b233cc3"
+      },
+      "citation": "https://doi.org/10.17632/f45bkkt8pr.1",
+      "remaining_reviews": [
+        "Source card describes Internet images/screenshots and third-party message sources; publisher CC-BY declaration is not independent rights-chain/privacy clearance.",
+        "Preserve supplied creator/copyright notices, source URI, CC-BY link and modification notice for covered redistributed material.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "multidogo_human_service_dialogues",
+      "rows": 812,
+      "dev_rows": 0,
+      "v2_presentations": 2436,
+      "selected_train_ids_sha256": "fe9d4066169e9817a561d2831ffa056bfecd96f2a8c83d8907e16b27b24cbe22",
+      "license_declared": "CDLA-Permissive-1.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "MultiDoGO human service dialogues",
+      "kind": "human_roleplay",
+      "publisher": "AWS Labs MultiDoGO dataset contributors",
+      "url": "https://github.com/awslabs/multi-domain-goal-oriented-dialogues-dataset/tree/baa30639c4b271f394b81443c842193407cdf26d",
+      "revision": "baa30639c4b271f394b81443c842193407cdf26d",
+      "artifact": {
+        "path": "data/external/multidogo/manifest.json",
+        "sha256": "475c19324a16e4adea5dab75aba2e5c209e7f59ccb78cb821d19bbfcab6dff63"
+      },
+      "citation": "https://aclanthology.org/D19-1460/",
+      "evidence": [
+        {
+          "path": "data/raw/multidogo/repository/LICENSE.txt",
+          "sha256": "8be8b09ba4230a6ab89a62439b45e3374e15870360d27c9a51131592b91a2f10"
+        }
+      ],
+      "remaining_reviews": [
+        "Review privacy and weak SAFE labels from service-domain roleplay.",
+        "Distinguish publication of Data/Enhanced Data from Results; preserve provider credits, agreement and change notices if covered data is redistributed.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "scamguard_ftc_pattern_action_states_v1",
+      "rows": 356,
+      "dev_rows": 0,
+      "v2_presentations": 402,
+      "selected_train_ids_sha256": "bbb89e7ae2fe9783511e7190c379528a0b583243549f48a61fc441e0eba26698",
+      "license_declared": "Apache-2.0",
+      "license_evidence_status": "project_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "ScamGuard FTC-pattern action states v1",
+      "kind": "project_template_synthetic",
+      "publisher": "ScamGuard project contributors",
+      "url": "https://github.com/humancto/scamguard/tree/bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "artifact": {
+        "path": "data/generated/ftc_pattern_action_states_v1/manifest.json",
+        "sha256": "540971802435f94e152cebb38da54d1002f9e47135027fb797003f2e8d586a29"
+      },
+      "generator": [
+        {
+          "path": "scripts/generate_ftc_pattern_action_states.py",
+          "sha256": "5f883528c997d3af27ca09c9a11c086ef2e226a61e8956c69fefa64bc93f7554"
+        }
+      ],
+      "citation": "https://consumer.ftc.gov/features/robocall-scam-examples",
+      "rights_url": "https://www.ftc.gov/policy-notices/website-policy",
+      "remaining_reviews": [
+        "Review project originality/provenance and human label/privacy decisions; FTC pattern grounding is not a grant for third-party transcripts.",
+        "Credit FTC pattern descriptions without endorsement; preserve applicable project Apache-2.0 notices.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "scamguard_multidogo_grounded_evidence_states_v1",
+      "rows": 844,
+      "dev_rows": 0,
+      "v2_presentations": 844,
+      "selected_train_ids_sha256": "a9c347f1253c90e1e06055cefdf66aad98b35028277c204e15306c61e771a875",
+      "license_declared": "CDLA-Permissive-1.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "ScamGuard MultiDoGO-grounded evidence states v1",
+      "kind": "synthetic_derivative_of_human_roleplay",
+      "publisher": "AWS Labs MultiDoGO dataset contributors; ScamGuard transformations",
+      "url": "https://github.com/awslabs/multi-domain-goal-oriented-dialogues-dataset/tree/baa30639c4b271f394b81443c842193407cdf26d",
+      "revision": "baa30639c4b271f394b81443c842193407cdf26d",
+      "artifact": {
+        "path": "data/external/multidogo/manifest.json",
+        "sha256": "475c19324a16e4adea5dab75aba2e5c209e7f59ccb78cb821d19bbfcab6dff63"
+      },
+      "citation": "https://aclanthology.org/D19-1460/",
+      "generator": [
+        {
+          "path": "scripts/build_multidogo_dialogues.py",
+          "sha256": "2aace17c132bd82bc66d812e523f0738059ddc81daa1a5613e588dbe0f03ed94"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "data/raw/multidogo/repository/LICENSE.txt",
+          "sha256": "8be8b09ba4230a6ab89a62439b45e3374e15870360d27c9a51131592b91a2f10"
+        }
+      ],
+      "remaining_reviews": [
+        "Synthetic transformations inherit human source context; do not relabel the entire derivative Apache-2.0.",
+        "Review CDLA Data/Enhanced Data versus Results scope, provider attribution and transformation notice, plus human label/privacy decisions.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "scamguard_synthetic_counterfactual_v1",
+      "rows": 128,
+      "dev_rows": 0,
+      "v2_presentations": 160,
+      "selected_train_ids_sha256": "5d5ef255d4ef143e6a54433b2f7dbafb0337006179b16ddea2ca7841c48222a0",
+      "license_declared": "Apache-2.0",
+      "license_evidence_status": "project_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "ScamGuard targeted counterfactuals v1",
+      "kind": "project_template_synthetic",
+      "publisher": "ScamGuard project contributors",
+      "url": "https://github.com/humancto/scamguard/tree/bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "artifact": {
+        "path": "data/generated/synthetic_manifest.json",
+        "sha256": "beea78dce364e7ba100c66d2024c79c0fae8a9bcb66cef8c366da31bdd002f49"
+      },
+      "generator": [
+        {
+          "path": "scripts/generate_synthetic.py",
+          "sha256": "8d78c6e3d51dfb3482830d38edfa9ca0b872f862bc8e997266cdf5879af125ef"
+        }
+      ],
+      "citation": "https://consumer.ftc.gov/articles/scammers-use-fake-emergencies-steal-your-money",
+      "remaining_reviews": [
+        "Review project originality, advisory attribution and independent label/privacy results.",
+        "Preserve applicable project Apache-2.0 notices; this is deterministic original-copy slot filling, not evidence of independently human-authored labels.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "scamguard_synthetic_dialogue_v2",
+      "rows": 1495,
+      "dev_rows": 0,
+      "v2_presentations": 2007,
+      "selected_train_ids_sha256": "a135d16a46c2716ded2b893fff806949b02e2db32f9c84685e30f1557ec09e8c",
+      "license_declared": "Apache-2.0",
+      "license_evidence_status": "project_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "ScamGuard paired synthetic dialogues v2",
+      "kind": "project_template_synthetic",
+      "publisher": "ScamGuard project contributors",
+      "url": "https://github.com/humancto/scamguard/tree/bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "artifact": {
+        "path": "data/generated/dialogue_curriculum_manifest.json",
+        "sha256": "5ab341ee965f4e675b418ea2ace918adda7f01f9667717e442efbc2a739e3c1d"
+      },
+      "generator": [
+        {
+          "path": "scripts/generate_dialogue_curriculum.py",
+          "sha256": "fbc75b93e4c419b638a685f1f622d07561b6e3098e625e6b529b1ff17a8a198f"
+        }
+      ],
+      "citation": "https://consumer.ftc.gov/consumer-alerts/2024/03/never-move-your-money-protect-it-thats-scam",
+      "remaining_reviews": [
+        "Review project originality, advisory attribution and independent label/privacy results.",
+        "Preserve applicable project Apache-2.0 notices.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "scamguard_synthetic_long_call_action_states_v1",
+      "rows": 6144,
+      "dev_rows": 0,
+      "v2_presentations": 6528,
+      "selected_train_ids_sha256": "8044747e5214eeae5903a39f1b0ed98d6eb1a9e3515317d2521f1f7b730cd66c",
+      "license_declared": "Apache-2.0",
+      "license_evidence_status": "project_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "ScamGuard long-call action states v1",
+      "kind": "project_template_synthetic",
+      "publisher": "ScamGuard project contributors",
+      "url": "https://github.com/humancto/scamguard/tree/bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "artifact": {
+        "path": "data/generated/call_action_states_v1_manifest.json",
+        "sha256": "f5e4890796bb07ca4ebadfbb92645cb981d0c3de3d2db2755c240dbcb51ff532"
+      },
+      "generator": [
+        {
+          "path": "scripts/generate_call_action_states.py",
+          "sha256": "a6e099edab23d971d7c2bf0472365e3b651e5a824b5afe1cfb9ec570c94ed954"
+        },
+        {
+          "path": "scripts/build_schema20_action_states.py",
+          "sha256": "cd5a84806499a63aeae4eaf1306948cceedb60a850b9f9501e79e595aa78013c"
+        },
+        {
+          "path": "scripts/build_schema19_call_windows.py",
+          "sha256": "25a59c6435341f2eaabe0e8cb74da0e02b0d7ac11f4cdf5de53dbac0017c40f3"
+        }
+      ],
+      "citation": "https://consumer.ftc.gov/articles/how-avoid-scam",
+      "remaining_reviews": [
+        "Review original-copy long-context construction and independent label/privacy results.",
+        "Preserve applicable project Apache-2.0 notices; parent short-state manifest is evidence, not the final long-row corpus identity.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "scamguard_synthetic_v5",
+      "rows": 4140,
+      "dev_rows": 2088,
+      "v2_presentations": 5148,
+      "selected_train_ids_sha256": "ba0ccf070d232569d90432018630f0ed7d9ac121c5d2f15204b3b80d43b4dbdd",
+      "license_declared": "Apache-2.0",
+      "license_evidence_status": "project_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "ScamGuard deterministic synthetic messages v5",
+      "kind": "project_template_synthetic",
+      "publisher": "ScamGuard project contributors",
+      "url": "https://github.com/humancto/scamguard/tree/bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+      "artifact": {
+        "path": "data/generated/synthetic_manifest.json",
+        "sha256": "beea78dce364e7ba100c66d2024c79c0fae8a9bcb66cef8c366da31bdd002f49"
+      },
+      "generator": [
+        {
+          "path": "scripts/generate_synthetic.py",
+          "sha256": "8d78c6e3d51dfb3482830d38edfa9ca0b872f862bc8e997266cdf5879af125ef"
+        }
+      ],
+      "citation": "https://consumer.ftc.gov/consumer-alerts/2025/03/what-are-signs-scam",
+      "remaining_reviews": [
+        "Review original-copy templates and multilingual variants with qualified humans; no model-generator license is claimed for template filling.",
+        "Preserve project Apache-2.0 notices and advisory-source citations.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "shakeleoatmeal_phone_scam_synthetic",
+      "rows": 1190,
+      "dev_rows": 0,
+      "v2_presentations": 2366,
+      "selected_train_ids_sha256": "f0936cc530ca2fac393b536a56604395b45664dbb755ddef1b63e7cb37d9a84c",
+      "license_declared": "MIT",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "Phone scam detection synthetic",
+      "kind": "publisher_llm_synthetic",
+      "publisher": "shakeleoatmeal",
+      "url": "https://huggingface.co/datasets/shakeleoatmeal/phone-scam-detection-synthetic/tree/27a1f6d0cf21dda995130d221383900b060dbcc9",
+      "revision": "27a1f6d0cf21dda995130d221383900b060dbcc9",
+      "artifact": {
+        "path": "data/raw/phone_scam_synthetic/train.parquet",
+        "sha256": "628452503397e07261192fa361e1f9a0e02c6ac7eca61a2ea82406f54feb51e2"
+      },
+      "evidence": [
+        {
+          "path": "data/raw/phone_scam_synthetic/README.md",
+          "sha256": "38171953e18bba0a66f5aa7f3bf11039ebbb4e033afbde95d38b46dd2a04d7ac"
+        },
+        {
+          "path": "data/external/phone_scam_synthetic/manifest.json",
+          "sha256": "3b38e958ec609f62e0b63bbb002f04081bcdc903b139d425e77613e3f14d827d"
+        }
+      ],
+      "generator_disclosure": {
+        "family": "Llama 8B",
+        "exact_model_id": null,
+        "revision": null,
+        "applicable_terms": null,
+        "generation_date": null,
+        "status": "review_required",
+        "checked_scope": "All six official README revisions and sole public discussion checked on 2026-10-11; no more specific generator identified."
+      },
+      "remaining_reviews": [
+        "Critical: obtain authoritative exact generator/model revision, generation date/host terms and permitted downstream training/model-distribution scope; do not guess Llama version.",
+        "MIT front matter alone does not resolve generator obligations or identify a separate copyright notice; complete human label/privacy review.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "taskmaster1_woz_dialogues",
+      "rows": 1193,
+      "dev_rows": 0,
+      "v2_presentations": 1193,
+      "selected_train_ids_sha256": "3ca50ac7a5c042a36fe3bc38efd7f932dc715cbdc8dc9e8ae039670cd87a9bb5",
+      "license_declared": "CC-BY-4.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "Taskmaster-1 Wizard-of-Oz dialogues",
+      "kind": "human_roleplay",
+      "publisher": "Google Research Taskmaster contributors",
+      "url": "https://github.com/google-research-datasets/Taskmaster/tree/d92cb6af3005f1dc09c39e75e7daf4a04905e00b/TM-1-2019",
+      "revision": "d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
+      "artifact": {
+        "path": "data/raw/taskmaster1_woz_dialogues.json",
+        "sha256": "cd3bc4e968487315d412c044d30af2bf0a4b33c3ef8b74c589f1e1fa832bf72f"
+      },
+      "evidence": [
+        {
+          "path": "data/external/taskmaster/manifest.json",
+          "sha256": "832c02a7ee9ded00f2689b91e52e5e90942209670e569c646eabbd2a27b2b11f"
+        }
+      ],
+      "remaining_reviews": [
+        "Review weak SAFE roleplay labels and privacy; do not call these naturally occurring victim communications.",
+        "Preserve creator/provider attribution, CC-BY link and modifications for covered redistributed material.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "uci_sms_spam",
+      "rows": 147,
+      "dev_rows": 15,
+      "v2_presentations": 147,
+      "selected_train_ids_sha256": "8caab8afa8620fe90f407d4cd4e7abe49417cb6f805fa1907c2307d2ace76958",
+      "license_declared": "CC-BY-4.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "SMS Spam Collection",
+      "kind": "publisher_collected_messages",
+      "publisher": "Tiago Almeida and Jos Hidalgo",
+      "url": "https://archive.ics.uci.edu/dataset/228/sms+spam+collection",
+      "revision": "archive content pinned by SHA-256; UCI dataset 228",
+      "artifact": {
+        "path": "data/raw/uci_sms_spam.zip",
+        "sha256": "1587ea43e58e82b14ff1f5425c88e17f8496bfcdb67a583dbff9eefaf9963ce3"
+      },
+      "citation": "https://doi.org/10.24432/C5CC84",
+      "remaining_reviews": [
+        "Review collection-specific upstream rights and privacy; the UCI card describes multiple research/forum sources.",
+        "Preserve supplied creator/copyright notices, CC-BY link, source URI and modifications for covered redistributed material.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "wspr_sms_phishing",
+      "rows": 1913,
+      "dev_rows": 0,
+      "v2_presentations": 1913,
+      "selected_train_ids_sha256": "718c70bf15244126ada23018ef163713a6e52f9270df8638c22045f89f454b48",
+      "license_declared": "MIT",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "WSPR SMS phishing release",
+      "kind": "publisher_collected_messages",
+      "publisher": "WSPR / North Carolina State University project contributors",
+      "url": "https://github.com/wspr-ncsu/sms-phishing/tree/ef7da01dfc145ce283a2af380e5dd8b817191ee7",
+      "revision": "ef7da01dfc145ce283a2af380e5dd8b817191ee7",
+      "artifact": {
+        "path": "data/raw/wspr_phishing_messages.csv",
+        "sha256": "d125c394af792faeb2b71b3f7100cad3b4cece02aff78cb4ec1fb9e7db90f230"
+      },
+      "remaining_reviews": [
+        "Review message-source rights/privacy and reported-phishing label limitations.",
+        "Preserve actual upstream MIT copyright/permission notice in any covered redistribution; collect that notice before release.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    },
+    {
+      "id": "youtube_scam_calls_cc0",
+      "rows": 435,
+      "dev_rows": 0,
+      "v2_presentations": 435,
+      "selected_train_ids_sha256": "39482e4d38cf257b5a5a5f4e6c8d6aa7d0fdd858b1d73ed6d3cb174113fd6056",
+      "license_declared": "CC0-1.0",
+      "license_evidence_status": "publisher_declared",
+      "rights_review_status": "review_required",
+      "human_review_status": "pending",
+      "title": "YouTube Scam Phone Call Transcripts v2",
+      "kind": "scam_call_derived_transcript",
+      "publisher": "Rival Cults / rivalcults",
+      "url": "https://www.kaggle.com/datasets/rivalcults/youtube-scam-phone-call-transcripts",
+      "revision": "version 2 (2024-08-04)",
+      "artifact": {
+        "path": "data/raw/youtube_scam_calls_v2.zip",
+        "sha256": "3f67497736e9421c2f6e59efc46c129006419d40fc752cbb981042940384cedd"
+      },
+      "evidence": [
+        {
+          "path": "data/external/youtube_scam_calls/manifest.json",
+          "sha256": "a394be257adc881bf9d0de24e10df2e4180dc207fd3792eb1b71869556b4be22"
+        }
+      ],
+      "publisher_claims": {
+        "license": "CC0-1.0",
+        "names_addresses_phone_numbers_removed": true,
+        "underlying_creator_permissions_provided": false,
+        "independently_verified_pii_free": false
+      },
+      "remaining_reviews": [
+        "Critical: establish the uploader's authority or another documented lawful basis for underlying YouTube/scambaiter/participant material and intended model distribution; no such permission receipt was located.",
+        "Publisher PII-removal claim is not an independent finding: pinned audit found two phone-like source rows before masking; human privacy review remains pending.",
+        "Do not redistribute transcripts or unlisted source links in a model pack; retain source attribution as provenance without implying clearance.",
+        "Independent human label/privacy audit remains incomplete.",
+        "Final artifact-specific rights/attribution review has not been approved."
+      ]
+    }
+  ],
+  "proposed_fail_closed_contract": {
+    "implemented_by_this_inventory": false,
+    "required_checks": [
+      "Reject missing/unknown schema or any non-false release_authorized in a blocked staging inventory.",
+      "Verify all data/base/candidate/parent/report/local-evidence hashes and exact source set, unique row counts, selected-ID digests and inherited source coverage.",
+      "Reject any review_required/restricted/unknown rights decision, absent human approval receipt, unresolved generator/rightsholder/privacy issue, or stale receipt before any publication eligibility claim.",
+      "A human decision needs scope, reviewer identity/role, date and hash-bound evidence; presence of an assertion or license metadata is not an approval.",
+      "Verify all three human returns and exact packet binding; independently inspect attestation and per-row language/reviewer assignment coverage.",
+      "Verify MIT/base and data-attribution notices in the pack, and fail if any distributed material lacks its applicable notice.",
+      "Restrict pack content to an explicit allowlist; no raw training/audit/sealed text, credentials, optimizer/training_args pickle, or unlisted source URLs.",
+      "Keep quality/final-validation/runtime/package checks separate; passing provenance never overrides failed quality gates.",
+      "Never contact publishers, authenticate or upload as a side effect of validation."
+    ]
+  },
+  "owner_actions": [
+    "Appoint independent human review coordinator/language helpers and return the three exact files; no guessed/AI-made review decisions.",
+    "Provide authoritative phone-generator details and YouTube rights evidence for qualified review, or decide on a separately authorized clean-data fresh-base experiment; do not silently waive uncertainties.",
+    "When genuinely eligible, select the HF account/organization, repository and visibility and sign in locally through normal HF authentication; never paste credentials into a review artifact."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "metadata_and_package_integrity_only",
+  "package": "dist/sg-ettin150m-recovery-v2-blocked-r2",
+  "manifest_sha256": "5fa50b46089e2c4f41bd8f7dc99702c6c4d70316c83e9521a1ce93655c7bdd2e",
+  "files": {
+    "DATA_NOTICE.md": {
+      "sha256": "a666febcddc631d79f70e1b6aa6afdfa169eb76d5b9c3121bc294aa150216df1",
+      "bytes": 7932
+    },
+    "LICENSES/ettin-MIT.txt": {
+      "sha256": "b866194b77a237d30106629df409eeafea233c019373e0b902332b4c3d517cd5",
+      "bytes": 1123
+    },
+    "LICENSES/scamguard-Apache-2.0.txt": {
+      "sha256": "e2036f41ca93317d8f17b91fff722c3ddd96acc76b97c5c2023055c3e827be77",
+      "bytes": 10827
+    },
+    "README.md": {
+      "sha256": "ad7742fe2103e10e8a046e64bbc5f945e6e892ebffab0657abe3e49b6f8f1c34",
+      "bytes": 2789
+    },
+    "config.json": {
+      "sha256": "8ea25957e427f454a76413b0506a3b73e0caa6f9fec1f24522f4d4e0dbf8e260",
+      "bytes": 2136
+    },
+    "model.safetensors": {
+      "sha256": "d03120a4982d1191eb6257c081aedf13e18301f5c291ebd93f7ab2e0a76419e9",
+      "bytes": 598442860
+    },
+    "scamguard_calibration.json": {
+      "sha256": "d31108b08ad213ebb0c0e3db1794393a119f34dda8a8aa3af6146d5fab2eb08d",
+      "bytes": 2043
+    },
+    "tokenizer.json": {
+      "sha256": "e0a696f1fbf0f2c7d212e8b9e133250d19bd1c7e5bc34fc91c59d008894dc7b1",
+      "bytes": 3583326
+    },
+    "tokenizer_config.json": {
+      "sha256": "d1356b2fcea62ce13fa24529b5f99a9f95a62ef278d75ff0e9b0b2c32a325da4",
+      "bytes": 486
+    }
+  },
+  "total_package_bytes": 602062318,
+  "inputs_sha256": {
+    "configs/ettin150m-recovery-v2-staging.json": "46697dc6506607fba42b457c00377c65263bd99255590ba06216007fb4b1d25b",
+    "scripts/stage_ettin_release.py": "19bd90548a80f97f982c499367407e24a249c84709843455427cefd42b19e745",
+    "tests/test_ettin_release.py": "a410d2c8c107209a9d4763e9d89bfb95c37c900d2b3cfe44ad94db800dd15d64"
+  },
+  "blockers": [
+    "open_quality:scam_dialogue_validation safe_fpr",
+    "open_quality:phone_scam_validation safe_fpr",
+    "current_sdk_differs_from_frozen_evaluation_runtime",
+    "independent_human_returns_missing",
+    "owner_review_of_independence_and_data_rights_required",
+    "encoder_frozen_unopened_final_validation_contract_missing",
+    "encoder_final_validation_not_performed",
+    "public_upload_not_authorized"
+  ],
+  "failed_quality_gates": [
+    "scam_dialogue_validation safe_fpr",
+    "phone_scam_validation safe_fpr"
+  ],
+  "release_authorized": false,
+  "production_ready": false,
+  "uploaded": false,
+  "model_inference_run": false
+}

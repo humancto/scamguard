@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "runtime_revision": "bd96b81e05a15b69f64bf036ba922f9ce155013a",
+  "inputs": {
+    "experiment_config": {
+      "path": "configs/ettin150m-recovery-v2.json",
+      "sha256": "5c6a241a6994d0a64ea7d92c8052b9b4d1a76e917b553683ba1207babd7986b5"
+    },
+    "training_report": {
+      "path": "reports/runs/sg-ettin150m-recovery-v2.train.json",
+      "sha256": "50d9f7483ac3b96e1d8b1cbb8846287eaa0f2c58cbff6296685289b445d75f8d"
+    },
+    "open_report": {
+      "path": "reports/runs/sg-ettin150m-recovery-v2.open.json",
+      "sha256": "ac8a6d53939355a82d453103170bc6fb31ef7d07b92cdbaf56bbcd0f3f83e045"
+    },
+    "base_license": {
+      "path": "LICENSES/Ettin-MIT.txt",
+      "sha256": "b866194b77a237d30106629df409eeafea233c019373e0b902332b4c3d517cd5"
+    },
+    "code_license": {
+      "path": "LICENSE",
+      "sha256": "e2036f41ca93317d8f17b91fff722c3ddd96acc76b97c5c2023055c3e827be77"
+    },
+    "data_notice": {
+      "path": "docs/ETTIN_DATA_NOTICE.md",
+      "sha256": "a666febcddc631d79f70e1b6aa6afdfa169eb76d5b9c3121bc294aa150216df1"
+    },
+    "provenance_report": {
+      "path": "configs/ettin150m-release-provenance.json",
+      "sha256": "791fb85a06a8594983104219c51ffb531989e038fb02f849451d10cbc56368c0"
+    }
+  }
+}

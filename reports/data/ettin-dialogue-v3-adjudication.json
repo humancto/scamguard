@@ -1,0 +1,46 @@
+{
+  "artifact_schema_version": 1,
+  "audit_protocol_sha256": "d9dcc931447ce5229ca5e07398b20944759dfe0f0224369c14c2729be10cbb59",
+  "benchmark_labels_changed": false,
+  "blind_inputs_sha256": "85ca1afb7e42e6eec743bea3679e05052699679403a3c248ec15331df5e1da54",
+  "contains_row_identifiers_or_predictions": false,
+  "contains_text": false,
+  "disagreements_must_be_preserved_in_versioned_adjudication": true,
+  "existing_635_row_training_audit_unchanged_and_still_required": true,
+  "experiment_id": "sg-ettin150m-recovery-v2",
+  "independent_human_review": false,
+  "limitations": [
+    "Only source labels are being adjudicated; no independent accuracy claim is licensed, even after completion.",
+    "The reviewer ZIP excludes selection roles, source metadata, reference labels, and model predictions.",
+    "The existing training-audit zero-disagreement release gate is not this adjudication's completion criterion.",
+    "Preparation does not perform or impersonate human review and does not resolve source/model redistribution rights."
+  ],
+  "packet_sha256": "3fd7a7be3557ab9a7fb57c089a09f989873d8f47e3388f2d686c43f520958d5e",
+  "private_canonical_inputs_sha256": "e8586eec3a6b172e42ebad66e2216b7a5737ee26ab11c63b702a94bdbac0732b",
+  "private_selection_sha256": "ef0b289d719680997207e6a2d5cfc3bd537186623cabe1544d4613448451f795",
+  "release_authorized": false,
+  "reviewer_packet_contains_answer_key": false,
+  "reviewer_requirements_sha256": "14f355613b871dfbd16430400aa54cda31289cdbca318e63ef6d778f415d2131",
+  "role": "benchmark_label_adjudication",
+  "sealed_inputs_opened": false,
+  "selected_rows": 96,
+  "selection": {
+    "concordant_controls": 49,
+    "controls_are_not_human_verified_truth": true,
+    "error_enriched_diagnostic_not_unbiased_accuracy": true,
+    "method": "All frozen target errors plus seeded controls matching source, dialogue type, and reference label; one per target stratum then capacity-capped proportional-deficit allocation.",
+    "seed": 20261011,
+    "target_reference_safe_model_scam": 43,
+    "target_reference_scam_model_safe": 4
+  },
+  "source_sha256": {
+    "ledger": "83eadf7b1615d6c5628984918e0b90a4baf0b4424402cb3b606609a15356e4aa",
+    "phone_scam_validation": "96d06085c4b5423a33235e417e1abcfa428ef0dd5a1f4551ded6305ead79f9ec",
+    "report": "ac8a6d53939355a82d453103170bc6fb31ef7d07b92cdbaf56bbcd0f3f83e045",
+    "scam_dialogue_validation": "c473c94a6d3cc7b6c114c5e6b29f86a31e454310558f5282d9c1133bb51741a0"
+  },
+  "status": "pending_qualified_independent_human_adjudication",
+  "threshold_retuning_authorized": false,
+  "training_use_authorized": false,
+  "zero_disagreement_release_gate_applicable": false
+}

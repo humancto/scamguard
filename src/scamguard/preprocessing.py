@@ -7,10 +7,12 @@ import re
 DIALOGUE_POLICY_NONE = "none"
 DIALOGUE_POLICY_SPEAKER_NEUTRAL_V1 = "speaker-neutral-v1"
 DIALOGUE_POLICY_EVIDENCE_RECENT_V2 = "speaker-neutral-evidence-recent-v2"
+DIALOGUE_POLICY_ACTION_PRESERVING_V3 = "speaker-neutral-action-preserving-v3"
 DIALOGUE_POLICIES = (
     DIALOGUE_POLICY_NONE,
     DIALOGUE_POLICY_SPEAKER_NEUTRAL_V1,
     DIALOGUE_POLICY_EVIDENCE_RECENT_V2,
+    DIALOGUE_POLICY_ACTION_PRESERVING_V3,
 )
 
 # The compactor is deliberately character-bounded instead of tokenizer-specific. That keeps the
@@ -303,6 +305,107 @@ def compact_dialogue_evidence_recent(text: str) -> str:
     return compacted
 
 
+# V3 is opt-in. Existing checkpoint manifests continue to select the unchanged V2 transform.
+# These patterns select context, NOT a verdict: requests may be legitimate, quoted, or negated.
+# In particular, a late assurance must not erase an earlier request for access or account details.
+_DIRECTED_ACCESS_RE = re.compile(
+    r"\b(?:grant|give|allow|enable|authorize|provide)\b[^.!?]{0,100}"
+    r"\b(?:access|permissions?|control)\b",
+    re.IGNORECASE,
+)
+_DIRECTED_VALUE_RE = re.compile(
+    r"\b(?:send|share|read|tell|give|provide|enter|submit|confirm|verify|transfer|pay)\b"
+    r"[^.!?]{0,110}\b(?:password|passcode|pin|code|credentials?|account|routing|card|"
+    r"social security|ssn|identity|email|address|payment|money|funds|balance)\b",
+    re.IGNORECASE,
+)
+_CONCRETE_REQUEST_OBJECT_RE = re.compile(
+    r"\b(?:password|passcode|pin|code|credentials?|routing number|"
+    r"(?:bank )?account number|card number|social security|ssn|"
+    r"payment|money|funds|balance)\b",
+    re.IGNORECASE,
+)
+
+
+def compact_dialogue_action_preserving(text: str) -> str:
+    """Opt-in V3: reserve the first evidence slot for a concrete requested action.
+
+    Unlike V2's participant-first ranking, V3 retains an explicit access/value request
+    before a longer question or later reassurance can use the evidence slots. It then
+    retains an explicit safety boundary and an opposite participant's context where
+    available. Negations and speaker identity are kept; this does not classify requests
+    as fraud. Character bounds do not guarantee arbitrary tokenizer-budget retention.
+    A checkpoint needs its own calibration/evaluation before adopting this new policy.
+    """
+    turns = parse_dialogue_turns(text)
+    if len(turns) < 4 or len({speaker for speaker, _ in turns}) < 2:
+        return text
+
+    requests = []
+    for index, (_, content) in enumerate(turns):
+        access = _DIRECTED_ACCESS_RE.search(content)
+        anchor = access or _DIRECTED_VALUE_RE.search(content)
+        if anchor is not None:
+            score, _, _, _ = _turn_score(content)
+            # Keep an actual requested secret/account number/payment ahead of vague
+            # identity reassurance. Inspect only the bounded clause after the request.
+            clause = re.split(r"[.!?]", content[anchor.start():], maxsplit=1)[0][:180]
+            priority = 2 if access else int(bool(_CONCRETE_REQUEST_OBJECT_RE.search(clause)))
+            requests.append((priority, score, -index, index, anchor))
+    if not requests:
+        return compact_dialogue_evidence_recent(text)
+
+    # Prefer access, then concrete requested values, then the frozen salience score.
+    # Earliest wins ties; topic-rich reassurance must not replace a concrete request.
+    _, _, _, action_index, action_anchor = max(requests, key=lambda item: item[:3])
+    chosen = [(action_index, action_anchor)]
+    boundaries = []
+    for index, (_, content) in enumerate(turns):
+        if index == action_index:
+            continue
+        boundary = _SAFE_BOUNDARY_RE.search(content)
+        if boundary is not None:
+            _, _, safe_score, _ = _turn_score(content)
+            boundaries.append((safe_score, -index, index, boundary))
+    if boundaries:
+        _, _, index, anchor = max(boundaries, key=lambda item: item[:2])
+        chosen.append((index, anchor))
+
+    fallback = _evidence_turns(turns)
+    candidates = sorted(
+        fallback,
+        key=lambda item: (turns[item[1]][0] != turns[action_index][0], item[0], item[1]),
+        reverse=True,
+    )
+    for _, index, anchor in candidates:
+        if len(chosen) >= EVIDENCE_RECENT_MAX_EVIDENCE_TURNS:
+            break
+        if index not in {selected for selected, _ in chosen}:
+            chosen.append((index, anchor))
+
+    speakers = list(dict.fromkeys(speaker for speaker, _ in turns))
+    names = {
+        speaker: chr(ord("A") + i) if i < 26 else str(i + 1)
+        for i, speaker in enumerate(speakers)
+    }
+    evidence = [
+        f"{names[turns[index][0]]}: {_bounded_turn(turns[index][1], anchor, recent=False)}"
+        for index, anchor in chosen
+    ]
+    selected = {index for index, _ in chosen}
+    recent = [
+        f"{names[turns[index][0]]}: {_bounded_turn(turns[index][1], None, recent=True)}"
+        for index in range(max(0, len(turns) - EVIDENCE_RECENT_MAX_RECENT_TURNS), len(turns))
+        if index not in selected
+    ]
+    compacted = "EVIDENCE: " + " ".join(evidence)
+    if recent:
+        compacted += " RECENT: " + " ".join(recent)
+    if len(compacted) > EVIDENCE_RECENT_MAX_CHARS:
+        compacted = compacted[: EVIDENCE_RECENT_MAX_CHARS - 1].rstrip() + "…"
+    return compacted
+
+
 def prepare_model_text(text: str, dialogue_policy: str = DIALOGUE_POLICY_NONE) -> str:
     if dialogue_policy == DIALOGUE_POLICY_NONE:
         return text
@@ -310,4 +413,6 @@ def prepare_model_text(text: str, dialogue_policy: str = DIALOGUE_POLICY_NONE) -
         return canonicalize_dialogue_speakers(text)
     if dialogue_policy == DIALOGUE_POLICY_EVIDENCE_RECENT_V2:
         return compact_dialogue_evidence_recent(text)
+    if dialogue_policy == DIALOGUE_POLICY_ACTION_PRESERVING_V3:
+        return compact_dialogue_action_preserving(text)
     raise ValueError(f"unsupported dialogue policy: {dialogue_policy}")
